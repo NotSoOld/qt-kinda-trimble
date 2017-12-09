@@ -19,15 +19,47 @@ void COMHandler::finishCOM()
     com->close();
 }
 
+void COMHandler::appendByte(QByteArray *bytes, byte b)
+{
+    bytes->append(b);
+    // Perform stuffing for DLE bytes.
+    if (b == DLE)
+    {
+        bytes->append(DLE);
+    }
+}
+
 void COMHandler::sendCommandPos()
 {
     QByteArray cmd;
     cmd.append(DLE);
-    cmd.append(COMMAND_STATUS_AND_POS);
+    appendByte(&cmd, COMMAND_REQUEST_STATUS_AND_POS);
     cmd.append(DLE);
     cmd.append(ETX);
     com->write(cmd.constData(), cmd.length());
     com->waitForBytesWritten(1000);
+}
+
+unsigned int COMHandler::bytesToInt32(QByteArray bytes, int start)
+{
+    _int32 *result = (_int32 *)calloc(1, sizeof(_int32));
+    for (int i = start; i < start + 4; i++) {
+        result->bytes[i - start] = bytes[i];
+    }
+    unsigned int res = result->value;
+    free(result);
+    return res;
+}
+
+unsigned short COMHandler::bytesToInt16(QByteArray bytes, int start)
+{
+    _int16 *result = (_int16 *)calloc(1, sizeof(_int16));
+    for (int i = start; i < start + 2; i++) {
+        result->bytes[i - start] = bytes[i];
+    }
+    unsigned short res = result->value;
+    free(result);
+    return res;
 }
 
 float COMHandler::bytesToSingle(QByteArray bytes, int start)

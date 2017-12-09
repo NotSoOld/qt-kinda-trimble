@@ -5,9 +5,11 @@ import QtQml 2.2
 
 Window {
     visible: true
-    width: 500
-    height: 400
-    title: qsTr("Hello World")
+    width: 800
+    height: 600
+    color: "#ffffff"
+    opacity: 1
+    title: qsTr("Kinda Trimble")
 
     signal sigSendCommandPos()
     signal sigSendCommandIOOptions()
@@ -17,8 +19,8 @@ Window {
 
     Text {
         id: receiverLabel
-        x: 156
-        y: 168
+        x: 475
+        y: 17
         width: 138
         height: 24
         text: qsTr("Полученная информация:")
@@ -30,10 +32,10 @@ Window {
 
     Text {
         id: receivedText
-        x: 42
-        y: 212
-        width: 347
-        height: 124
+        x: 453
+        y: 52
+        width: 334
+        height: 523
         text: qsTr("")
         font.pixelSize: 14
     }
@@ -149,5 +151,18 @@ Window {
         x: 30
         y: 17
         text: qsTr("Данные о позиции")
+    }
+
+    TabView {
+        id: tabView
+        x: 19
+        y: 164
+        width: 416
+        height: 411
+
+        Tab {
+            id: pos
+            title: "Pos"
+        }
     }
 }
