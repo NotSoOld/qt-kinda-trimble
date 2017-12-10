@@ -19,7 +19,87 @@ void COMHandler::finishCOM()
     com->close();
 }
 
-void COMHandler::appendByte(QByteArray *bytes, byte b)
+QByteArray COMHandler::toByteArray(double d)
+{
+    __double *result = (__double *)calloc(1, sizeof(__double));
+    result->value = d;
+    QByteArray res;
+    for (int i = 0; i < 8; i++) {
+        res.append(result->bytes[i]);
+    }
+    free(result);
+    return res;
+}
+
+QByteArray COMHandler::toByteArray(float f)
+{
+    __single *result = (__single *)calloc(1, sizeof(__single));
+    result->value = f;
+    QByteArray res;
+    for (int i = 0; i < 4; i++) {
+        res.append(result->bytes[i]);
+    }
+    free(result);
+    return res;
+}
+
+QByteArray COMHandler::toByteArray(unsigned short f)
+{
+    _int16 *result = (_int16 *)calloc(1, sizeof(_int16));
+    result->value = f;
+    QByteArray res;
+    for (int i = 0; i < 2; i++) {
+        res.append(result->bytes[i]);
+    }
+    free(result);
+    return res;
+}
+
+QByteArray COMHandler::toByteArray(unsigned int f)
+{
+    _int32 *result = (_int32 *)calloc(1, sizeof(_int32));
+    result->value = f;
+    QByteArray res;
+    for (int i = 0; i < 4; i++) {
+        res.append(result->bytes[i]);
+    }
+    free(result);
+    return res;
+}
+
+void COMHandler::append(QByteArray *bytes, double d)
+{
+    QByteArray doubleBytes = toByteArray(d);
+    for (int i = 0; i < 8; i++) {
+        append(bytes, (byte)doubleBytes[i]);
+    }
+}
+
+void COMHandler::append(QByteArray *bytes, float f)
+{
+    QByteArray floatBytes = toByteArray(f);
+    for (int i = 0; i < 4; i++) {
+        append(bytes, (byte)floatBytes[i]);
+    }
+}
+
+void COMHandler::append(QByteArray *bytes, unsigned short f)
+{
+    QByteArray shortBytes = toByteArray(f);
+    for (int i = 0; i < 2; i++) {
+        append(bytes, (byte)shortBytes[i]);
+    }
+}
+
+void COMHandler::append(QByteArray *bytes, unsigned int f)
+{
+    QByteArray intBytes = toByteArray(f);
+    for (int i = 0; i < 4; i++) {
+        append(bytes, (byte)intBytes[i]);
+    }
+}
+
+void COMHandler::append(QByteArray *bytes, byte b)
 {
     bytes->append(b);
     // Perform stuffing for DLE bytes.
@@ -33,7 +113,7 @@ void COMHandler::sendCommandPos()
 {
     QByteArray cmd;
     cmd.append(DLE);
-    appendByte(&cmd, COMMAND_REQUEST_STATUS_AND_POS);
+    append(&cmd, (byte)COMMAND_REQUEST_STATUS_AND_POS);
     cmd.append(DLE);
     cmd.append(ETX);
     com->write(cmd.constData(), cmd.length());

@@ -120,13 +120,26 @@ public:
     void finishCOM();
     void receiveText();
     void run();
+
+    QByteArray toByteArray(double);
+    QByteArray toByteArray(float);
+    QByteArray toByteArray(unsigned short);
+    QByteArray toByteArray(unsigned int);
+
     unsigned short bytesToInt16(QByteArray, int);
     unsigned int bytesToInt32(QByteArray, int);
     float bytesToSingle(QByteArray, int);
     double bytesToDouble(QByteArray, int);
+
     QString parseDoubleXYZPos(QByteArray);
     QString parseDoubleLLAPos(QByteArray);
-    void appendByte(QByteArray *, byte);
+
+    void append(QByteArray *, byte);
+    void append(QByteArray *, double);
+    void append(QByteArray *, float);
+    void append(QByteArray *, unsigned short);
+    void append(QByteArray *, unsigned int);
+
     void (COMHandler::*methodToStartThreadWith)();
     QString name;
     QSerialPort *com;

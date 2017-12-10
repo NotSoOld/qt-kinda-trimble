@@ -4,6 +4,7 @@ import QtQuick.Controls 1.5
 import QtQml 2.2
 
 Window {
+    id: window
     visible: true
     width: 800
     height: 600
@@ -17,152 +18,67 @@ Window {
         receivedText.text += s+"\n\n"
     }
 
-    Text {
-        id: receiverLabel
-        x: 475
-        y: 17
-        width: 138
-        height: 24
-        text: qsTr("Полученная информация:")
-        font.pixelSize: 14
-        verticalAlignment: Text.AlignVCenter
-        horizontalAlignment: Text.AlignHCenter
-        font.italic: true
-    }
-
-    Text {
-        id: receivedText
-        x: 453
-        y: 52
+    Rectangle {
+        id: rectangle
+        x: 450
+        y: 23
         width: 334
-        height: 523
-        text: qsTr("")
-        font.pixelSize: 14
-    }
+        height: 542
+        color: "#00000000"
+        border.color: "#a9a9a9"
 
-    Button {
-        id: sendCommandPosButton
-        x: 299
-        y: 105
-        width: 162
-        height: 29
-        text: qsTr("Запросить позицию")
-        onClicked: {
-            sigSendCommandPos();
+        TextArea {
+            id: receivedText
+            x: 1
+            y: 1
+            width: 332
+            height: 540
+            font.weight: Font.Light
+            readOnly: false
+            font.wordSpacing: -4
+            wrapMode: Text.NoWrap
+            font.pixelSize: 14
         }
-    }
-
-    Button {
-        id: sendCommandIOOptionsButton
-        x: 36
-        y: 105
-        width: 229
-        height: 29
-        text: qsTr("Настроить ввод-вывод")
-        onClicked: {
-            sigSendCommandIOOptions();
-        }
-    }
-
-    CheckBox {
-        id: eCEFcheck
-        objectName: "eCEFcheck"
-        x: 30
-        y: 39
-        text: qsTr("ECEF (XYZ)")
-        checked: true
-        onCheckedChanged: {
-            // send a signal to code
-        }
-    }
-
-    CheckBox {
-        id: lLAcheck
-        objectName: "lLAcheck"
-        x: 30
-        y: 65
-        text: qsTr("LLA")
-        checked: true
-        onCheckedChanged: {
-
-        }
-    }
-
-    RadioButton {
-        id: singlePrecRB
-        x: 180
-        y: 39
-        text: qsTr("single")
-        onCheckedChanged: {
-            doublePrecRB.checked = !(singlePrecRB.checked)
-        }
-    }
-
-    RadioButton {
-        id: doublePrecRB
-        objectName: "doublePrecRB"
-        x: 180
-        y: 65
-        text: qsTr("double")
-        checked: true
-        onCheckedChanged: {
-            singlePrecRB.checked = !(doublePrecRB.checked)
-        }
-    }
-
-    Label {
-        id: label
-        x: 180
-        y: 17
-        text: qsTr("Точность данных")
-    }
-
-    RadioButton {
-        id: gpsRB
-        objectName: "gpsTimeRB"
-        x: 306
-        y: 39
-        text: qsTr("GPS")
-        onCheckedChanged: {
-            utcRB.checked = !(gpsRB.checked)
-        }
-    }
-
-    RadioButton {
-        id: utcRB
-        x: 306
-        y: 65
-        text: qsTr("UTC")
-        checked: true
-        onCheckedChanged: {
-            gpsRB.checked = !(utcRB.checked)
-        }
-    }
-
-    Label {
-        id: label1
-        x: 306
-        y: 17
-        text: qsTr("Временные метки")
-    }
-
-    Label {
-        id: label2
-        x: 30
-        y: 17
-        text: qsTr("Данные о позиции")
     }
 
     TabView {
         id: tabView
-        x: 19
-        y: 164
-        width: 416
-        height: 411
+        x: 18
+        y: 35
+        width: 400
+        height: 517
+        currentIndex: 0
 
         Tab {
-            id: pos
-            title: "Pos"
+            id: essentialsTab
+            title: "Основное"
+            source: "essentials.qml"
         }
+
+        Tab {
+            id: satellite_info
+            title: "Информация о спутниках"
+            source: "satellite_info.qml"
+        }
+
+        Tab {
+            id: io_options
+            title: "Опции ввода/вывода"
+            source: "io_options.qml"
+        }
+
+        Tab {
+            id: init_position
+            title: "Начальная позиция"
+            source: "init_position.qml"
+        }
+
+        Tab {
+            id: other_stuff
+            title: "Включение и здоровье спутников"
+            source: "other_stuff.qml"
+        }
+
     }
+
 }
