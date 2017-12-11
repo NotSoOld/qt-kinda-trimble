@@ -149,8 +149,8 @@ public:
 signals:
     void appendReceivedText(QVariant s);
 public slots:
-    void sendCommandPos();
-    void sendCommandIOOptions();
+    void send_COMMAND_REQUEST_STATUS_AND_POS();
+    void send_COMMAND_SET_IO_OPTIONS();
 };
 
 #endif // COMHANDLER_H

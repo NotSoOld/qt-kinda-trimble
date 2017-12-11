@@ -20,24 +20,27 @@ int main(int argc, char *argv[])
 
     window = qobject_cast<QQuickWindow *>(engine.rootObjects().value(0));
     handler.window = window;
+
     QObject::connect(
                 window,
-                SIGNAL(sigSendCommandPos()),
+                SIGNAL(sig_send_COMMAND_REQUEST_STATUS_AND_POS()),
                 &handler,
-                SLOT(sendCommandPos())
+                SLOT(send_COMMAND_REQUEST_STATUS_AND_POS())
     );
     QObject::connect(
                 window,
-                SIGNAL(sigSendCommandIOOptions()),
+                SIGNAL(sig_send_COMMAND_SET_IO_OPTIONS()),
                 &handler,
-                SLOT(sendCommandIOOptions())
+                SLOT(send_COMMAND_SET_IO_OPTIONS())
     );
+
     QObject::connect(
                 &receiverThread,
                 SIGNAL(appendReceivedText(QVariant)),
                 window,
                 SLOT(onAppendReceivedtext(QVariant))
     );
+
     receiverThread.configureCOM("COM4", QIODevice::ReadWrite);
     receiverThread.window = window;
     receiverThread.methodToStartThreadWith = &COMHandler::receiveText;

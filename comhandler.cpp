@@ -101,6 +101,7 @@ void COMHandler::append(QByteArray *bytes, unsigned int f)
 
 void COMHandler::append(QByteArray *bytes, byte b)
 {
+    //qDebug() << "bytes version called";
     bytes->append(b);
     // Perform stuffing for DLE bytes.
     if (b == DLE)
@@ -109,7 +110,7 @@ void COMHandler::append(QByteArray *bytes, byte b)
     }
 }
 
-void COMHandler::sendCommandPos()
+void COMHandler::send_COMMAND_REQUEST_STATUS_AND_POS()
 {
     QByteArray cmd;
     cmd.append(DLE);
@@ -118,6 +119,7 @@ void COMHandler::sendCommandPos()
     cmd.append(ETX);
     com->write(cmd.constData(), cmd.length());
     com->waitForBytesWritten(1000);
+    qDebug() << "send_COMMAND_REQUEST_STATUS_AND_POS";
 }
 
 unsigned int COMHandler::bytesToInt32(QByteArray bytes, int start)
@@ -195,22 +197,27 @@ QString COMHandler::parseDoubleLLAPos(QByteArray data)
     return QString("Received REPORT_DOUBLE_LLA_POS (0x84) packet:\n \
                      --Position LLA: (%0 rad; %1 rad; %2 meters)\n \
                      --Clock bias: %3\n--Time of fix: %4")
-            .arg(latitude).arg(longitude).arg(altitude).arg(clockBias).arg(timeOfFix);
+             .arg(latitude).arg(longitude).arg(altitude).arg(clockBias).arg(timeOfFix);
 }
 
 void COMHandler::receiveText()
 {
-    QByteArray data;
     char readed = 0;
     char reportCode = 0;
+    parser = ParserStatus::Waiting_for_message;
+
     while (true) {
-        com->waitForReadyRead(1000);
+        QByteArray data;
+        while(!(com->waitForReadyRead(1000)));
+        //qDebug() << "started to read...";
         com->read(&readed, 1);      // First DLE
         if (!(readed == DLE && parser == ParserStatus::Waiting_for_message)) {
             // Parse error!
         }
         parser = ParserStatus::Reading_data;
+        //qDebug() << "took first DLE...";
         com->read(&reportCode, 1);  // Report code
+        //qDebug() << "took report code... " + reportCode;
         while (true) {
             com->read(&readed, 1);
             if (readed == DLE) {
@@ -230,14 +237,19 @@ void COMHandler::receiveText()
             }
 
         }
+        qDebug() << QString("Finished reading... Trying to check reportCode 0x%0").arg((byte)reportCode, 1, 16);
         // Here we have reportCode and our data in array from message.
         QString message;
-        switch ((unsigned char)reportCode) {
+        switch ((byte)reportCode) {
         case REPORT_DOUBLE_XYZ_POS:
-            message = parseDoubleXYZPos(data);
+            message.append(parseDoubleXYZPos(data));
             break;
         case REPORT_DOUBLE_LLA_POS:
-            message = parseDoubleLLAPos(data);
+            message.append(parseDoubleLLAPos(data));
+            break;
+        default:
+            message = QString("(Yet) unknown command 0x%0").arg((byte)reportCode, 1, 16);
+            break;
         }
         emit appendReceivedText(message);
 
@@ -245,7 +257,7 @@ void COMHandler::receiveText()
     }
 }
 
-void COMHandler::sendCommandIOOptions()
+void COMHandler::send_COMMAND_SET_IO_OPTIONS()
 {
     QByteArray cmd;
     QObject *ecefCheck = window->findChild<QObject *>("eCEFcheck");

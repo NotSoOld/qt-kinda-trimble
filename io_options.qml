@@ -18,7 +18,7 @@ Item {
         border.width: 1
 
         Button {
-            id: button
+            id: request_io_options_button
             x: 31
             y: 14
             width: 323
@@ -36,7 +36,7 @@ Item {
         }
 
         Button {
-            id: button1
+            id: save_to_flash_io_options_button
             x: 31
             y: 435
             width: 323
@@ -51,9 +51,6 @@ Item {
             y: 103
             text: qsTr("ECEF (XYZ)")
             checked: true
-            onCheckedChanged: {
-                // send a signal to code
-            }
         }
 
         CheckBox {
@@ -63,9 +60,6 @@ Item {
             y: 129
             text: qsTr("LLA")
             checked: true
-            onCheckedChanged: {
-
-            }
         }
 
         RadioButton {
@@ -134,37 +128,44 @@ Item {
         }
 
         RadioButton {
-            id: singlePrecRB1
+            id: haeRB
             x: 19
             y: 155
             text: qsTr("HAE")
+            objectName: "haeRB"
+            onCheckedChanged: {
+                mslRB.checked = !(haeRB.checked)
+            }
         }
 
         RadioButton {
-            id: doublePrecRB1
+            id: mslRB
             x: 19
             y: 181
             text: qsTr("Геоид MSL")
             checked: true
-            objectName: "doublePrecRB"
+            objectName: "mslRB"
+            onCheckedChanged: {
+                haeRB.checked = !(mslRB.checked)
+            }
         }
 
         CheckBox {
-            id: eCEFcheck1
+            id: ecef_vel_check
             x: 149
             y: 188
             text: qsTr("ECEF")
             checked: true
-            objectName: "eCEFcheck"
+            objectName: "ecef_vel_check"
         }
 
         CheckBox {
-            id: lLAcheck1
+            id: enu_vel_check
             x: 149
             y: 214
             text: qsTr("ENU")
             checked: true
-            objectName: "lLAcheck"
+            objectName: "enu_vel_check"
         }
 
         Label {
@@ -175,35 +176,46 @@ Item {
         }
 
         CheckBox {
-            id: checkBox
+            id: raw_data_report_check
             x: 19
             y: 251
             text: qsTr("Прием пакетов с сырыми данными об измерениях")
+            objectName: "raw_data_report_check"
         }
 
         RadioButton {
-            id: singlePrecRB2
+            id: aem_out_RB
             x: 19
             y: 277
             text: qsTr("Вывод в а.е.м.")
+            objectName: "aem_out_RB"
+            onCheckedChanged: {
+                dbhz_out_RB.checked = !(aem_out_RB.checked)
+            }
         }
 
         RadioButton {
-            id: doublePrecRB2
+            id: dbhz_out_RB
             x: 19
             y: 303
             text: qsTr("Вывод в дБ-Гц")
             checked: true
-            objectName: "doublePrecRB"
+            objectName: "dbhz_out_RB"
+            onCheckedChanged: {
+                aem_out_RB.checked = !(dbhz_out_RB.checked)
+            }
         }
 
         Button {
-            id: button2
+            id: send_io_options_button
             x: 31
             y: 350
             width: 323
             height: 35
             text: "Отправить настройки ввода-вывода в ОЗУ"
+            onClicked: {
+                sig_send_COMMAND_SET_IO_OPTIONS();
+            }
         }
 
 

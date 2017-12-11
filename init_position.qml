@@ -17,46 +17,34 @@ Item {
         border.color: "#cc898989"
         border.width: 1
 
-        Label {
-            id: label
-            x: 28
-            y: 54
-            text: qsTr("Ось Х:")
-        }
-
         TextField {
             id: init_x_text
-            x: 87
+            x: 43
             y: 54
-            placeholderText: qsTr("Text Field")
-        }
-
-        Label {
-            id: label1
-            x: 28
-            y: 80
-            text: qsTr("Ось Y:")
+            width: 151
+            height: 20
+            placeholderText: qsTr("Ось Х")
+            objectName: "init_x_text"
         }
 
         TextField {
             id: init_y_text
-            x: 87
+            x: 43
             y: 80
-            placeholderText: qsTr("Text Field")
-        }
-
-        Label {
-            id: label2
-            x: 28
-            y: 106
-            text: qsTr("Ось Z:")
+            width: 151
+            height: 20
+            placeholderText: qsTr("Ось Y")
+            objectName: "init_y_text"
         }
 
         TextField {
             id: init_z_text
-            x: 87
+            x: 43
             y: 106
-            placeholderText: qsTr("Text Field")
+            width: 151
+            height: 20
+            placeholderText: qsTr("Ось Z")
+            objectName: "init_z_text"
         }
 
         Label {
@@ -67,60 +55,42 @@ Item {
         }
 
         Button {
-            id: button
-            x: 262
+            id: set_init_xyz_pos_button
+            x: 233
             y: 64
             width: 98
             height: 52
             text: qsTr("Задать")
         }
 
-        Label {
-            id: label4
-            x: 32
+        TextField {
+            id: init_lat_text
+            x: 43
             y: 204
-            text: qsTr("Lat. (широта):")
+            width: 151
+            height: 20
+            placeholderText: qsTr("Latitude (широта)")
+            objectName: "init_lat_text"
         }
 
         TextField {
-            id: init_x_text1
-            x: 143
-            y: 204
-            width: 94
-            height: 20
-            placeholderText: qsTr("Text Field")
-        }
-
-        Label {
-            id: label5
-            x: 32
+            id: init_long_text
+            x: 43
             y: 230
-            text: qsTr("Long. (долгота):")
+            width: 151
+            height: 20
+            placeholderText: qsTr("Longitude (долгота)")
+            objectName: "init_long_text"
         }
 
         TextField {
-            id: init_y_text1
-            x: 143
-            y: 230
-            width: 94
-            height: 20
-            placeholderText: qsTr("Text Field")
-        }
-
-        Label {
-            id: label6
-            x: 32
+            id: init_alt_text
+            x: 43
             y: 256
-            text: qsTr("Alt. (высота):")
-        }
-
-        TextField {
-            id: init_z_text1
-            x: 143
-            y: 256
-            width: 94
+            width: 151
             height: 20
-            placeholderText: qsTr("Text Field")
+            placeholderText: qsTr("Altitude (высота)")
+            objectName: "init_alt_text"
         }
 
         Label {
@@ -131,8 +101,8 @@ Item {
         }
 
         Button {
-            id: button1
-            x: 266
+            id: set_init_lla_pos_button
+            x: 233
             y: 214
             width: 98
             height: 52
@@ -140,12 +110,15 @@ Item {
         }
 
         Button {
-            id: button2
+            id: request_pos_vel_button
             x: 43
             y: 395
             width: 295
             height: 59
             text: qsTr("Запросить текущую позицию (а также\nскорость и отметку времени, если вкл.)")
+            onClicked: {
+                sig_send_COMMAND_REQUEST_STATUS_AND_POS();
+            }
         }
 
     }
