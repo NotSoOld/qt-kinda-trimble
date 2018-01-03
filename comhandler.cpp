@@ -1,4 +1,5 @@
 #include "comhandler.h"
+#include "converter.h"
 
 void COMHandler::configureCOM(QString portName, QIODevice::OpenModeFlag openModeFlag)
 {
@@ -9,7 +10,7 @@ void COMHandler::configureCOM(QString portName, QIODevice::OpenModeFlag openMode
     com->setFlowControl(QSerialPort::NoFlowControl);
     com->setStopBits(QSerialPort::OneStop);
     com->open(openModeFlag);
-    qDebug() << "COM is configured";
+    qDebug() << "COM-порт готов к работе";
     name = portName;
 }
 
@@ -19,57 +20,11 @@ void COMHandler::finishCOM()
     com->close();
 }
 
-QByteArray COMHandler::toByteArray(double d)
-{
-    __double *result = (__double *)calloc(1, sizeof(__double));
-    result->value = d;
-    QByteArray res;
-    for (int i = 0; i < 8; i++) {
-        res.append(result->bytes[i]);
-    }
-    free(result);
-    return res;
-}
 
-QByteArray COMHandler::toByteArray(float f)
-{
-    __single *result = (__single *)calloc(1, sizeof(__single));
-    result->value = f;
-    QByteArray res;
-    for (int i = 0; i < 4; i++) {
-        res.append(result->bytes[i]);
-    }
-    free(result);
-    return res;
-}
-
-QByteArray COMHandler::toByteArray(unsigned short f)
-{
-    _int16 *result = (_int16 *)calloc(1, sizeof(_int16));
-    result->value = f;
-    QByteArray res;
-    for (int i = 0; i < 2; i++) {
-        res.append(result->bytes[i]);
-    }
-    free(result);
-    return res;
-}
-
-QByteArray COMHandler::toByteArray(unsigned int f)
-{
-    _int32 *result = (_int32 *)calloc(1, sizeof(_int32));
-    result->value = f;
-    QByteArray res;
-    for (int i = 0; i < 4; i++) {
-        res.append(result->bytes[i]);
-    }
-    free(result);
-    return res;
-}
 
 void COMHandler::append(QByteArray *bytes, double d)
 {
-    QByteArray doubleBytes = toByteArray(d);
+    QByteArray doubleBytes = TypesConverter::toByteArray(d);
     for (int i = 0; i < 8; i++) {
         append(bytes, (byte)doubleBytes[i]);
     }
@@ -77,7 +32,7 @@ void COMHandler::append(QByteArray *bytes, double d)
 
 void COMHandler::append(QByteArray *bytes, float f)
 {
-    QByteArray floatBytes = toByteArray(f);
+    QByteArray floatBytes = TypesConverter::toByteArray(f);
     for (int i = 0; i < 4; i++) {
         append(bytes, (byte)floatBytes[i]);
     }
@@ -85,7 +40,7 @@ void COMHandler::append(QByteArray *bytes, float f)
 
 void COMHandler::append(QByteArray *bytes, unsigned short f)
 {
-    QByteArray shortBytes = toByteArray(f);
+    QByteArray shortBytes = TypesConverter::toByteArray(f);
     for (int i = 0; i < 2; i++) {
         append(bytes, (byte)shortBytes[i]);
     }
@@ -93,7 +48,7 @@ void COMHandler::append(QByteArray *bytes, unsigned short f)
 
 void COMHandler::append(QByteArray *bytes, unsigned int f)
 {
-    QByteArray intBytes = toByteArray(f);
+    QByteArray intBytes = TypesConverter::toByteArray(f);
     for (int i = 0; i < 4; i++) {
         append(bytes, (byte)intBytes[i]);
     }
@@ -103,99 +58,58 @@ void COMHandler::append(QByteArray *bytes, byte b)
 {
     //qDebug() << "bytes version called";
     bytes->append(b);
-    // Perform stuffing for DLE bytes.
+    // DLE в сообщении необходимо "застаффить".
     if (b == DLE)
     {
         bytes->append(DLE);
     }
 }
 
-void COMHandler::send_COMMAND_REQUEST_STATUS_AND_POS()
-{
-    QByteArray cmd;
-    cmd.append(DLE);
-    append(&cmd, (byte)COMMAND_REQUEST_STATUS_AND_POS);
-    cmd.append(DLE);
-    cmd.append(ETX);
-    com->write(cmd.constData(), cmd.length());
-    com->waitForBytesWritten(1000);
-    qDebug() << "send_COMMAND_REQUEST_STATUS_AND_POS";
-}
 
-unsigned int COMHandler::bytesToInt32(QByteArray bytes, int start)
+
+QString COMHandler::parse_REPORT_UNPARSABLE(QByteArray data)
 {
-    _int32 *result = (_int32 *)calloc(1, sizeof(_int32));
-    for (int i = start; i < start + 4; i++) {
-        result->bytes[i - start] = bytes[i];
+    QString res;
+    res.append("Невозможно разобрать то, что Вы отправили.\n"
+               "Содержимое отправленного пакета:\n");
+    for (int i = 0; i < data.length(); i++) {
+        res.append(QString("%0 ").arg((byte)data[i], 1, 16));
     }
-    unsigned int res = result->value;
-    free(result);
     return res;
 }
 
-unsigned short COMHandler::bytesToInt16(QByteArray bytes, int start)
-{
-    _int16 *result = (_int16 *)calloc(1, sizeof(_int16));
-    for (int i = start; i < start + 2; i++) {
-        result->bytes[i - start] = bytes[i];
-    }
-    unsigned short res = result->value;
-    free(result);
-    return res;
-}
-
-float COMHandler::bytesToSingle(QByteArray bytes, int start)
-{
-    __single *result = (__single *)calloc(1, sizeof(__single));
-    for (int i = start; i < start + 4; i++) {
-        result->bytes[i - start] = bytes[i];
-    }
-    float res = result->value;
-    free(result);
-    return res;
-}
-
-double COMHandler::bytesToDouble(QByteArray bytes, int start)
-{
-    __double *result = (__double *)calloc(1, sizeof(__double));
-    for (int i = start; i < start + 8; i++) {
-        result->bytes[i - start] = bytes[i];
-    }
-    double res = result->value;
-    free(result);
-    return res;
-}
-
-QString COMHandler::parseDoubleXYZPos(QByteArray data)
+QString COMHandler::parse_REPORT_DOUBLE_XYZ_POS(QByteArray data)
 {
     if (data.length() != 36) {
-        qDebug() << "Probably corrupted REPORT_DOUBLE_XYZ_POS (0x83) packet";
+        qDebug() << "Пакет REPORT_DOUBLE_XYZ_POS (0x83) имеет неверную длину";
+        return "";
     }
 
-    double X = bytesToDouble(data, 0);
-    double Y = bytesToDouble(data, 8);
-    double Z = bytesToDouble(data, 16);
-    double clockBias = bytesToDouble(data, 24);
-    float timeOfFix = bytesToSingle(data, 32);
-    return QString("Received REPORT_DOUBLE_XYZ_POS (0x83) packet:\n \
-                     --Position XYZ: (%0; %1; %2)\n \
+    double X = TypesConverter::bytesToDouble(data, 0);
+    double Y = TypesConverter::bytesToDouble(data, 8);
+    double Z = TypesConverter::bytesToDouble(data, 16);
+    double clockBias = TypesConverter::bytesToDouble(data, 24);
+    float timeOfFix = TypesConverter::bytesToSingle(data, 32);
+    return QString("Получен пакет REPORT_DOUBLE_XYZ_POS (0x83):\n \
+                     --Позиция XYZ: (%0; %1; %2)\n \
                      --Clock bias: %3\n--Time of fix: %4")
             .arg(X).arg(Y).arg(Z).arg(clockBias).arg(timeOfFix);
 }
 
-QString COMHandler::parseDoubleLLAPos(QByteArray data)
+QString COMHandler::parse_REPORT_DOUBLE_LLA_POS(QByteArray data)
 {
     if (data.length() != 36) {
-        qDebug() << "Probably corrupted REPORT_DOUBLE_LLA_POS (0x84) packet";
+        qDebug() << "Пакет REPORT_DOUBLE_LLA_POS (0x84) имеет неверную длину";
+        return "";
     }
 
-    double latitude = bytesToDouble(data, 0);
-    double longitude = bytesToDouble(data, 8);
-    double altitude = bytesToDouble(data, 16);
-    double clockBias = bytesToDouble(data, 24);
-    float timeOfFix = bytesToSingle(data, 32);
-    return QString("Received REPORT_DOUBLE_LLA_POS (0x84) packet:\n \
-                     --Position LLA: (%0 rad; %1 rad; %2 meters)\n \
+    double latitude = TypesConverter::bytesToDouble(data, 0);
+    double longitude = TypesConverter::bytesToDouble(data, 8);
+    double altitude = TypesConverter::bytesToDouble(data, 16);
+    double clockBias = TypesConverter::bytesToDouble(data, 24);
+    float timeOfFix = TypesConverter::bytesToSingle(data, 32);
+    return QString("Получен пакет REPORT_DOUBLE_LLA_POS (0x84):\n \
+                     --Позиция LLA: (%0 rad; %1 rad; %2 meters)\n \
                      --Clock bias: %3\n--Time of fix: %4")
              .arg(latitude).arg(longitude).arg(altitude).arg(clockBias).arg(timeOfFix);
 }
@@ -212,7 +126,8 @@ void COMHandler::receiveText()
         //qDebug() << "started to read...";
         com->read(&readed, 1);      // First DLE
         if (!(readed == DLE && parser == ParserStatus::Waiting_for_message)) {
-            // Parse error!
+            qDebug() << "Ошибка разбора!";
+            exit(2);
         }
         parser = ParserStatus::Reading_data;
         //qDebug() << "took first DLE...";
@@ -238,17 +153,21 @@ void COMHandler::receiveText()
 
         }
         qDebug() << QString("Finished reading... Trying to check reportCode 0x%0").arg((byte)reportCode, 1, 16);
-        // Here we have reportCode and our data in array from message.
+        // На этом этапе мы имеем код пришедшего пакета
+        // и всё его содержимое без стаффинга.
         QString message;
         switch ((byte)reportCode) {
+        case REPORT_UNPARSABLE:
+            message.append(parse_REPORT_UNPARSABLE(data));
+            break;
         case REPORT_DOUBLE_XYZ_POS:
-            message.append(parseDoubleXYZPos(data));
+            message.append(parse_REPORT_DOUBLE_XYZ_POS(data));
             break;
         case REPORT_DOUBLE_LLA_POS:
-            message.append(parseDoubleLLAPos(data));
+            message.append(parse_REPORT_DOUBLE_LLA_POS(data));
             break;
         default:
-            message = QString("(Yet) unknown command 0x%0").arg((byte)reportCode, 1, 16);
+            message = QString("Неизвестный пакет 0x%0").arg((byte)reportCode, 1, 16);
             break;
         }
         emit appendReceivedText(message);
@@ -257,41 +176,145 @@ void COMHandler::receiveText()
     }
 }
 
-void COMHandler::send_COMMAND_SET_IO_OPTIONS()
+bool COMHandler::getBoolFromQML(const char *qmlName, const char *propertyName)
+{
+    QObject *qmlObject = window->findChild<QObject *>(qmlName);
+    if (!qmlObject) {
+        qDebug() << QString("Не удается найти QML-компонент %0").arg(qmlName);
+        exit(1);
+    }
+    return qmlObject->property(propertyName).toBool();
+}
+
+int COMHandler::getIntFromQML(const char *qmlName, const char *propertyName)
+{
+    QObject *qmlObject = window->findChild<QObject *>(qmlName);
+    if (!qmlObject) {
+        qDebug() << QString("Не удается найти QML-компонент %0").arg(qmlName);
+        exit(1);
+    }
+    return qmlObject->property(propertyName).toInt();
+}
+
+double COMHandler::getDoubleFromQML(const char *qmlName, const char *propertyName)
+{
+    QObject *qmlObject = window->findChild<QObject *>(qmlName);
+    if (!qmlObject) {
+        qDebug() << QString("Не удается найти QML-компонент %0").arg(qmlName);
+        exit(1);
+    }
+    return qmlObject->property(propertyName).toDouble();
+}
+
+void COMHandler::build_COMMAND_SET_IO_OPTIONS(QByteArray *cmd)
+{
+    bool ecefChecked = getBoolFromQML("eCEFcheck", "checked");
+    bool llaChecked = getBoolFromQML("lLAcheck", "checked");
+    bool precision = getBoolFromQML("doublePrecRB", "checked");
+    bool gpsTime = getBoolFromQML("gpsTimeRB", "checked");
+    bool mslChecked = getBoolFromQML("mslRB", "checked");
+    bool ecefVelChecked = getBoolFromQML("ecef_vel_check", "checked");
+    bool enuVelChecked = getBoolFromQML("enu_vel_check", "checked");
+    bool raw_data_report_checked = getBoolFromQML("raw_data_report_check", "checked");
+    bool dbhz_out_checked = getBoolFromQML("dbhz_out_RB", "checked");
+
+    append(cmd, (byte)(
+               (ecefChecked ? BIT(0) : 0) |
+               (llaChecked ? BIT(1) : 0) |
+               (mslChecked ? BIT(2) : 0) |
+               (precision ? BIT(4) : 0)
+              ));
+    append(cmd, (byte)(
+               (ecefVelChecked ? BIT(0) : 0) |
+               (enuVelChecked ? BIT(1) : 0)
+              ));
+    append(cmd, (byte)(gpsTime ? 0 : BIT(0)));
+    append(cmd, (byte)(
+               (raw_data_report_checked ? BIT(0) : 0) |
+               (dbhz_out_checked ? BIT(3) : 0)
+              ));
+
+    qDebug() << *cmd;
+}
+
+void COMHandler::build_COMMAND_ACCURATE_INIT_POS_XYZ(QByteArray *cmd)
+{
+    double initX = getDoubleFromQML("init_x_text", "text");
+    double initY = getDoubleFromQML("init_y_text", "text");
+    double initZ = getDoubleFromQML("init_z_text", "text");
+    append(cmd, initX);
+    append(cmd, initY);
+    append(cmd, initZ);
+
+    qDebug() << *cmd;
+}
+
+void COMHandler::build_COMMAND_ACCURATE_INIT_POS_LLA(QByteArray *cmd)
+{
+    double initLat = getDoubleFromQML("init_lat_text", "text");
+    double initLong = getDoubleFromQML("init_long_text", "text");
+    double initAlt = getDoubleFromQML("init_alt_text", "text");
+    append(cmd, initLat);
+    append(cmd, initLong);
+    append(cmd, initAlt);
+
+    qDebug() << *cmd;
+}
+
+void COMHandler::build_COMMAND_REQUEST_SATELLITE_SYSTEM_DATA(QByteArray *cmd)
+{
+    byte typeOfData = (byte)getIntFromQML("typeOfDataComboBox", "currentIndex") + 2;
+    byte satelliteIndex = (byte)getIntFromQML("satellite_selection_spinner1", "value");
+    append(cmd, typeOfData);
+    append(cmd, satelliteIndex);
+
+    qDebug() << *cmd;
+}
+
+void COMHandler::send_command(int code, int subcode)
 {
     QByteArray cmd;
-    QObject *ecefCheck = window->findChild<QObject *>("eCEFcheck");
-    if (!ecefCheck) {
-        qDebug() << "could not find ecefCheck";
-    }
-    bool ecefChecked = ecefCheck->property("checked").toBool();
-    QObject *llaCheck = window->findChild<QObject *>("lLAcheck");
-    if (!llaCheck) {
-        qDebug() << "could not find llaCheck";
-    }
-    bool llaChecked = llaCheck->property("checked").toBool();
-    QObject *precisionRB = window->findChild<QObject *>("doublePrecRB");
-    if (!precisionRB) {
-        qDebug() << "could not find precisionRB";
-    }
-    bool precision = precisionRB->property("checked").toBool();
-    QObject *gpsTimeRB = window->findChild<QObject *>("gpsTimeRB");
-    if (!gpsTimeRB) {
-        qDebug() << "could not find gpsTimeRB";
-    }
-    bool gpsTime = gpsTimeRB->property("checked").toBool();
+    qDebug() << code;
+    qDebug() << subcode;
 
     cmd.append(DLE);
-    cmd.append(COMMAND_SET_IO_OPTIONS);
-    cmd.append((ecefChecked ? BIT(0) : 0) |
-               (llaChecked ? BIT(1) : 0) |
-               (precision ? BIT(4) : 0));
-    cmd.append((char)0);
-    cmd.append(gpsTime ? 0 : BIT(0));
-    cmd.append((char)0);
+    // Некоторые пакеты содержат только код команды,
+    // либо код команды и ее подкод.
+    append(&cmd, (byte)code);
+    if (subcode > 0) {
+        append(&cmd, (byte)subcode);
+    }
+    // Для команд, которые содержат дополнительную информацию,
+    // выбирается соответствующий метод.
+    switch ((byte)code) {
+    case COMMAND_SET_IO_OPTIONS:
+        // Если == -1, то это запрос настроек, а не их установка.
+        if (subcode == 0) {
+            build_COMMAND_SET_IO_OPTIONS(&cmd);
+        }
+        break;
+    case COMMAND_SATELLITE_SELECTION:
+        // Индекс спутника приходит в subcode. Подкод = 0 не добавится выше,
+        // поэтому это нужно сделать отдельно.
+        if (subcode == 0) {
+            cmd.append((byte)subcode);
+        }
+        break;
+    case COMMAND_ACCURATE_INIT_POS_XYZ:
+        build_COMMAND_ACCURATE_INIT_POS_XYZ(&cmd);
+        break;
+    case COMMAND_ACCURATE_INIT_POS_LLA:
+        build_COMMAND_ACCURATE_INIT_POS_LLA(&cmd);
+        break;
+    case COMMAND_REQUEST_SATELLITE_SYSTEM_DATA:
+        // Подкод здесь всегда = 1, он же - первый информационный байт
+        // (см. документацию).
+        build_COMMAND_REQUEST_SATELLITE_SYSTEM_DATA(&cmd);
+        break;
+    }
+
     cmd.append(DLE);
     cmd.append(ETX);
-    qDebug() << cmd;
     com->write(cmd.constData(), cmd.length());
     com->waitForBytesWritten(1000);
 }

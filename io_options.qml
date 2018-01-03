@@ -24,6 +24,9 @@ Item {
             width: 323
             height: 35
             text: qsTr("Запросить текущие настройки ввода-вывода")
+            onClicked: {
+                sig_send_command(_COMMAND_SET_IO_OPTIONS, -1);
+            }
         }
 
         Rectangle {
@@ -42,6 +45,9 @@ Item {
             width: 323
             height: 35
             text: qsTr("Сохранить настройки (из ОЗУ устройства) в ПЗУ")
+            onClicked: {
+                sig_send_command(_COMMAND_SUPER, _CMDSUB_WRITE_CONFIG_TO_FLASH);
+            }
         }
 
         CheckBox {
@@ -214,7 +220,7 @@ Item {
             height: 35
             text: "Отправить настройки ввода-вывода в ОЗУ"
             onClicked: {
-                sig_send_COMMAND_SET_IO_OPTIONS();
+                sig_send_command(_COMMAND_SET_IO_OPTIONS, 0);
             }
         }
 

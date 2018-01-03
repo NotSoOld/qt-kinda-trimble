@@ -91,26 +91,6 @@ enum ParserStatus {
     Found_DLE
 };
 
-union _int16 {
-    unsigned short value;
-    byte bytes[2];
-};
-
-union _int32 {
-    unsigned int value;
-    byte bytes[4];
-};
-
-union __double {
-    double value;
-    byte bytes[8];
-};
-
-union __single {
-    float value;
-    byte bytes[4];
-};
-
 
 class COMHandler : public QThread
 {
@@ -121,24 +101,24 @@ public:
     void receiveText();
     void run();
 
-    QByteArray toByteArray(double);
-    QByteArray toByteArray(float);
-    QByteArray toByteArray(unsigned short);
-    QByteArray toByteArray(unsigned int);
+    void build_COMMAND_SET_IO_OPTIONS(QByteArray *);
+    void build_COMMAND_ACCURATE_INIT_POS_XYZ(QByteArray *);
+    void build_COMMAND_ACCURATE_INIT_POS_LLA(QByteArray *);
+    void build_COMMAND_REQUEST_SATELLITE_SYSTEM_DATA(QByteArray *);
 
-    unsigned short bytesToInt16(QByteArray, int);
-    unsigned int bytesToInt32(QByteArray, int);
-    float bytesToSingle(QByteArray, int);
-    double bytesToDouble(QByteArray, int);
-
-    QString parseDoubleXYZPos(QByteArray);
-    QString parseDoubleLLAPos(QByteArray);
+    QString parse_REPORT_UNPARSABLE(QByteArray);
+    QString parse_REPORT_DOUBLE_XYZ_POS(QByteArray);
+    QString parse_REPORT_DOUBLE_LLA_POS(QByteArray);
 
     void append(QByteArray *, byte);
     void append(QByteArray *, double);
     void append(QByteArray *, float);
     void append(QByteArray *, unsigned short);
     void append(QByteArray *, unsigned int);
+
+    bool getBoolFromQML(const char *, const char *);
+    int getIntFromQML(const char *, const char *);
+    double getDoubleFromQML(const char *, const char *);
 
     void (COMHandler::*methodToStartThreadWith)();
     QString name;
@@ -149,8 +129,7 @@ public:
 signals:
     void appendReceivedText(QVariant s);
 public slots:
-    void send_COMMAND_REQUEST_STATUS_AND_POS();
-    void send_COMMAND_SET_IO_OPTIONS();
+    void send_command(int, int);
 };
 
 #endif // COMHANDLER_H

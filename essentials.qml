@@ -25,6 +25,9 @@ Item {
             width: 193
             height: 44
             text: qsTr("Версия железа")
+            onClicked: {
+                sig_send_command(_COMMAND_FIRMWARE_INFO, _CMDSUB_FIRMWARE_VERSION);
+            }
         }
 
         Button {
@@ -34,6 +37,9 @@ Item {
             width: 193
             height: 44
             text: qsTr("Информация о компонентах")
+            onClicked: {
+                sig_send_command(_COMMAND_FIRMWARE_INFO, _CMDSUB_HARDWARE_COMPONENT_INFO);
+            }
         }
 
         Button {
@@ -43,6 +49,9 @@ Item {
             width: 165
             height: 44
             text: qsTr("Холодная перезагрузка")
+            onClicked: {
+                sig_send_command(_COMMAND_INITIATE_RESET, 0x4B);
+            }
         }
 
         Button {
@@ -52,6 +61,9 @@ Item {
             width: 165
             height: 44
             text: qsTr("Теплая перезагрузка")
+            onClicked: {
+                sig_send_command(_COMMAND_INITIATE_RESET, 0x0E);
+            }
         }
 
         Button {
@@ -61,6 +73,9 @@ Item {
             width: 165
             height: 44
             text: qsTr("Горячая перезагрузка")
+            onClicked: {
+                sig_send_command(_COMMAND_INITIATE_HOT_RESET, 0);
+            }
         }
 
         Button {
@@ -71,6 +86,9 @@ Item {
             height: 57
             text: qsTr("Полный сброс")
             enabled: false
+            onClicked: {
+                sig_send_command(_COMMAND_INITIATE_RESET, 0x46);
+            }
         }
 
         Button {
@@ -80,6 +98,9 @@ Item {
             width: 193
             height: 44
             text: qsTr("Версия ПО")
+            onClicked: {
+                sig_send_command(_COMMAND_REQEST_SOFTWARE_VERSION, 0);
+            }
         }
 
         CheckBox {

@@ -21,9 +21,9 @@ Item {
             id: init_x_text
             x: 43
             y: 54
-            width: 151
+            width: 167
             height: 20
-            placeholderText: qsTr("Ось Х")
+            placeholderText: qsTr("Ось Х (м)")
             objectName: "init_x_text"
         }
 
@@ -31,9 +31,9 @@ Item {
             id: init_y_text
             x: 43
             y: 80
-            width: 151
+            width: 167
             height: 20
-            placeholderText: qsTr("Ось Y")
+            placeholderText: qsTr("Ось Y (м)")
             objectName: "init_y_text"
         }
 
@@ -41,9 +41,9 @@ Item {
             id: init_z_text
             x: 43
             y: 106
-            width: 151
+            width: 167
             height: 20
-            placeholderText: qsTr("Ось Z")
+            placeholderText: qsTr("Ось Z (м)")
             objectName: "init_z_text"
         }
 
@@ -61,15 +61,18 @@ Item {
             width: 98
             height: 52
             text: qsTr("Задать")
+            onClicked: {
+                sig_send_command(_COMMAND_ACCURATE_INIT_POS_XYZ, 0);
+            }
         }
 
         TextField {
             id: init_lat_text
             x: 43
             y: 204
-            width: 151
+            width: 167
             height: 20
-            placeholderText: qsTr("Latitude (широта)")
+            placeholderText: qsTr("Latitude (широта, рад)")
             objectName: "init_lat_text"
         }
 
@@ -77,9 +80,9 @@ Item {
             id: init_long_text
             x: 43
             y: 230
-            width: 151
+            width: 167
             height: 20
-            placeholderText: qsTr("Longitude (долгота)")
+            placeholderText: qsTr("Longitude (долгота, рад)")
             objectName: "init_long_text"
         }
 
@@ -87,9 +90,9 @@ Item {
             id: init_alt_text
             x: 43
             y: 256
-            width: 151
+            width: 167
             height: 20
-            placeholderText: qsTr("Altitude (высота)")
+            placeholderText: qsTr("Altitude (высота, м)")
             objectName: "init_alt_text"
         }
 
@@ -107,6 +110,9 @@ Item {
             width: 98
             height: 52
             text: qsTr("Задать")
+            onClicked: {
+                sig_send_command(_COMMAND_ACCURATE_INIT_POS_LLA, 0);
+            }
         }
 
         Button {
@@ -117,7 +123,7 @@ Item {
             height: 59
             text: qsTr("Запросить текущую позицию (а также\nскорость и отметку времени, если вкл.)")
             onClicked: {
-                sig_send_COMMAND_REQUEST_STATUS_AND_POS();
+                sig_send_command(_COMMAND_REQUEST_STATUS_AND_POS, 0);
             }
         }
 

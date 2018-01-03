@@ -24,6 +24,9 @@ Item {
             width: 162
             height: 51
             text: qsTr("Информация о\nвыбранных спутниках")
+            onClicked: {
+                sig_send_command(_COMMAND_REQUEST_GPS_SATELLITES, 0);
+            }
         }
 
         Button {
@@ -33,6 +36,9 @@ Item {
             width: 162
             height: 51
             text: qsTr("Уровень сигнала\nвыбранных спутников")
+            onClicked: {
+                sig_send_command(_COMMAND_REQUEST_SIGNAL_LEVELS, 0);
+            }
         }
 
         Label {
@@ -49,6 +55,9 @@ Item {
             width: 154
             height: 46
             text: qsTr("Выбрать наилучший\nавтоматически")
+            onClicked: {
+                sig_send_command(_COMMAND_SATELLITE_SELECTION, 0);
+            }
         }
 
         Button {
@@ -58,10 +67,13 @@ Item {
             width: 154
             height: 46
             text: qsTr("Выбрать по указанному\nномеру (1 - 32)")
+            onClicked: {
+                sig_send_command(_COMMAND_SATELLITE_SELECTION, satellite_selection_spinner.value.toFixed());
+            }
         }
 
         SpinBox {
-            id: number_one_satellite_selection_spinner
+            id: satellite_selection_spinner
             x: 204
             y: 252
             width: 60
@@ -80,13 +92,14 @@ Item {
         }
 
         SpinBox {
-            id: number_one_satellite_selection_spinner1
+            id: satellite_selection_spinner1
             x: 311
             y: 379
             width: 60
             height: 20
             maximumValue: 32
             minimumValue: 0
+            objectName: "satellite_selection_spinner1"
         }
 
         Label {
@@ -110,6 +123,9 @@ Item {
             width: 105
             height: 35
             text: qsTr("Запрос")
+            onClicked: {
+                sig_send_command(_COMMAND_REQUEST_SATELLITE_SYSTEM_DATA, 1);
+            }
         }
 
         Label {
@@ -126,6 +142,7 @@ Item {
             width: 174
             height: 22
             model: ["Альманах", "Здоровье, toa, WNa", "Ионосфера", "UTC", "Ephemeris"]
+            objectName: "typeOfDataComboBox"
         }
     }
 }
