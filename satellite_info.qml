@@ -124,6 +124,7 @@ Item {
             height: 35
             text: qsTr("Запрос")
             onClicked: {
+                // Подкод "1" - см. документацию.
                 sig_send_command(_COMMAND_REQUEST_SATELLITE_SYSTEM_DATA, 1);
             }
         }

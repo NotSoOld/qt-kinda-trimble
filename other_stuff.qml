@@ -25,6 +25,9 @@ Item {
             width: 175
             height: 44
             text: qsTr("Последнее измерение\n(в сыром виде со спутника)")
+            onClicked: {
+                sig_send_command(_COMMAND_REQUEST_LAST_RAW_MEASUREMENT, satellite_selection_spinner.value.toFixed());
+            }
         }
 
         Button {
@@ -34,15 +37,20 @@ Item {
             width: 175
             height: 44
             text: qsTr("Статус трекинга спутника")
+            onClicked: {
+                sig_send_command(_COMMAND_REQUEST_SATELLITE_TRACKING_STATUS, satellite_selection_spinner.value.toFixed());
+            }
         }
 
         SpinBox {
-            id: spinBox
+            id: satellite_selection_spinner
             x: 169
             y: 99
             width: 66
             height: 20
+            minimumValue: 0
             maximumValue: 32
+            objectName: "satellites_and_health_spinner"
         }
 
         Label {
@@ -66,6 +74,9 @@ Item {
             width: 175
             height: 28
             text: qsTr("Включить спутник")
+            onClicked: {
+                sig_send_command(_COMMAND_SET_REQUEST_SATELLITES_AND_HEALTH, 1);
+            }
         }
 
         Button {
@@ -75,6 +86,9 @@ Item {
             width: 175
             height: 28
             text: qsTr("Выключить спутник")
+            onClicked: {
+                sig_send_command(_COMMAND_SET_REQUEST_SATELLITES_AND_HEALTH, 2);
+            }
         }
 
         Button {
@@ -84,6 +98,9 @@ Item {
             width: 175
             height: 47
             text: qsTr("Принимать здоровье\nспутника во внимание")
+            onClicked: {
+                sig_send_command(_COMMAND_SET_REQUEST_SATELLITES_AND_HEALTH, 4);
+            }
         }
 
         Button {
@@ -93,24 +110,33 @@ Item {
             width: 175
             height: 47
             text: qsTr("Игнорировать здоровье\nспутника")
+            onClicked: {
+                sig_send_command(_COMMAND_SET_REQUEST_SATELLITES_AND_HEALTH, 5);
+            }
         }
 
         Button {
             id: button6
-            x: 61
+            x: 16
             y: 247
-            width: 282
+            width: 368
             height: 33
-            text: qsTr("Запросить статус включения спутников")
+            text: qsTr("Запросить статус включения всех 32 спутников")
+            onClicked: {
+                sig_send_command(_COMMAND_SET_REQUEST_SATELLITES_AND_HEALTH, 3);
+            }
         }
 
         Button {
             id: button7
-            x: 45
+            x: 16
             y: 376
-            width: 310
+            width: 368
             height: 33
-            text: qsTr("Запросить статус значения здоровья спутников")
+            text: qsTr("Запросить статус значения здоровья всех 32 спутников")
+            onClicked: {
+                sig_send_command(_COMMAND_SET_REQUEST_SATELLITES_AND_HEALTH, 6);
+            }
         }
 
 

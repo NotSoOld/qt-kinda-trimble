@@ -114,6 +114,112 @@ QString COMHandler::parse_REPORT_DOUBLE_LLA_POS(QByteArray data)
              .arg(latitude).arg(longitude).arg(altitude).arg(clockBias).arg(timeOfFix);
 }
 
+QString COMHandler::parse_REPORT_SINGLE_XYZ_POS(QByteArray data)
+{
+    if (data.length() != 16) {
+        qDebug() << "Пакет REPORT_SINGLE_XYZ_POS (0x42) имеет неверную длину";
+        return "";
+    }
+
+    float X = TypesConverter::bytesToSingle(data, 0);
+    float Y = TypesConverter::bytesToSingle(data, 4);
+    float Z = TypesConverter::bytesToSingle(data, 8);
+    float timeOfFix = TypesConverter::bytesToSingle(data, 12);
+    return QString("Получен пакет REPORT_SINGLE_XYZ_POS (0x42):\n \
+                     --Позиция XYZ: (%0; %1; %2)\n \
+                     ----Time of fix: %3")
+            .arg(X).arg(Y).arg(Z).arg(timeOfFix);
+}
+
+QString COMHandler::parse_REPORT_SINGLE_VELOCITY_FIX_XYZ(QByteArray data)
+{
+    if (data.length() != 20) {
+        qDebug() << "Пакет REPORT_SINGLE_VELOCITY_FIX_XYZ (0x43) имеет неверную длину";
+        return "";
+    }
+
+    float X_vel = TypesConverter::bytesToSingle(data, 0);
+    float Y_vel = TypesConverter::bytesToSingle(data, 4);
+    float Z_vel = TypesConverter::bytesToSingle(data, 8);
+    float biasRate = TypesConverter::bytesToSingle(data, 12);
+    float timeOfFix = TypesConverter::bytesToSingle(data, 16);
+    return QString("Получен пакет REPORT_SINGLE_VELOCITY_FIX_XYZ (0x43):\n \
+                     --Скорость XYZ (м/с): (%0; %1; %2)\n \
+                     --Bias rate: %3\n--Time of fix: %4")
+            .arg(X_vel).arg(Y_vel).arg(Z_vel).arg(biasRate).arg(timeOfFix);
+}
+
+QString COMHandler::parse_REPORT_SOFTWARE_VERSION_INFO(QByteArray data)
+{
+    if (data.length() != 10) {
+        qDebug() << "Пакет REPORT_SOFTWARE_VERSION_INFO (0x45) имеет неверную длину";
+        return "";
+    }
+
+    return QString("Получен пакет REPORT_SOFTWARE_VERSION_INFO (0x45):\n \
+                   ---- Данные с уровня приложения:\n \
+                   -- Major версия приложения: %0\n \
+                   -- Minor версия приложения: %1\n \
+                   -- Дата: %2/%3/%4\n \
+                   ---- Данные с уровня ядра:\n \
+                   -- Major версия ядра GPS: %5\n \
+                   -- Minor версия ядра GPS: %6\n \
+                   -- Дата: %7/%8/%9\n \ ")
+            .arg(data[0]).arg(data[1]).arg(data[2]).arg(data[3]).arg(data[4])
+            .arg(data[5]).arg(data[6]).arg(data[7]).arg(data[8]).arg(data[9]);
+}
+
+QString COMHandler::parse_REPORT_TRACKED_SATELLITES_SINGAL_LVL(QByteArray data)
+{
+    QString message = "Уровни сигналов: ";
+    // Первый байт - количество присланных пар "номер спутника - уровень сигнала".
+    for (byte i = 0; i < data[0]; i++) {
+       message.append("Спутник %0: %1").arg(data[i * 5 + 1]).arg(TypesConverter::bytesToSingle(data, i * 5 + 2));
+    }
+    return message;
+}
+
+QString COMHandler::parse_REPORT_SINGLE_LLA_POS(QByteArray data)
+{
+    if (data.length() != 20) {
+        qDebug() << "Пакет REPORT_SINGLE_LLA_POS (0x4A) имеет неверную длину";
+        return "";
+    }
+
+    float latitude = TypesConverter::bytesToSingle(data, 0);
+    float longitude = TypesConverter::bytesToSingle(data, 4);
+    float altitude = TypesConverter::bytesToSingle(data, 8);
+    float clockBias = TypesConverter::bytesToSingle(data, 12);
+    float timeOfFix = TypesConverter::bytesToSingle(data, 16);
+    return QString("Получен пакет REPORT_SINGLE_LLA_POS (0x84):\n \
+                     --Позиция LLA: (%0 rad; %1 rad; %2 meters)\n \
+                     --Clock bias: %3\n--Time of fix: %4")
+             .arg(latitude).arg(longitude).arg(altitude).arg(clockBias).arg(timeOfFix);
+}
+
+QString COMHandler::parse_REPORT_SINGLE_VELOCITY_FIX_ENU(QByteArray data)
+{
+    if (data.length() != 20) {
+        qDebug() << "Пакет REPORT_SINGLE_VELOCITY_FIX_ENU (0x56) имеет неверную длину";
+        return "";
+    }
+
+    float east_vel = TypesConverter::bytesToSingle(data, 0);
+    float north_vel = TypesConverter::bytesToSingle(data, 4);
+    float up_vel = TypesConverter::bytesToSingle(data, 8);
+    float biasRate = TypesConverter::bytesToSingle(data, 12);
+    float timeOfFix = TypesConverter::bytesToSingle(data, 16);
+    return QString("Получен пакет REPORT_SINGLE_VELOCITY_FIX_ENU (0x56):\n \
+                     -- Скорость ENU (м/с): (%0; %1; %2)\n \
+                     -- Bias rate: %3\n-- Time of fix: %4")
+            .arg(east_vel).arg(north_vel).arg(up_vel).arg(biasRate).arg(timeOfFix);
+}
+
+
+
+
+
+
 void COMHandler::receiveText()
 {
     char readed = 0;
@@ -165,6 +271,24 @@ void COMHandler::receiveText()
             break;
         case REPORT_DOUBLE_LLA_POS:
             message.append(parse_REPORT_DOUBLE_LLA_POS(data));
+            break;
+        case REPORT_SINGLE_XYZ_POS:
+            message.append(parse_REPORT_SINGLE_XYZ_POS(data));
+            break;
+        case REPORT_SINGLE_VELOCITY_FIX_XYZ:
+            message.append(parse_REPORT_SINGLE_VELOCITY_FIX_XYZ(data));
+            break;
+        case REPORT_SOFTWARE_VERSION_INFO:
+            message.append(parse_REPORT_SOFTWARE_VERSION_INFO(data));
+            break;
+        case REPORT_TRACKED_SATELLITES_SINGAL_LVL:
+            message.append(parse_REPORT_TRACKED_SATELLITES_SINGAL_LVL(data));
+            break;
+        case REPORT_SINGLE_LLA_POS:
+            message.append(parse_REPORT_SINGLE_LLA_POS(data));
+            break;
+        case REPORT_SINGLE_VELOCITY_FIX_ENU:
+            message.append(parse_REPORT_SINGLE_VELOCITY_FIX_ENU(data));
             break;
         default:
             message = QString("Неизвестный пакет 0x%0").arg((byte)reportCode, 1, 16);
@@ -271,6 +395,14 @@ void COMHandler::build_COMMAND_REQUEST_SATELLITE_SYSTEM_DATA(QByteArray *cmd)
     qDebug() << *cmd;
 }
 
+void COMHandler::build_COMMAND_SET_REQUEST_SATELLITES_AND_HEALTH(QByteArray *cmd)
+{
+    byte satelliteIndex = (byte)getIntFromQML("satellites_and_health_spinner", "value");
+    append(cmd, satelliteIndex);
+
+    qDebug() << *cmd;
+}
+
 void COMHandler::send_command(int code, int subcode)
 {
     QByteArray cmd;
@@ -279,7 +411,8 @@ void COMHandler::send_command(int code, int subcode)
 
     cmd.append(DLE);
     // Некоторые пакеты содержат только код команды,
-    // либо код команды и ее подкод.
+    // либо код команды и ее подкод. Для таких пакетов
+    // дополнительный метод не нужен.
     append(&cmd, (byte)code);
     if (subcode > 0) {
         append(&cmd, (byte)subcode);
@@ -288,14 +421,16 @@ void COMHandler::send_command(int code, int subcode)
     // выбирается соответствующий метод.
     switch ((byte)code) {
     case COMMAND_SET_IO_OPTIONS:
-        // Если == -1, то это запрос настроек, а не их установка.
+        // (Если == -1, то это запрос настроек, а не их установка.)
         if (subcode == 0) {
             build_COMMAND_SET_IO_OPTIONS(&cmd);
         }
         break;
     case COMMAND_SATELLITE_SELECTION:
-        // Индекс спутника приходит в subcode. Подкод = 0 не добавится выше,
-        // поэтому это нужно сделать отдельно.
+    case COMMAND_REQUEST_LAST_RAW_MEASUREMENT:
+    case COMMAND_REQUEST_SATELLITE_TRACKING_STATUS:
+        // Индекс спутника для этих команд приходит в subcode.
+        // Подкод == 0 не добавится выше, поэтому это нужно сделать отдельно.
         if (subcode == 0) {
             cmd.append((byte)subcode);
         }
@@ -307,9 +442,14 @@ void COMHandler::send_command(int code, int subcode)
         build_COMMAND_ACCURATE_INIT_POS_LLA(&cmd);
         break;
     case COMMAND_REQUEST_SATELLITE_SYSTEM_DATA:
-        // Подкод здесь всегда = 1, он же - первый информационный байт
-        // (см. документацию).
+        // Подкод здесь всегда == 1, он же - первый информационный байт (см. документацию).
         build_COMMAND_REQUEST_SATELLITE_SYSTEM_DATA(&cmd);
+        break;
+    case COMMAND_SET_REQUEST_SATELLITES_AND_HEALTH:
+        // Для всех возможных операций (1 - 6) номер операции уже пришел в подкоде.
+        // Для всех операций также нужно добавить номер спутника, которого эта операция касается
+        // (для операций 3 и 6 номер спутника не важен, однако пакет всё равно нужно дополнить).
+        build_COMMAND_SET_REQUEST_SATELLITES_AND_HEALTH(&cmd);
         break;
     }
 

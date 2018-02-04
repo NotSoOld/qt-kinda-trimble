@@ -105,10 +105,17 @@ public:
     void build_COMMAND_ACCURATE_INIT_POS_XYZ(QByteArray *);
     void build_COMMAND_ACCURATE_INIT_POS_LLA(QByteArray *);
     void build_COMMAND_REQUEST_SATELLITE_SYSTEM_DATA(QByteArray *);
+    void build_COMMAND_SET_REQUEST_SATELLITES_AND_HEALTH(QByteArray *);
 
     QString parse_REPORT_UNPARSABLE(QByteArray);
     QString parse_REPORT_DOUBLE_XYZ_POS(QByteArray);
     QString parse_REPORT_DOUBLE_LLA_POS(QByteArray);
+    QString parse_REPORT_SINGLE_XYZ_POS(QByteArray);
+    QString parse_REPORT_SINGLE_VELOCITY_FIX_XYZ(QByteArray);
+    QString parse_REPORT_SOFTWARE_VERSION_INFO(QByteArray);
+    QString parse_REPORT_TRACKED_SATELLITES_SINGAL_LVL(QByteArray);
+    QString parse_REPORT_SINGLE_LLA_POS(QByteArray);
+    QString parse_REPORT_SINGLE_VELOCITY_FIX_ENU(QByteArray);
 
     void append(QByteArray *, byte);
     void append(QByteArray *, double);

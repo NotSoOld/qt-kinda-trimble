@@ -80,7 +80,7 @@ int main(int argc, char *argv[])
                 window,
                 SIGNAL(sig_send_command(int, int)),
                 &handler,
-                SLOT(send_command(int,int))
+                SLOT(send_command(int, int))
     );
 
     QObject::connect(
