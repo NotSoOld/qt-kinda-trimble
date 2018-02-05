@@ -14,13 +14,19 @@ public:
     static QByteArray toByteArray(unsigned short);
     static QByteArray toByteArray(unsigned int);
 
-    static unsigned short bytesToInt16(QByteArray, int);
+    static unsigned short bytesToUInt16(QByteArray, int);
+    static short bytesToSInt16(QByteArray, int);
     static unsigned int bytesToInt32(QByteArray, int);
     static float bytesToSingle(QByteArray, int);
     static double bytesToDouble(QByteArray, int);
 
-    union _int16 {
+    union _uint16 {
         unsigned short value;
+        byte bytes[2];
+    };
+
+    union _sint16 {
+        short value;
         byte bytes[2];
     };
 

@@ -59,6 +59,7 @@
 #define REPORT_SOFTWARE_VERSION_INFO                    0x45
 #define REPORT_TRACKED_SATELLITES_SINGAL_LVL            0x47
 #define REPORT_SINGLE_LLA_POS                           0x4A
+#define REPORT_REQUEST_IO_OPTIONS                       0x55
 #define REPORT_SINGLE_VELOCITY_FIX_ENU                  0x56
 #define REPORT_LAST_FIX_INFO                            0x57
 #define REPORT_GPS_SYSTEM_DATA                          0x58
@@ -115,7 +116,11 @@ public:
     QString parse_REPORT_SOFTWARE_VERSION_INFO(QByteArray);
     QString parse_REPORT_TRACKED_SATELLITES_SINGAL_LVL(QByteArray);
     QString parse_REPORT_SINGLE_LLA_POS(QByteArray);
+    QString parse_REPORT_REQUEST_IO_OPTIONS(QByteArray);
     QString parse_REPORT_SINGLE_VELOCITY_FIX_ENU(QByteArray);
+    QString parse_REPORT_GPS_SYSTEM_DATA(QByteArray);
+    QString parse_REPORT_STATUS_SATELLITE_HEALTH(QByteArray);
+    QString parse_REPORT_RAW_MEASUREMENT_DATA(QByteArray);
 
     void append(QByteArray *, byte);
     void append(QByteArray *, double);
