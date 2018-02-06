@@ -7,6 +7,8 @@
 #include <QThread>
 #include <QQuickWindow>
 #include <QDebug>
+#include "converter.h"
+#include "packetparser.h"
 
 #define PI 3.1415926535898
 #define DLE 0x10
@@ -99,7 +101,7 @@ class COMHandler : public QThread
 public:
     void configureCOM(QString, QIODevice::OpenModeFlag);
     void finishCOM();
-    void receiveText();
+    void receiveReport();
     void run();
 
     void build_COMMAND_SET_IO_OPTIONS(QByteArray *);
@@ -108,25 +110,11 @@ public:
     void build_COMMAND_REQUEST_SATELLITE_SYSTEM_DATA(QByteArray *);
     void build_COMMAND_SET_REQUEST_SATELLITES_AND_HEALTH(QByteArray *);
 
-    QString parse_REPORT_UNPARSABLE(QByteArray);
-    QString parse_REPORT_DOUBLE_XYZ_POS(QByteArray);
-    QString parse_REPORT_DOUBLE_LLA_POS(QByteArray);
-    QString parse_REPORT_SINGLE_XYZ_POS(QByteArray);
-    QString parse_REPORT_SINGLE_VELOCITY_FIX_XYZ(QByteArray);
-    QString parse_REPORT_SOFTWARE_VERSION_INFO(QByteArray);
-    QString parse_REPORT_TRACKED_SATELLITES_SINGAL_LVL(QByteArray);
-    QString parse_REPORT_SINGLE_LLA_POS(QByteArray);
-    QString parse_REPORT_REQUEST_IO_OPTIONS(QByteArray);
-    QString parse_REPORT_SINGLE_VELOCITY_FIX_ENU(QByteArray);
-    QString parse_REPORT_GPS_SYSTEM_DATA(QByteArray);
-    QString parse_REPORT_STATUS_SATELLITE_HEALTH(QByteArray);
-    QString parse_REPORT_RAW_MEASUREMENT_DATA(QByteArray);
-
-    void append(QByteArray *, byte);
-    void append(QByteArray *, double);
-    void append(QByteArray *, float);
-    void append(QByteArray *, unsigned short);
-    void append(QByteArray *, unsigned int);
+    void appendAndStuff(QByteArray *, byte);
+    void appendAndStuff(QByteArray *, double);
+    void appendAndStuff(QByteArray *, float);
+    void appendAndStuff(QByteArray *, unsigned short);
+    void appendAndStuff(QByteArray *, unsigned int);
 
     bool getBoolFromQML(const char *, const char *);
     int getIntFromQML(const char *, const char *);
@@ -135,7 +123,7 @@ public:
     void (COMHandler::*methodToStartThreadWith)();
     QString name;
     QSerialPort *com;
-    ParserStatus parser;
+    ParserStatus parserStatus;
     QQuickWindow *window;
 
 signals:
