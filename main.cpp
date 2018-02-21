@@ -13,7 +13,8 @@ int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
     QQmlApplicationEngine engine;
-    handler.configureCOM("COM3", QIODevice::ReadWrite);
+ //   handler.configureCOM("COM5", QIODevice::ReadWrite);
+    COMHandler::configureCOM("COM5", QIODevice::ReadWrite);
     engine.load(QUrl(QStringLiteral("qrc:/main.qml")));
     if (engine.rootObjects().isEmpty())
         return -1;
@@ -35,14 +36,19 @@ int main(int argc, char *argv[])
                 SLOT(onAppendReceivedtext(QVariant))
     );
 
-    receiverThread.configureCOM("COM4", QIODevice::ReadWrite);
+    /*QObject::connect(
+                COMHandler::com,
+                &QSerialPort::readyRead,
+                &receiverThread,
+                &COMHandler::receiveReport
+    );*/
+
     receiverThread.window = window;
     receiverThread.methodToStartThreadWith = &COMHandler::receiveReport;
     receiverThread.start();
 
     app.exec();
     receiverThread.terminate();
-    handler.finishCOM();
-    receiverThread.finishCOM();
+    COMHandler::finishCOM();
     return 0;
 }

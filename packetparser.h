@@ -5,6 +5,7 @@
 #include <QtCore>
 #include <QDebug>
 #include <converter.h>
+#include <comhandler.h>
 
 class PacketParser : public QObject
 {

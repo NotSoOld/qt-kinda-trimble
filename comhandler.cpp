@@ -1,5 +1,7 @@
 #include "comhandler.h"
 
+QSerialPort *COMHandler::com;
+QString COMHandler::name;
 
 void COMHandler::configureCOM(QString portName, QIODevice::OpenModeFlag openModeFlag)
 {
@@ -10,14 +12,15 @@ void COMHandler::configureCOM(QString portName, QIODevice::OpenModeFlag openMode
     com->setFlowControl(QSerialPort::NoFlowControl);
     com->setStopBits(QSerialPort::OneStop);
     com->open(openModeFlag);
-    qDebug() << "COM-порт готов к работе";
+    com->clear();
     name = portName;
 }
 
 void COMHandler::finishCOM()
 {
-    com->flush();
+    com->clear();
     com->close();
+    delete com;
 }
 
 
@@ -64,34 +67,55 @@ void COMHandler::appendAndStuff(QByteArray *bytes, byte b)
     }
 }
 
+byte COMHandler::readUntilSucceed()
+{
+    char result = 0;
+
+    while (true) {
+        while(!(com->waitForReadyRead(2000)));
+        if (com->getChar(&result) == true)
+            return (byte)result;
+    }
+}
+
 
 void COMHandler::receiveReport()
 {
-    char readed = 0;
-    char reportCode = 0;
-    parserStatus = ParserStatus::Waiting_for_message;
 
+    parserStatus = ParserStatus::Waiting_for_message;
     while (true) {
-        QByteArray data;
-        while(!(com->waitForReadyRead(1000)));
+        byte readed = 0;
+        byte reportCode = 0;
+        QByteArray *data = new QByteArray();
+        data->clear();
+        while(!(com->waitForReadyRead(2000)));
+
         //qDebug() << "started to read...";
-        com->read(&readed, 1);      // First DLE
+
+        //com->read(&readed, 1);      // First DLE
+        readed = readUntilSucceed();
+        ;
+        //qDebug() << QString("%0").arg((byte)readed, 1, 16);
         if (!(readed == DLE && parserStatus == ParserStatus::Waiting_for_message)) {
             qDebug() << "Ошибка разбора!";
-            exit(2);
+            return;
         }
         parserStatus = ParserStatus::Reading_data;
-        //qDebug() << "took first DLE...";
-        com->read(&reportCode, 1);  // Report code
-        //qDebug() << "took report code... " + reportCode;
+       // qDebug() << "took first DLE...";
+         //com->read(&reportCode, 1);  // Report code
+        reportCode = readUntilSucceed();
+        ;
+        //qDebug() << QString("Took report code %0").arg((byte)reportCode, 1, 16);
         while (true) {
-            com->read(&readed, 1);
+            //com->read(&readed, 1);
+            readed = readUntilSucceed();
+            ;
             if (readed == DLE) {
                 if (parserStatus == ParserStatus::Reading_data) {     // Stuffed DLE
                     parserStatus = ParserStatus::Found_DLE;
                 }
                 else if (parserStatus == ParserStatus::Found_DLE) {
-                    data.append(DLE);
+                    data->append(DLE);
                     parserStatus = ParserStatus::Reading_data;
                 }
             }
@@ -99,15 +123,16 @@ void COMHandler::receiveReport()
                 if (readed == ETX && parserStatus == ParserStatus::Found_DLE) {  // DLE-ETX sequence
                     break;
                 }
-                data.append(readed);
+                data->append(readed);
             }
 
         }
-        qDebug() << QString("Finished reading... Trying to check reportCode 0x%0").arg((byte)reportCode, 1, 16);
+        ;
+        //qDebug() << QString("Finished reading... Trying to check reportCode 0x%0").arg((byte)reportCode, 1, 16);
         // На этом этапе мы имеем код пришедшего пакета
         // и всё его содержимое без стаффинга.
-        QString message;
-        PacketParser *parser = new PacketParser(data);
+        QString message = "";
+        PacketParser *parser = new PacketParser(*data);
         switch ((byte)reportCode) {
         case REPORT_UNPARSABLE:
             message.append(parser->parse_REPORT_UNPARSABLE());
@@ -161,6 +186,7 @@ void COMHandler::receiveReport()
         emit appendReceivedText(message);
 
         parserStatus = ParserStatus::Waiting_for_message;
+        delete data;
     }
 }
 
@@ -270,8 +296,8 @@ void COMHandler::build_COMMAND_SET_REQUEST_SATELLITES_AND_HEALTH(QByteArray *cmd
 void COMHandler::send_command(int code, int subcode)
 {
     QByteArray cmd;
-    qDebug() << code;
-    qDebug() << subcode;
+    //qDebug() << code;
+    //qDebug() << subcode;
 
     cmd.append(DLE);
     // Некоторые пакеты содержат только код команды,
@@ -319,8 +345,10 @@ void COMHandler::send_command(int code, int subcode)
 
     cmd.append(DLE);
     cmd.append(ETX);
+    //qDebug() << "Starting to write to com...";
     com->write(cmd.constData(), cmd.length());
-    com->waitForBytesWritten(1000);
+    com->waitForBytesWritten(300);
+    //qDebug() << "finished writing to com";
 }
 
 void COMHandler::run()

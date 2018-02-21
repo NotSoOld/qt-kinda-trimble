@@ -99,10 +99,11 @@ class COMHandler : public QThread
 {
     Q_OBJECT
 public:
-    void configureCOM(QString, QIODevice::OpenModeFlag);
-    void finishCOM();
+    static void configureCOM(QString, QIODevice::OpenModeFlag);
+    static void finishCOM();
     void receiveReport();
     void run();
+    byte readUntilSucceed();
 
     void build_COMMAND_SET_IO_OPTIONS(QByteArray *);
     void build_COMMAND_ACCURATE_INIT_POS_XYZ(QByteArray *);
@@ -121,8 +122,8 @@ public:
     double getDoubleFromQML(const char *, const char *);
 
     void (COMHandler::*methodToStartThreadWith)();
-    QString name;
-    QSerialPort *com;
+    static QString name;
+    static QSerialPort *com;
     ParserStatus parserStatus;
     QQuickWindow *window;
 

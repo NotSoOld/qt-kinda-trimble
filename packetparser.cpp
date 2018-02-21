@@ -15,7 +15,25 @@ QString PacketParser::parse_REPORT_UNPARSABLE()
     }
     return res;
 }
+/*
+QString PacketParser::parse_REPORT_FIRMWARE_INFO()
+{
+    QString res;
 
+    if (data[1] == RPTSUB_FIRMWARE_VERSION) {
+        parse_RPTSUB_FIRMWARE_VERSION(res);
+    }
+    else if (data[1] == RPTSUB_HARDWARE_COMPONENT_INFO) {
+        parse_RPTSUB_HARDWARE_COMPONENT_INFO(res);
+    }
+    return res;
+}
+
+void PacketParser::parse_RPTSUB_FIRMWARE_VERSION(QString *res)
+{
+
+}
+*/
 QString PacketParser::parse_REPORT_DOUBLE_XYZ_POS()
 {
     if (data.length() != 36) {
