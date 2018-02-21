@@ -103,7 +103,8 @@ public:
     static void finishCOM();
     void receiveReport();
     void run();
-    byte readUntilSucceed();
+    //byte readUntilSucceed();
+    //void readFromCOM();
 
     void build_COMMAND_SET_IO_OPTIONS(QByteArray *);
     void build_COMMAND_ACCURATE_INIT_POS_XYZ(QByteArray *);
@@ -124,6 +125,8 @@ public:
     void (COMHandler::*methodToStartThreadWith)();
     static QString name;
     static QSerialPort *com;
+    static QByteArray readedData;
+    static byte previouslyReadedChar;
     ParserStatus parserStatus;
     QQuickWindow *window;
 
@@ -131,6 +134,7 @@ signals:
     void appendReceivedText(QVariant s);
 public slots:
     void send_command(int, int);
+    void readFromCOM();
 };
 
 #endif // COMHANDLER_H

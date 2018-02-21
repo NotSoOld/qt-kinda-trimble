@@ -36,16 +36,16 @@ int main(int argc, char *argv[])
                 SLOT(onAppendReceivedtext(QVariant))
     );
 
-    /*QObject::connect(
+    QObject::connect(
                 COMHandler::com,
                 &QSerialPort::readyRead,
                 &receiverThread,
-                &COMHandler::receiveReport
-    );*/
+                &COMHandler::readFromCOM
+    );
 
     receiverThread.window = window;
-    receiverThread.methodToStartThreadWith = &COMHandler::receiveReport;
-    receiverThread.start();
+   // receiverThread.methodToStartThreadWith = &COMHandler::receiveReport;
+   // receiverThread.start();
 
     app.exec();
     receiverThread.terminate();

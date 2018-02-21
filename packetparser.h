@@ -12,6 +12,7 @@ class PacketParser : public QObject
     Q_OBJECT
 public:
     PacketParser(QByteArray);
+    byte reportCode();
 
     QString parse_REPORT_UNPARSABLE();
     QString parse_REPORT_DOUBLE_XYZ_POS();

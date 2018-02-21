@@ -2,7 +2,15 @@
 
 PacketParser::PacketParser(QByteArray data)
 {
-    this->data = data;
+    this->data.clear();
+    for (int i = 1; i < data.length() - 1; i++) {
+        this->data.append(data[i]);
+    }
+}
+
+byte PacketParser::reportCode()
+{
+    return (byte)(data[0]);
 }
 
 QString PacketParser::parse_REPORT_UNPARSABLE()

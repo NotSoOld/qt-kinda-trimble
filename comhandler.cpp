@@ -2,6 +2,8 @@
 
 QSerialPort *COMHandler::com;
 QString COMHandler::name;
+QByteArray COMHandler::readedData;
+byte COMHandler::previouslyReadedChar;
 
 void COMHandler::configureCOM(QString portName, QIODevice::OpenModeFlag openModeFlag)
 {
@@ -66,7 +68,7 @@ void COMHandler::appendAndStuff(QByteArray *bytes, byte b)
         bytes->append(DLE);
     }
 }
-
+/*
 byte COMHandler::readUntilSucceed()
 {
     char result = 0;
@@ -77,11 +79,38 @@ byte COMHandler::readUntilSucceed()
             return (byte)result;
     }
 }
+*/
+void COMHandler::readFromCOM()
+{
+    int bytesAvailable = com->bytesAvailable();
+    for (int i = 0; i < bytesAvailable; i++) {
+        char readedChar;
+        com->getChar(&readedChar);
+        //qDebug() << QString("reading 0x%0, prev read 0x%1").arg((byte)readedChar, 1, 16).arg(previouslyReadedChar, 1, 16);
+        if (previouslyReadedChar == DLE && (byte)readedChar == ETX) {
+            // Обнаружен конец пакета. ETX также отбрасываем.
+            //qDebug() << readedData;
+            receiveReport();
+            // После вызова этой функции всё содержимое readedData было разобрано
+            // (оно содержало полный пакет), поэтому теперь можно его очистить.
+            readedData.clear();
+           // qDebug() << "cleared readed data";
+
+        }
+
+        else if (!(previouslyReadedChar == DLE && (byte)readedChar == DLE)) {
+            // Если обнаружен стаффинг байта DLE, не нужно заносить его в полученные данные.
+            readedData.append(readedChar);
+        }
+
+        previouslyReadedChar = (byte)readedChar;
+    }
+}
 
 
 void COMHandler::receiveReport()
 {
-
+/*
     parserStatus = ParserStatus::Waiting_for_message;
     while (true) {
         byte readed = 0;
@@ -127,13 +156,14 @@ void COMHandler::receiveReport()
             }
 
         }
-        ;
+        ;*/
         //qDebug() << QString("Finished reading... Trying to check reportCode 0x%0").arg((byte)reportCode, 1, 16);
-        // На этом этапе мы имеем код пришедшего пакета
-        // и всё его содержимое без стаффинга.
+        // На этом этапе мы имеем данные пришедшего пакета
+        // без стаффинга, но с начальным DLE и конечным DLE.
+        // Конструктор парсера пакетов сам отбросит всё лишнее.
         QString message = "";
-        PacketParser *parser = new PacketParser(*data);
-        switch ((byte)reportCode) {
+        PacketParser *parser = new PacketParser(readedData);
+        switch (parser->reportCode()) {
         case REPORT_UNPARSABLE:
             message.append(parser->parse_REPORT_UNPARSABLE());
             break;
@@ -180,14 +210,13 @@ void COMHandler::receiveReport()
             message.append(parser->parse_REPORT_SATELLITE_SELECTION_LIST());
             break;
         default:
-            message = QString("Неизвестный пакет 0x%0").arg((byte)reportCode, 1, 16);
+            message = QString("Неизвестный пакет 0x%0").arg(parser->reportCode(), 1, 16);
             break;
         }
         emit appendReceivedText(message);
 
-        parserStatus = ParserStatus::Waiting_for_message;
-        delete data;
-    }
+       // parserStatus = ParserStatus::Waiting_for_message;
+    //}
 }
 
 bool COMHandler::getBoolFromQML(const char *qmlName, const char *propertyName)
