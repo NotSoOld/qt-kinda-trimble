@@ -223,7 +223,5 @@ Item {
                 sig_send_command(_COMMAND_SET_IO_OPTIONS, 0);
             }
         }
-
-
     }
 }

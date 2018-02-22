@@ -6,5 +6,7 @@
         <file>io_options.qml</file>
         <file>init_position.qml</file>
         <file>other_stuff.qml</file>
+        <file>autopacket_masking.qml</file>
+        <file>timing_packets.qml</file>
     </qresource>
 </RCC>

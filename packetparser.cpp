@@ -13,6 +13,11 @@ byte PacketParser::reportCode()
     return (byte)(data[0]);
 }
 
+byte PacketParser::reportSubcode()
+{
+    return (byte)(data.length() > 1 ? data[1] : 0);
+}
+
 QString PacketParser::parse_REPORT_UNPARSABLE()
 {
     QString res;
@@ -23,25 +28,40 @@ QString PacketParser::parse_REPORT_UNPARSABLE()
     }
     return res;
 }
-/*
-QString PacketParser::parse_REPORT_FIRMWARE_INFO()
+
+QString PacketParser::parse_RPTSUB_FIRMWARE_VERSION()
 {
     QString res;
 
-    if (data[1] == RPTSUB_FIRMWARE_VERSION) {
-        parse_RPTSUB_FIRMWARE_VERSION(res);
+    res.append("Получен пакет RPTSUB_FIRMWARE_VERSION (0x1C / 0x81):\n");
+    res.append(QString("- Major версия прошивки: %0\n").arg(data[3]));
+    res.append(QString("- Minor версия прошивки: %0\n").arg(data[4]));
+    res.append(QString("- Номер сборки прошивки: %0\n").arg(data[5]));
+    res.append(QString("- Дата сборки прошивки: %0/%1/%2\n").arg(data[6]).arg(data[7]).arg(TypesConverter::bytesToUInt16(data, 8)));
+    res.append(QString("- ID прошивки: "));
+    for (int i = 0; i < data[10]; i++) {
+        res.append((char)data[11 + i]);
     }
-    else if (data[1] == RPTSUB_HARDWARE_COMPONENT_INFO) {
-        parse_RPTSUB_HARDWARE_COMPONENT_INFO(res);
-    }
+
     return res;
 }
 
-void PacketParser::parse_RPTSUB_FIRMWARE_VERSION(QString *res)
+QString PacketParser::parse_RPTSUB_HARDWARE_COMPONENT_INFO()
 {
+    QString res;
 
+    res.append("Получен пакет RPTSUB_FIRMWARE_VERSION (0x1C / 0x83):\n");
+    res.append(QString("- Серийный номер платы: %0\n").arg(TypesConverter::bytesToUInt32(data, 2)));
+    res.append(QString("- Дата сборки платы: %0/%1/%2, %3 часов\n").arg(data[6]).arg(data[7]).arg(TypesConverter::bytesToUInt16(data, 8)).arg(data[10]));
+    res.append(QString("- Код платы, ассоциированный с ID: %0\n").arg(TypesConverter::bytesToUInt16(data, 11)));
+    res.append(QString("- ID платы: "));
+    for (int i = 0; i < data[13]; i++) {
+        res.append((char)data[14 + i]);
+    }
+
+    return res;
 }
-*/
+
 QString PacketParser::parse_REPORT_DOUBLE_XYZ_POS()
 {
     if (data.length() != 36) {
@@ -431,6 +451,113 @@ QString PacketParser::parse_REPORT_SATELLITE_SELECTION_LIST()
     for (int i = 17; i < 17 + (data[0] & (byte)7); i++) {
         s.append(QString("SV PRN: %0\n").arg(data[i]));
     }
+
+    return s;
+}
+
+QString PacketParser::parse_RPTSUB_PRIMARY_TIMING_PACKET()
+{
+    if (data.length() != 17) {
+        return QString("Пакет RPTSUB_PRIMARY_TIMING_PACKET (0x8F-AB) имеет неверную длину");
+    }
+
+    QString s = "Получен пакет RPTSUB_PRIMARY_TIMING_PACKET (0x8F-AB):\n";
+    s.append(QString("- Секунды недели GPS: %0\n").arg(TypesConverter::bytesToUInt32(data, 1)));
+    s.append(QString("- Номер недели GPS: %0\n").arg(TypesConverter::bytesToUInt16(data, 5)));
+    s.append(QString("- Сдвиг UTC, cек: %0\n").arg(TypesConverter::bytesToSInt16(data, 7)));
+    s.append(QString("- Номер недели GPS: %0\n").arg(TypesConverter::bytesToUInt16(data, 5)));
+    s.append("- Флаги времени:\n");
+    s.append(QString("-- Время GPS/UTC: %0\n").arg(data[9] & BIT(0) ? "UTC" : "GPS"));
+    s.append(QString("-- PPS GPS/UTC: %0\n").arg(data[9] & BIT(1) ? "UTC" : "GPS"));
+    s.append(QString("-- Время %0\n").arg(data[9] & BIT(2) ? "не установлено" : "установлено"));
+    s.append(QString("-- Информация UTC: %0\n").arg(data[9] & BIT(3) ? "отсутствует" : "присутствует"));
+    s.append(QString("-- Время от %0\n").arg(data[9] & BIT(4) ? "пользователя" : "GPS"));
+    s.append(QString("- Дата и время: %0/%1/%2 %3:%4:%5\n").arg(data[13]).arg(data[14]).arg(TypesConverter::bytesToUInt16(data, 15))
+            .arg(data[12]).arg(data[11]).arg(data[10]));
+
+    return s;
+}
+
+QString PacketParser::parse_RPTSUB_SUPPL_TIMING_PACKET()
+{
+    if (data.length() != 68) {
+        return QString("Пакет RPTSUB_PRIMARY_TIMING_PACKET (0x8F-AB) имеет неверную длину");
+    }
+
+    QString s = "Получен пакет RPTSUB_SUPPL_TIMING_PACKET (0x8F-AC):\n";
+    s.append(QString("- Режим приемника: "));
+    switch (data[1]) {
+        case 0: s.append("автоматический (2D/3D)"); break;
+        case 1: s.append("один спутник (время)"); break;
+        case 3: s.append("горизонтальный (2D)"); break;
+        case 4: s.append("полная позиция (3D)"); break;
+        case 7: s.append("переопределенные часы"); break;
+        default: s.append("неизвестно");
+    }
+    s.append(QString("\n- Режим дисциплинирования: "));
+    switch (data[2]) {
+        case 0: s.append("обычный (закреплен за GPS)"); break;
+        case 1: s.append("Включение"); break;
+        case 2: s.append("автоудержание"); break;
+        case 3: s.append("ручное удержание"); break;
+        case 4: s.append("восстановление"); break;
+        case 5: s.append("не используется"); break;
+        case 6: s.append("дисциплинирование выключено"); break;
+        default: s.append("неизвестно");
+    }
+    s.append(QString("\n- Прогресс самоопроса, %: %0\n").arg((char)data[3] ? QString((char)data[3]) : QString("самоопрос в данный момент не проводится")));
+    s.append(QString("- Длительность удержания (текущего или последнего, если удержание было отключено), сек: %0\n").arg(TypesConverter::bytesToUInt32(data, 4)));\
+    s.append("- Критические сигналы:\n");
+    s.append(QString("-- DAC at rail: %0\n").arg(data[8] & BIT(4) ? "ДА" : "нет"));
+    s.append("- Не такие критические сигналы:\n");
+    s.append(QString("-- DAC near rail: %0\n").arg(data[10] & BIT(0) ? "ДА" : "нет"));
+    s.append(QString("-- Малое напряжение на антенне (open): %0\n").arg(data[10] & BIT(1) ? "ДА" : "нет"));
+    s.append(QString("-- Слишком большое напряжение на антенне (short): %0\n").arg(data[10] & BIT(2) ? "ДА" : "нет"));
+    s.append(QString("-- Нет спутников для слежения: %0\n").arg(data[10] & BIT(3) ? "ДА" : "нет"));
+    s.append(QString("-- Нет дисциплинирования: %0\n").arg(data[10] & BIT(4) ? "ДА" : "нет"));
+    s.append(QString("-- Самоопрос в процессе: %0\n").arg(data[10] & BIT(5) ? "ДА" : "нет"));
+    s.append(QString("-- Нет сохраненной позиции: %0\n").arg(data[10] & BIT(6) ? "ДА" : "нет"));
+    s.append(QString("-- Leap second pending: %0\n").arg(data[10] & BIT(7) ? "ДА" : "нет"));
+    s.append(QString("-- В тестовом режиме: %0\n").arg(data[11] & BIT(0) ? "ДА" : "нет"));
+    s.append(QString("-- Позиция под вопросом: %0\n").arg(data[11] & BIT(1) ? "ДА" : "нет"));
+    s.append(QString("-- Неполный альманах: %0\n").arg(data[11] & BIT(3) ? "ДА" : "нет"));
+    s.append(QString("-- PPS не генерируется: %0\n").arg(data[11] & BIT(4) ? "ДА" : "нет"));
+    s.append(QString("- Статус декодирования GPS: "));
+    switch (data[12]) {
+        case 0x00: s.append("делает фиксы"); break;
+        case 0x01: s.append("не имеет времени GPS"); break;
+        case 0x03: s.append("PDOP слишком высок"); break;
+        case 0x08: s.append("нет юзабельных sat"); break;
+        case 0x09: s.append("только один юзабельный sat"); break;
+        case 0x0A: s.append("только два юзабельных sat"); break;
+        case 0x0B: s.append("только три юзабельных sat"); break;
+        case 0x0C: s.append("выбранный sat неюзабелен"); break;
+        case 0x10: s.append("TRAIM отбросил фикс"); break;
+        default: s.append("неизвестно");
+    }
+    s.append(QString("\n- Дисциплинированная активность: "));
+    switch (data[2]) {
+        case 0: s.append("лок фазы"); break;
+        case 1: s.append("разогрев осциллятора"); break;
+        case 2: s.append("лок частоты"); break;
+        case 3: s.append("установка PPS"); break;
+        case 4: s.append("инициализация повторяющего фильтра"); break;
+        case 5: s.append("компенсация OCXO (удержание)"); break;
+        case 6: s.append("неактивно"); break;
+        case 7: s.append("не используется"); break;
+        case 8: s.append("режим восстановления"); break;
+        case 9: s.append("калибровка/управление напряжением"); break;
+        default: s.append("неизвестно");
+    }
+    s.append(QString("- Сдвиг PPS, нс: %0\n").arg(TypesConverter::bytesToSingle(data, 16)));
+    s.append(QString("- Сдвиг клока, ppb: %0\n").arg(TypesConverter::bytesToSingle(data, 20)));
+    s.append(QString("- Значение DAC: %0\n").arg(TypesConverter::bytesToUInt32(data, 24)));
+    s.append(QString("- Напряжение на DAC: %0V\n").arg(TypesConverter::bytesToSingle(data, 28)));
+    s.append(QString("- Температура: %0\n").arg(TypesConverter::bytesToSingle(data, 32)));
+    s.append(QString("- Широта: %0\n").arg(TypesConverter::bytesToDouble(data, 36)));
+    s.append(QString("- Долгота: %0\n").arg(TypesConverter::bytesToDouble(data, 44)));
+    s.append(QString("- Высота: %0\n").arg(TypesConverter::bytesToDouble(data, 52)));
+    s.append(QString("- Ошибка квантизации PPS, нс: %0\n").arg(TypesConverter::bytesToSingle(data, 60)));
 
     return s;
 }

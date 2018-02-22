@@ -111,6 +111,8 @@ public:
     void build_COMMAND_ACCURATE_INIT_POS_LLA(QByteArray *);
     void build_COMMAND_REQUEST_SATELLITE_SYSTEM_DATA(QByteArray *);
     void build_COMMAND_SET_REQUEST_SATELLITES_AND_HEALTH(QByteArray *);
+    void build_CMDSUB_SET_PACKET_BROADCAST_MASK(QByteArray *);
+    void build_CMDSUB_REQUEST_TIMING_PACKET(QByteArray *);
 
     void appendAndStuff(QByteArray *, byte);
     void appendAndStuff(QByteArray *, double);

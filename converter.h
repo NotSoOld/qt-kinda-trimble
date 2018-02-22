@@ -16,7 +16,8 @@ public:
 
     static unsigned short bytesToUInt16(QByteArray, int);
     static short bytesToSInt16(QByteArray, int);
-    static unsigned int bytesToInt32(QByteArray, int);
+    static unsigned int bytesToUInt32(QByteArray, int);
+    static int bytesToSInt32(QByteArray, int);
     static float bytesToSingle(QByteArray, int);
     static double bytesToDouble(QByteArray, int);
 
@@ -30,8 +31,13 @@ public:
         byte bytes[2];
     };
 
-    union _int32 {
+    union _uint32 {
         unsigned int value;
+        byte bytes[4];
+    };
+
+    union _sint32 {
+        int value;
         byte bytes[4];
     };
 

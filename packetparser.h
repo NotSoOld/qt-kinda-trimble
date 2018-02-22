@@ -13,8 +13,11 @@ class PacketParser : public QObject
 public:
     PacketParser(QByteArray);
     byte reportCode();
+    byte reportSubcode();
 
     QString parse_REPORT_UNPARSABLE();
+    QString parse_RPTSUB_FIRMWARE_VERSION();
+    QString parse_RPTSUB_HARDWARE_COMPONENT_INFO();
     QString parse_REPORT_DOUBLE_XYZ_POS();
     QString parse_REPORT_DOUBLE_LLA_POS();
     QString parse_REPORT_SINGLE_XYZ_POS();
@@ -29,6 +32,8 @@ public:
     QString parse_REPORT_RAW_MEASUREMENT_DATA();
     QString parse_REPORT_SATELLITE_TRACKING_STATUS();
     QString parse_REPORT_SATELLITE_SELECTION_LIST();
+    QString parse_RPTSUB_PRIMARY_TIMING_PACKET();
+    QString parse_RPTSUB_SUPPL_TIMING_PACKET();
 private:
     QByteArray data;
 

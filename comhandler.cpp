@@ -167,6 +167,18 @@ void COMHandler::receiveReport()
         case REPORT_UNPARSABLE:
             message.append(parser->parse_REPORT_UNPARSABLE());
             break;
+        case REPORT_FIRMWARE_INFO:
+            switch (parser->reportSubcode()) {
+            case RPTSUB_FIRMWARE_VERSION:
+                message.append(parser->parse_RPTSUB_FIRMWARE_VERSION());
+                break;
+            case RPTSUB_HARDWARE_COMPONENT_INFO:
+                message.append(parser->parse_RPTSUB_HARDWARE_COMPONENT_INFO());
+                break;
+            default:
+                message = "Это точно был пакет REPORT_FIRMWARE_INFO (0х1С)? Подкод не распознан.";
+            }
+            break;
         case REPORT_DOUBLE_XYZ_POS:
             message.append(parser->parse_REPORT_DOUBLE_XYZ_POS());
             break;
@@ -209,9 +221,20 @@ void COMHandler::receiveReport()
         case REPORT_SATELLITE_SELECTION_LIST:
             message.append(parser->parse_REPORT_SATELLITE_SELECTION_LIST());
             break;
+        case REPORT_SUPER:
+            switch (parser->reportSubcode()) {
+            case RPTSUB_PRIMARY_TIMING_PACKET:
+                message.append(parser->parse_RPTSUB_PRIMARY_TIMING_PACKET());
+                break;
+            case RPTSUB_SUPPL_TIMING_PACKET:
+                message.append(parser->parse_RPTSUB_SUPPL_TIMING_PACKET());
+                break;
+            default:
+                message = "Это точно был пакет REPORT_SUPER (0х8F)? Подкод не распознан.";
+            }
+            break;
         default:
             message = QString("Неизвестный пакет 0x%0").arg(parser->reportCode(), 1, 16);
-            break;
         }
         emit appendReceivedText(message);
 
@@ -322,6 +345,36 @@ void COMHandler::build_COMMAND_SET_REQUEST_SATELLITES_AND_HEALTH(QByteArray *cmd
     qDebug() << *cmd;
 }
 
+void COMHandler::build_CMDSUB_SET_PACKET_BROADCAST_MASK(QByteArray *cmd)
+{
+    bool maskPrimaryPackets = getBoolFromQML("primaryPacketMaskingBit", "checked");
+    bool maskSupplPackets = getBoolFromQML("supplPacketMaskingBit", "checked");
+    bool maskOtherPackets = getBoolFromQML("otherPacketsMaskingBit", "checked");
+    appendAndStuff(cmd, (byte)(
+                       (maskPrimaryPackets ? BIT(0) : 0) |
+                       (maskSupplPackets ? BIT(2) : 0) |
+                       (maskOtherPackets ? BIT(6) : 0)
+                      ));
+    appendAndStuff(cmd, (byte)0);
+    appendAndStuff(cmd, (byte)0);
+    appendAndStuff(cmd, (byte)0);
+
+    qDebug() << *cmd;
+}
+
+void COMHandler::build_CMDSUB_REQUEST_TIMING_PACKET(QByteArray *cmd)
+{
+    QObject *qmlObject = window->findChild<QObject *>("timingPacketItem");
+    if (!qmlObject) {
+        qDebug() << QString("Не удается найти QML-компонент %0").arg("timingPacketItem");
+        exit(1);
+    }
+    byte typeOfRequest = (byte)(qmlObject->property("timingPacketType").toInt());
+    appendAndStuff(cmd, typeOfRequest);
+
+    qDebug() << *cmd;
+}
+
 void COMHandler::send_command(int code, int subcode)
 {
     QByteArray cmd;
@@ -370,6 +423,19 @@ void COMHandler::send_command(int code, int subcode)
         // (для операций 3 и 6 номер спутника не важен, однако пакет всё равно нужно дополнить).
         build_COMMAND_SET_REQUEST_SATELLITES_AND_HEALTH(&cmd);
         break;
+    case COMMAND_SUPER:
+        // Суперпакетов TSIP много, нужно выбрать нужный метод по подкоду.
+        switch((byte)subcode) {
+        case CMDSUB_SET_PACKET_BROADCAST_MASK:
+            build_CMDSUB_SET_PACKET_BROADCAST_MASK(&cmd);
+            break;
+        case CMDSUB_REQUEST_PRIMARY_TIMING_PACKET:
+        case CMDSUB_REQUEST_SUPPL_TIMING_PACKET:
+            // Здесь необходимо добавить лишь код, обозначающий, как прислать этот пакет.
+            // Для обоих пакетов коды значат одно и то же, поэтому одного метода достаточно.
+            build_CMDSUB_REQUEST_TIMING_PACKET(&cmd);
+            break;
+        }
     }
 
     cmd.append(DLE);

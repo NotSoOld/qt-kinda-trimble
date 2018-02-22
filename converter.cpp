@@ -38,7 +38,7 @@ QByteArray TypesConverter::toByteArray(unsigned short f)
 
 QByteArray TypesConverter::toByteArray(unsigned int f)
 {
-    _int32 *result = (_int32 *)calloc(1, sizeof(_int32));
+    _uint32 *result = (_uint32 *)calloc(1, sizeof(_uint32));
     result->value = f;
     QByteArray res;
     for (int i = 0; i < 4; i++) {
@@ -49,13 +49,24 @@ QByteArray TypesConverter::toByteArray(unsigned int f)
 }
 
 
-unsigned int TypesConverter::bytesToInt32(QByteArray bytes, int start)
+unsigned int TypesConverter::bytesToUInt32(QByteArray bytes, int start)
 {
-    _int32 *result = (_int32 *)calloc(1, sizeof(_int32));
+    _uint32 *result = (_uint32 *)calloc(1, sizeof(_uint32));
     for (int i = start; i < start + 4; i++) {
         result->bytes[i - start] = bytes[i];
     }
     unsigned int res = result->value;
+    free(result);
+    return res;
+}
+
+int TypesConverter::bytesToSInt32(QByteArray bytes, int start)
+{
+    _sint32 *result = (_sint32 *)calloc(1, sizeof(_sint32));
+    for (int i = start; i < start + 4; i++) {
+        result->bytes[i - start] = bytes[i];
+    }
+    int res = result->value;
     free(result);
     return res;
 }
