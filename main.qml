@@ -3,10 +3,9 @@ import QtQuick.Window 2.2
 import QtQuick.Controls 1.5
 import QtQuick.Controls 2.2
 import QtQml 2.2
-import QtQuick.Controls.Styles 1.4
 
 Window {
-    id: window
+    id: main_window
     visible: true
     width: 800
     height: 600
@@ -79,7 +78,7 @@ Window {
                 text: ""
                 wrapMode: Text.WordWrap
                 font.weight: Font.Light
-                readOnly: false
+                readOnly: true
                 font.wordSpacing: 0
                 font.pixelSize: 14
             }
@@ -189,4 +188,26 @@ Window {
         font.pixelSize: 14
     }
 
+    COMInit {
+        id: com_init_window
+        modality: Qt.WindowModal
+        onCloseWindow: {
+            com_init_window.close();
+            main_window.show();
+        }
+    }
+
+    Button {
+        id: button
+        x: 583
+        y: 9
+        width: 201
+        height: 50
+        text: qsTr("Настройка VirtualCOM")
+
+        onClicked: {
+            com_init_window.show();
+            main_window.hide();
+        }
+    }
 }

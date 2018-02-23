@@ -1,5 +1,6 @@
 import QtQuick 2.1
 import QtQuick.Controls 1.0
+import QtQuick.Controls 2.2
 
 Item {
     width: 400
@@ -21,10 +22,11 @@ Item {
         Button {
             id: button
             x: 16
-            y: 144
+            y: 152
             width: 175
-            height: 44
+            height: 59
             text: qsTr("Последнее измерение\n(в сыром виде со спутника)")
+            font.pointSize: 7
             onClicked: {
                 sig_send_command(_COMMAND_REQUEST_LAST_RAW_MEASUREMENT, satellite_selection_spinner.value.toFixed());
             }
@@ -33,10 +35,10 @@ Item {
         Button {
             id: button1
             x: 209
-            y: 144
+            y: 152
             width: 175
-            height: 44
-            text: qsTr("Статус трекинга спутника")
+            height: 59
+            text: qsTr("Статус трекинга\nспутника")
             onClicked: {
                 sig_send_command(_COMMAND_REQUEST_SATELLITE_TRACKING_STATUS, satellite_selection_spinner.value.toFixed());
             }
@@ -44,12 +46,13 @@ Item {
 
         SpinBox {
             id: satellite_selection_spinner
-            x: 169
-            y: 99
-            width: 66
-            height: 20
-            minimumValue: 0
-            maximumValue: 32
+            x: 132
+            y: 104
+            width: 136
+            height: 29
+            font.pointSize: 9
+            from: 0
+            to: 32
             objectName: "satellites_and_health_spinner"
         }
 
@@ -70,9 +73,9 @@ Item {
         Button {
             id: button2
             x: 16
-            y: 202
+            y: 224
             width: 175
-            height: 28
+            height: 42
             text: qsTr("Включить спутник")
             onClicked: {
                 sig_send_command(_COMMAND_SET_REQUEST_SATELLITES_AND_HEALTH, 1);
@@ -82,9 +85,9 @@ Item {
         Button {
             id: button3
             x: 209
-            y: 202
+            y: 224
             width: 175
-            height: 28
+            height: 42
             text: qsTr("Выключить спутник")
             onClicked: {
                 sig_send_command(_COMMAND_SET_REQUEST_SATELLITES_AND_HEALTH, 2);
@@ -94,10 +97,11 @@ Item {
         Button {
             id: button4
             x: 16
-            y: 310
+            y: 336
             width: 175
-            height: 47
+            height: 59
             text: qsTr("Принимать здоровье\nспутника во внимание")
+            font.pointSize: 7
             onClicked: {
                 sig_send_command(_COMMAND_SET_REQUEST_SATELLITES_AND_HEALTH, 4);
             }
@@ -106,10 +110,11 @@ Item {
         Button {
             id: button5
             x: 209
-            y: 310
+            y: 336
             width: 175
-            height: 47
+            height: 59
             text: qsTr("Игнорировать здоровье\nспутника")
+            font.pointSize: 7
             onClicked: {
                 sig_send_command(_COMMAND_SET_REQUEST_SATELLITES_AND_HEALTH, 5);
             }
@@ -118,9 +123,9 @@ Item {
         Button {
             id: button6
             x: 16
-            y: 247
+            y: 277
             width: 368
-            height: 33
+            height: 44
             text: qsTr("Запросить статус включения всех 32 спутников")
             onClicked: {
                 sig_send_command(_COMMAND_SET_REQUEST_SATELLITES_AND_HEALTH, 3);
@@ -130,10 +135,11 @@ Item {
         Button {
             id: button7
             x: 16
-            y: 376
+            y: 413
             width: 368
-            height: 33
-            text: qsTr("Запросить статус значения здоровья всех 32 спутников")
+            height: 56
+            text: qsTr("Запросить статус значения здоровья\nвсех 32 спутников")
+            font.pointSize: 7
             onClicked: {
                 sig_send_command(_COMMAND_SET_REQUEST_SATELLITES_AND_HEALTH, 6);
             }

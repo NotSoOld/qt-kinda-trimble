@@ -1,5 +1,6 @@
 import QtQuick 2.1
-import QtQuick.Controls 1.0
+//import QtQuick.Controls 1.0
+import QtQuick.Controls 2.2
 
 Item {
     width: 400
@@ -19,11 +20,12 @@ Item {
 
         Button {
             id: request_io_options_button
-            x: 31
-            y: 14
-            width: 323
-            height: 35
+            x: 35
+            y: 8
+            width: 330
+            height: 44
             text: qsTr("Запросить текущие настройки ввода-вывода")
+            font.pointSize: 7
             onClicked: {
                 sig_send_command(_COMMAND_SET_IO_OPTIONS, -1);
             }
@@ -41,10 +43,11 @@ Item {
         Button {
             id: save_to_flash_io_options_button
             x: 31
-            y: 435
+            y: 443
             width: 323
-            height: 35
+            height: 42
             text: qsTr("Сохранить настройки (из ОЗУ устройства) в ПЗУ")
+            font.pointSize: 7
             onClicked: {
                 sig_send_command(_COMMAND_SUPER, _CMDSUB_WRITE_CONFIG_TO_FLASH);
             }
@@ -63,67 +66,92 @@ Item {
             id: lLAcheck
             objectName: "lLAcheck"
             x: 19
-            y: 129
+            y: 135
             text: qsTr("LLA")
             checked: true
         }
 
-        RadioButton {
-            id: singlePrecRB
-            x: 149
-            y: 103
-            text: qsTr("single")
-            onCheckedChanged: {
-                doublePrecRB.checked = !(singlePrecRB.checked)
-            }
+        ButtonGroup {
+            buttons: prec_column.children
         }
 
-        RadioButton {
-            id: doublePrecRB
-            objectName: "doublePrecRB"
-            x: 149
-            y: 129
-            text: qsTr("double")
-            checked: true
-            onCheckedChanged: {
-                singlePrecRB.checked = !(doublePrecRB.checked)
-            }
-        }
-
-        Label {
-            id: label
-            x: 149
+        Column {
+            id: prec_column
+            x: 10
             y: 81
-            text: qsTr("Точность данных:")
-        }
+            spacing: -10
 
-        RadioButton {
-            id: gpsRB
-            objectName: "gpsTimeRB"
-            x: 273
-            y: 103
-            text: qsTr("GPS")
-            onCheckedChanged: {
-                utcRB.checked = !(gpsRB.checked)
+            Label {
+                id: label
+                x: 149
+                y: 0
+                text: qsTr("Точность:")
             }
-        }
-
-        RadioButton {
-            id: utcRB
-            x: 273
-            y: 129
-            text: qsTr("UTC")
-            checked: true
-            onCheckedChanged: {
-                gpsRB.checked = !(utcRB.checked)
+            Rectangle {
+                width: 7
+                height: 20
+                color: "#00ffffff"
             }
+
+            RadioButton {
+                id: singlePrecRB
+                x: 149
+                y: 103
+                text: qsTr("single")
+                autoExclusive: true
+                checked: true
+            }
+
+            RadioButton {
+                id: doublePrecRB
+                objectName: "doublePrecRB"
+                x: 149
+                y: 146
+                text: qsTr("double")
+                checked: true
+            }
+
         }
 
-        Label {
-            id: label1
-            x: 273
+        ButtonGroup {
+            buttons: time_column.children
+        }
+
+        Column {
+            id: time_column
+            x: -3
             y: 81
-            text: qsTr("Временные метки:")
+            spacing: -10
+
+            Label {
+                id: label1
+                x: 273
+                y: 81
+                text: qsTr("Временные метки:")
+            }
+
+            Rectangle {
+                width: 7
+                height: 20
+                color: "#00ffffff"
+            }
+            RadioButton {
+                id: gpsRB
+                objectName: "gpsTimeRB"
+                x: 273
+                y: 103
+                text: qsTr("GPS")
+                checkable: true
+                checked: true
+            }
+
+            RadioButton {
+                id: utcRB
+                x: 273
+                y: 146
+                text: qsTr("UTC")
+                checked: false
+            }
         }
 
         Label {
@@ -133,33 +161,40 @@ Item {
             text: "Данные о позиции:"
         }
 
-        RadioButton {
-            id: haeRB
-            x: 19
-            y: 155
-            text: qsTr("HAE")
-            objectName: "haeRB"
-            onCheckedChanged: {
-                mslRB.checked = !(haeRB.checked)
-            }
+        ButtonGroup {
+            buttons: hae_msl_column.children
         }
 
-        RadioButton {
-            id: mslRB
-            x: 19
+        Column {
+            id: hae_msl_column
+            x: -1
             y: 181
-            text: qsTr("Геоид MSL")
-            checked: true
-            objectName: "mslRB"
-            onCheckedChanged: {
-                haeRB.checked = !(mslRB.checked)
+            spacing: -10
+
+
+            RadioButton {
+                id: haeRB
+                x: 22
+                y: 181
+                text: qsTr("HAE")
+                checked: true
+                objectName: "haeRB"
+            }
+
+            RadioButton {
+                id: mslRB
+                x: 22
+                y: 223
+                text: qsTr("Геоид MSL")
+                checked: false
+                objectName: "mslRB"
             }
         }
 
         CheckBox {
             id: ecef_vel_check
-            x: 149
-            y: 188
+            x: 238
+            y: 214
             text: qsTr("ECEF")
             checked: true
             objectName: "ecef_vel_check"
@@ -176,49 +211,59 @@ Item {
 
         Label {
             id: label3
-            x: 149
-            y: 166
+            x: 181
+            y: 198
+            width: 118
+            height: 21
             text: "Данные о скорости:"
         }
 
         CheckBox {
             id: raw_data_report_check
             x: 19
-            y: 251
+            y: 274
             text: qsTr("Прием пакетов с сырыми данными об измерениях")
             objectName: "raw_data_report_check"
         }
 
-        RadioButton {
-            id: aem_out_RB
-            x: 19
-            y: 277
-            text: qsTr("Вывод в а.е.м.")
-            objectName: "aem_out_RB"
-            onCheckedChanged: {
-                dbhz_out_RB.checked = !(aem_out_RB.checked)
-            }
+        ButtonGroup {
+            buttons: out_column.children
         }
 
-        RadioButton {
-            id: dbhz_out_RB
-            x: 19
-            y: 303
-            text: qsTr("Вывод в дБ-Гц")
-            checked: true
-            objectName: "dbhz_out_RB"
-            onCheckedChanged: {
-                aem_out_RB.checked = !(dbhz_out_RB.checked)
+        Column {
+            id: out_column
+            x: -1
+            y: 310
+            spacing: -10
+
+            RadioButton {
+                id: aem_out_RB
+                x: 19
+                y: 313
+                width: 140
+                height: 40
+                text: qsTr("Вывод в а.е.м.")
+                objectName: "aem_out_RB"
+            }
+
+            RadioButton {
+                id: dbhz_out_RB
+                x: 19
+                y: 350
+                text: qsTr("Вывод в дБ-Гц")
+                checked: true
+                objectName: "dbhz_out_RB"
             }
         }
 
         Button {
             id: send_io_options_button
             x: 31
-            y: 350
+            y: 395
             width: 323
-            height: 35
+            height: 42
             text: "Отправить настройки ввода-вывода в ОЗУ"
+            font.pointSize: 7
             onClicked: {
                 sig_send_command(_COMMAND_SET_IO_OPTIONS, 0);
             }

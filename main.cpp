@@ -3,6 +3,7 @@
 #include <QQmlEngine>
 #include <QQmlContext>
 #include <QQuickWindow>
+#include <QQuickStyle>
 #include <comhandler.h>
 
 COMHandler handler;
@@ -13,8 +14,12 @@ int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
     QQmlApplicationEngine engine;
- //   handler.configureCOM("COM5", QIODevice::ReadWrite);
+
+    QQuickStyle::setStyle("Material");
+
     COMHandler::configureCOM("COM5", QIODevice::ReadWrite);
+
+    //engine.load(QUrl(QStringLiteral("qrc:/COMInit.qml")));
     engine.load(QUrl(QStringLiteral("qrc:/main.qml")));
     if (engine.rootObjects().isEmpty())
         return -1;

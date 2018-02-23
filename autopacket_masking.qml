@@ -1,5 +1,6 @@
 import QtQuick 2.1
 import QtQuick.Controls 1.0
+import QtQuick.Controls 2.2
 
 Item {
     width: 400
@@ -30,7 +31,7 @@ Item {
             id: supplPacketMaskingBit
             objectName: "supplPacketMaskingBit"
             x: 21
-            y: 71
+            y: 82
             text: qsTr("Дополн. информация по таймингу")
             checked: true
         }
@@ -46,7 +47,7 @@ Item {
         CheckBox {
             id: otherPacketsMaskingBit
             x: 21
-            y: 97
+            y: 117
             text: qsTr("Остальные пакеты (позиция, скорость,\nсырые измерения, список спутников)")
             checked: true
             objectName: "otherPacketsMaskingBit"
@@ -54,11 +55,12 @@ Item {
 
         Button {
             id: send_autopacket_masking_options_button
-            x: 224
-            y: 159
+            x: 223
+            y: 177
             width: 149
-            height: 66
+            height: 86
             text: "Отправить\nнастройки\nмаскирования"
+            font.pointSize: 7
             onClicked: {
                 sig_send_command(_COMMAND_SUPER, _CMDSUB_SET_PACKET_BROADCAST_MASK);
             }
@@ -67,7 +69,7 @@ Item {
         Label {
             id: label3
             x: 21
-            y: 151
+            y: 177
             width: 171
             height: 113
             text: "Примечание. Перечисленные у третьего пункта пакеты могут маскироваться другими пакетами и не приходить, даже если флажок установлен."

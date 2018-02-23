@@ -7,6 +7,9 @@ byte COMHandler::previouslyReadedChar;
 
 void COMHandler::configureCOM(QString portName, QIODevice::OpenModeFlag openModeFlag)
 {
+    if (com->isOpen()) {
+        finishCOM();
+    }
     com = new QSerialPort(portName);
     com->setBaudRate(QSerialPort::Baud9600);
     com->setDataBits(QSerialPort::Data8);

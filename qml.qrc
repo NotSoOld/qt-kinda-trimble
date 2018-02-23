@@ -8,5 +8,6 @@
         <file>other_stuff.qml</file>
         <file>autopacket_masking.qml</file>
         <file>timing_packets.qml</file>
+        <file>COMInit.qml</file>
     </qresource>
 </RCC>

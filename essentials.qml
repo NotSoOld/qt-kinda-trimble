@@ -1,5 +1,6 @@
 import QtQuick 2.1
 import QtQuick.Controls 1.0
+import QtQuick.Controls 2.2
 
 Item {
     width: 400
@@ -32,9 +33,9 @@ Item {
 
         Button {
             id: hardware_components_button
-            x: 94
-            y: 82
-            width: 193
+            x: 77
+            y: 83
+            width: 246
             height: 44
             text: qsTr("Информация о компонентах")
             onClicked: {
@@ -44,9 +45,9 @@ Item {
 
         Button {
             id: cold_reset_button
-            x: 108
+            x: 94
             y: 223
-            width: 165
+            width: 193
             height: 44
             text: qsTr("Холодная перезагрузка")
             onClicked: {
@@ -56,9 +57,9 @@ Item {
 
         Button {
             id: warm_reset_button
-            x: 108
+            x: 94
             y: 287
-            width: 165
+            width: 193
             height: 44
             text: qsTr("Теплая перезагрузка")
             onClicked: {
@@ -68,9 +69,9 @@ Item {
 
         Button {
             id: hot_reset_button
-            x: 108
+            x: 94
             y: 351
-            width: 165
+            width: 193
             height: 44
             text: qsTr("Горячая перезагрузка")
             onClicked: {
@@ -80,9 +81,9 @@ Item {
 
         Button {
             id: factory_reset_button
-            x: 267
+            x: 251
             y: 426
-            width: 111
+            width: 141
             height: 57
             text: qsTr("Полный сброс")
             enabled: false
@@ -98,6 +99,7 @@ Item {
             width: 193
             height: 44
             text: qsTr("Версия ПО")
+            font.pointSize: 8
             onClicked: {
                 sig_send_command(_COMMAND_REQEST_SOFTWARE_VERSION, 0);
             }
@@ -105,11 +107,17 @@ Item {
 
         CheckBox {
             id: confirm_factory_reset_chk
-            x: 48
-            y: 435
-            width: 197
-            height: 40
+            x: 41
+            y: 421
+            width: 237
+            height: 68
             text: qsTr("Да, я уверен в том, что\nхочу сделать полный сброс")
+            padding: 0
+            leftPadding: 0
+            rightPadding: 0
+            bottomPadding: 0
+            topPadding: 0
+            font.pointSize: 8
             onCheckedChanged: {
                 factory_reset_button.enabled = confirm_factory_reset_chk.checked
             }
