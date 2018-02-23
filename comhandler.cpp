@@ -5,20 +5,51 @@ QString COMHandler::name;
 QByteArray COMHandler::readedData;
 byte COMHandler::previouslyReadedChar;
 
-void COMHandler::configureCOM(QString portName, QIODevice::OpenModeFlag openModeFlag)
+void COMHandler::configureCOM(QString portName, int baudRate, int dataBits, int parity, int flowControl, int stopBits)
 {
-    if (com->isOpen()) {
+    if (com && com->isOpen()) {
         finishCOM();
     }
     com = new QSerialPort(portName);
-    com->setBaudRate(QSerialPort::Baud9600);
-    com->setDataBits(QSerialPort::Data8);
-    com->setParity(QSerialPort::NoParity);
-    com->setFlowControl(QSerialPort::NoFlowControl);
-    com->setStopBits(QSerialPort::OneStop);
-    com->open(openModeFlag);
+    com->setBaudRate(baudRate);
+    switch (dataBits) {
+        case 0: com->setDataBits(QSerialPort::Data5); break;
+        case 1: com->setDataBits(QSerialPort::Data6); break;
+        case 2: com->setDataBits(QSerialPort::Data7); break;
+        case 3: com->setDataBits(QSerialPort::Data8); break;
+        default: com->setDataBits(QSerialPort::UnknownDataBits);
+    }
+    switch (parity) {
+        case 0: com->setParity(QSerialPort::NoParity); break;
+        case 2: com->setParity(QSerialPort::EvenParity); break;
+        case 3: com->setParity(QSerialPort::OddParity); break;
+        case 4: com->setParity(QSerialPort::SpaceParity); break;
+        case 5: com->setParity(QSerialPort::MarkParity); break;
+        default: com->setParity(QSerialPort::UnknownParity);
+    }
+    switch (flowControl) {
+        case 0: com->setFlowControl(QSerialPort::NoFlowControl); break;
+        case 1: com->setFlowControl(QSerialPort::HardwareControl); break;
+        case 2: com->setFlowControl(QSerialPort::SoftwareControl); break;
+        default: com->setFlowControl(QSerialPort::UnknownFlowControl);
+    }
+    switch (stopBits) {
+        case 1: com->setStopBits(QSerialPort::OneStop); break;
+        case 2: com->setStopBits(QSerialPort::OneAndHalfStop); break;
+        case 3: com->setStopBits(QSerialPort::TwoStop); break;
+        default: com->setStopBits(QSerialPort::UnknownStopBits);
+    }
+    com->open(QSerialPort::ReadWrite);
     com->clear();
     name = portName;
+    QObject::connect(
+                com,
+                &QSerialPort::readyRead,
+                this,
+                &COMHandler::readFromCOM
+    );
+
+    emit appendReceivedText(QString("VirtualCOM %0 подключен с параметрами: %1").arg(portName).arg(baudRate));
 }
 
 void COMHandler::finishCOM()
@@ -27,7 +58,6 @@ void COMHandler::finishCOM()
     com->close();
     delete com;
 }
-
 
 
 void COMHandler::appendAndStuff(QByteArray *bytes, double d)
@@ -367,12 +397,7 @@ void COMHandler::build_CMDSUB_SET_PACKET_BROADCAST_MASK(QByteArray *cmd)
 
 void COMHandler::build_CMDSUB_REQUEST_TIMING_PACKET(QByteArray *cmd)
 {
-    QObject *qmlObject = window->findChild<QObject *>("timingPacketItem");
-    if (!qmlObject) {
-        qDebug() << QString("Не удается найти QML-компонент %0").arg("timingPacketItem");
-        exit(1);
-    }
-    byte typeOfRequest = (byte)(qmlObject->property("timingPacketType").toInt());
+    byte typeOfRequest = (byte)getIntFromQML("timingPacketItem", "timingPacketType");
     appendAndStuff(cmd, typeOfRequest);
 
     qDebug() << *cmd;

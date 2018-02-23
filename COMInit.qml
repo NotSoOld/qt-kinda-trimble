@@ -10,7 +10,7 @@ Window {
     width: 400
     height: 480
     title: "Настройка подключения"
-    signal closeWindow()
+    signal closeWindow(string portName, int baud, int dataBits, int parity, int flowControl, int stopBits)
 
     Text {
         id: text1
@@ -32,7 +32,7 @@ Window {
     }
 
     TextField {
-        id: textEdit
+        id: portNameTextEdit
         x: 211
         y: 67
         width: 90
@@ -55,12 +55,14 @@ Window {
     }
 
     ComboBox {
-        id: comboBox
+        id: baudComboBox
         x: 211
         y: 99
         width: 90
         height: 40
-        model: [1200, 9600]
+        currentIndex: 3
+        model: [1200, 2400, 4800, 9600, 19200, 38400, 57600, 115200]
+
     }
 
     Text {
@@ -72,11 +74,13 @@ Window {
     }
 
     ComboBox {
-        id: comboBox1
+        id: dataBitsComboBox
         x: 211
         y: 133
         width: 90
         height: 40
+        currentIndex: 3
+        model: [5, 6, 7, 8]
     }
 
     Text {
@@ -88,11 +92,13 @@ Window {
     }
 
     ComboBox {
-        id: comboBox2
+        id: parityComboBox
         x: 211
         y: 168
         width: 90
         height: 40
+        currentIndex: 0
+        model: ["no", "even", "odd", "space", "mark"]
     }
 
     Text {
@@ -104,11 +110,13 @@ Window {
     }
 
     ComboBox {
-        id: comboBox3
+        id: flowControlComboBox
         x: 211
         y: 201
         width: 90
         height: 40
+        currentIndex: 0
+        model: ["нет", "аппаратный", "программный"]
     }
 
     Text {
@@ -120,11 +128,13 @@ Window {
     }
 
     ComboBox {
-        id: comboBox4
+        id: stopBitsComboBox
         x: 211
         y: 234
         width: 90
         height: 40
+        currentIndex: 0
+        model: ["1", "1.5", "2"]
     }
 
     Button {
@@ -135,7 +145,9 @@ Window {
         height: 51
         text: qsTr("Подключиться")
         onClicked: {
-            comInitWindow.closeWindow()
+            comInitWindow.closeWindow(portNameTextEdit.text, parseInt(baudComboBox.currentText),
+                                      dataBitsComboBox.currentIndex, parityComboBox.currentIndex,
+                                      flowControlComboBox.currentIndex, stopBitsComboBox.currentIndex);
         }
     }
 

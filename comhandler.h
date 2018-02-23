@@ -99,7 +99,6 @@ class COMHandler : public QThread
 {
     Q_OBJECT
 public:
-    static void configureCOM(QString, QIODevice::OpenModeFlag);
     static void finishCOM();
     void receiveReport();
     void run();
@@ -137,6 +136,7 @@ signals:
 public slots:
     void send_command(int, int);
     void readFromCOM();
+    void configureCOM(QString, int, int, int, int, int);
 };
 
 #endif // COMHANDLER_H

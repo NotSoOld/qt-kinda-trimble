@@ -17,15 +17,18 @@ int main(int argc, char *argv[])
 
     QQuickStyle::setStyle("Material");
 
-    COMHandler::configureCOM("COM5", QIODevice::ReadWrite);
-
     //engine.load(QUrl(QStringLiteral("qrc:/COMInit.qml")));
     engine.load(QUrl(QStringLiteral("qrc:/main.qml")));
     if (engine.rootObjects().isEmpty())
         return -1;
 
     window = qobject_cast<QQuickWindow *>(engine.rootObjects().value(0));
+    if (!window) {
+        qDebug() << QString("Не удается найти основное окно");
+        exit(1);
+    }
     handler.window = window;
+    receiverThread.window = window;
 
     QObject::connect(
                 window,
@@ -42,13 +45,12 @@ int main(int argc, char *argv[])
     );
 
     QObject::connect(
-                COMHandler::com,
-                &QSerialPort::readyRead,
+                window,
+                SIGNAL(sig_open_port(QString, int, int, int, int, int)),
                 &receiverThread,
-                &COMHandler::readFromCOM
+                SLOT(configureCOM(QString, int, int, int, int, int))
     );
 
-    receiverThread.window = window;
    // receiverThread.methodToStartThreadWith = &COMHandler::receiveReport;
    // receiverThread.start();
 

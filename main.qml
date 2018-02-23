@@ -51,6 +51,7 @@ Window {
     property int     _CMDSUB_REQUEST_SUPPL_TIMING_PACKET         : 0xAC
 
     signal sig_send_command(int code, int subcode)
+    signal sig_open_port(string portName, int baud, int dataBits, int parity, int flowControl, int stopBits)
 
     function onAppendReceivedtext(s) {
         receivedText.append(s+"\n\n--------------------------\n")
@@ -67,14 +68,17 @@ Window {
 
         ScrollView {
             id: view
+            contentHeight: 30
+            anchors.topMargin: 8
+            anchors.leftMargin: 8
             anchors.fill: parent
 
             TextArea {
                 id: receivedText
-                x: -10
-                y: -6
-                width: 334
-                height: 588
+                x: -5
+                y: -1
+                width: 314
+                height: 487
                 text: ""
                 wrapMode: Text.WordWrap
                 font.weight: Font.Light
@@ -190,10 +194,13 @@ Window {
 
     COMInit {
         id: com_init_window
+        objectName: "com_init_window"
         modality: Qt.WindowModal
+
         onCloseWindow: {
             com_init_window.close();
             main_window.show();
+            sig_open_port(portName, baud, dataBits, parity, flowControl, stopBits);
         }
     }
 
