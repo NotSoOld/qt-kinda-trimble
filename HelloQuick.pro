@@ -15,7 +15,9 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += main.cpp \
     comhandler.cpp \
     converter.cpp \
-    packetparser.cpp
+    packetparser.cpp \
+    qmldataobtainer.cpp \
+    qbytehelper.cpp
 
 RESOURCES += qml.qrc
 
@@ -33,4 +35,7 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 HEADERS += \
     comhandler.h \
     converter.h \
-    packetparser.h
+    packetparser.h \
+    qmldataobtainer.h \
+    kinda_trimble_shared.h \
+    qbytehelper.h

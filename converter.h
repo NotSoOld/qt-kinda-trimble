@@ -1,9 +1,7 @@
 #ifndef CONVERTER_H
 #define CONVERTER_H
 
-#include <QObject>
-#include <QtCore>
-#include <QQuickWindow>
+#include "kinda_trimble_shared.h"
 
 class TypesConverter : public QObject
 {
