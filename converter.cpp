@@ -96,8 +96,8 @@ short TypesConverter::bytesToSInt16(QByteArray bytes, int start)
 float TypesConverter::bytesToSingle(QByteArray bytes, int start)
 {
     _single *result = (_single *)calloc(1, sizeof(_single));
-    for (int i = start; i < start + 4; i++) {
-        result->bytes[i - start] = bytes[i];
+    for (int i = 0, j = 3; j < 4; i++, j--) {
+        result->bytes[j] = (byte)(bytes[start + i]);
     }
     float res = result->value;
     free(result);

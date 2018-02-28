@@ -5,7 +5,7 @@
 #include "kinda_trimble_shared.h"
 #include "converter.h"
 
-class QByteHelper : public QObject
+class QByteArrayHelper : public QObject
 {
     Q_OBJECT
 public:

@@ -3,7 +3,7 @@
 
 #include "kinda_trimble_shared.h"
 
-class QMLDataObtainer : public QObject
+class QMLDataHelper : public QObject
 {
     Q_OBJECT
 public:

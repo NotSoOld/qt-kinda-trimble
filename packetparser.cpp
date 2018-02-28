@@ -3,19 +3,20 @@
 PacketParser::PacketParser(QByteArray data)
 {
     this->data.clear();
-    for (int i = 1; i < data.length() - 1; i++) {
+    reportCode = (byte)data[0];
+    for (int i = 2; i < data.length() - 1; i++) {
         this->data.append(data[i]);
     }
 }
 
 byte PacketParser::reportCode()
 {
-    return (byte)(data[0]);
+    return reportCode;
 }
 
 byte PacketParser::reportSubcode()
 {
-    return (byte)(data.length() > 1 ? data[1] : 0);
+    return data[0];
 }
 
 QString PacketParser::parse_REPORT_UNPARSABLE()
@@ -33,15 +34,32 @@ QString PacketParser::parse_RPTSUB_FIRMWARE_VERSION()
 {
     QString res;
 
+    //reportStruct = new report_foo;                    // Works! P.S. calloc doesn't work
+    //memcpy(reportStruct, &data, sizeof(data));        // still under question
+    //reportStruct->bar = 4;
+    //reportStruct->sss = "My String with random length";   // also seems legit
+
     res.append("Получен пакет RPTSUB_FIRMWARE_VERSION (0x1C / 0x81):\n");
-    res.append(QString("- Major версия прошивки: %0\n").arg(data[3]));
-    res.append(QString("- Minor версия прошивки: %0\n").arg(data[4]));
+    res.append(QString("- Major версия прошивки: %0\n").arg((byte)data[3]));
+    res.append(QString("- Minor версия прошивки: %0\n").arg((byte)data[4]));
     res.append(QString("- Номер сборки прошивки: %0\n").arg(data[5]));
     res.append(QString("- Дата сборки прошивки: %0/%1/%2\n").arg(data[6]).arg(data[7]).arg(TypesConverter::bytesToUInt16(data, 8)));
     res.append(QString("- ID прошивки: "));
     for (int i = 0; i < data[10]; i++) {
         res.append((char)data[11 + i]);
     }
+
+    QDataStream dataStream(data);
+    //RPTSUB_FIRMWARE_VERSION_report = new RPTSUB_FIRMWARE_VERSION_reportStruct;    // It is already allocated in stack
+
+    dataStream >> RPTSUB_FIRMWARE_VERSION_report.reportCode >> RPTSUB_FIRMWARE_VERSION_report.reportSubcode
+            >> RPTSUB_FIRMWARE_VERSION_report.reserved >> RPTSUB_FIRMWARE_VERSION_report.majorVersion
+            >> RPTSUB_FIRMWARE_VERSION_report.minorVersion >> RPTSUB_FIRMWARE_VERSION_report.buildNumber
+            >> RPTSUB_FIRMWARE_VERSION_report.month >> RPTSUB_FIRMWARE_VERSION_report.day
+            >> RPTSUB_FIRMWARE_VERSION_report.year >> RPTSUB_FIRMWARE_VERSION_report.productNameLength
+            >> RPTSUB_FIRMWARE_VERSION_report.productName;
+    // --- or... ---
+    memcpy(&RPTSUB_FIRMWARE_VERSION_report, &data, sizeof(data));
 
     return res;
 }
@@ -150,10 +168,10 @@ QString PacketParser::parse_REPORT_SOFTWARE_VERSION_INFO()
 
 QString PacketParser::parse_REPORT_TRACKED_SATELLITES_SINGAL_LVL()
 {
-    QString message = "Уровни сигналов: ";
+    QString message = "-- Уровни сигналов (пакет 0x47): ";
     // Первый байт - количество присланных пар "номер спутника - уровень сигнала".
-    for (byte i = 0; i < data[0]; i++) {
-       message.append("Спутник %0: %1").arg(data[i * 5 + 1]).arg(TypesConverter::bytesToSingle(data, i * 5 + 2));
+    for (byte i = 0; i < data[1]; i++) {
+       message.append(QString("Спутник %0: %1").arg(data[i * 5 + 2]).arg(TypesConverter::bytesToSingle(data, i * 5 + 3)));
     }
     return message;
 }
@@ -438,17 +456,17 @@ QString PacketParser::parse_REPORT_SATELLITE_SELECTION_LIST()
     else if ((data[0] & (byte)224) >> 5 == 5) {
         fix_dimension = "OD clock fix";
     }
-    s.append(QString("Fix dimension: %0\n").arg(fix_dimension));
+    s.append(QString("- Fix dimension: %0\n").arg(fix_dimension));
 
-    s.append(QString("Fix mode: %0").arg((data[0] & BIT(3)) ? "manual" : "auto"));
-    s.append(QString("Количество спутников в fix: %0").arg(data[0] & (byte)7));
+    s.append(QString("- Fix mode: %0\n").arg((data[0] & BIT(3)) ? "manual" : "auto"));
+    s.append(QString("- Количество спутников в fix: %0\n").arg(data[0] & (byte)15));
     s.append(QString("- PDOP: %0\n").arg(TypesConverter::bytesToSingle(data, 1)));
     s.append(QString("- HDOP: %0\n").arg(TypesConverter::bytesToSingle(data, 5)));
     s.append(QString("- VDOP: %0\n").arg(TypesConverter::bytesToSingle(data, 9)));
     s.append(QString("- TDOP: %0\n").arg(TypesConverter::bytesToSingle(data, 13)));
     s.append(QString("Список всех включенных спутников (отрицательное значение означает, \
                     что спутник отвергнут для использования в алгоритме T-RAIM):\n"));
-    for (int i = 17; i < 17 + (data[0] & (byte)7); i++) {
+    for (int i = 17; i < 17 + (data[0] & (byte)15); i++) {
         s.append(QString("SV PRN: %0\n").arg(data[i]));
     }
 
@@ -456,16 +474,15 @@ QString PacketParser::parse_REPORT_SATELLITE_SELECTION_LIST()
 }
 
 QString PacketParser::parse_RPTSUB_PRIMARY_TIMING_PACKET()
-{
+{/*
     if (data.length() != 17) {
         return QString("Пакет RPTSUB_PRIMARY_TIMING_PACKET (0x8F-AB) имеет неверную длину");
     }
-
+*/
     QString s = "Получен пакет RPTSUB_PRIMARY_TIMING_PACKET (0x8F-AB):\n";
     s.append(QString("- Секунды недели GPS: %0\n").arg(TypesConverter::bytesToUInt32(data, 1)));
     s.append(QString("- Номер недели GPS: %0\n").arg(TypesConverter::bytesToUInt16(data, 5)));
     s.append(QString("- Сдвиг UTC, cек: %0\n").arg(TypesConverter::bytesToSInt16(data, 7)));
-    s.append(QString("- Номер недели GPS: %0\n").arg(TypesConverter::bytesToUInt16(data, 5)));
     s.append("- Флаги времени:\n");
     s.append(QString("-- Время GPS/UTC: %0\n").arg(data[9] & BIT(0) ? "UTC" : "GPS"));
     s.append(QString("-- PPS GPS/UTC: %0\n").arg(data[9] & BIT(1) ? "UTC" : "GPS"));
@@ -479,11 +496,11 @@ QString PacketParser::parse_RPTSUB_PRIMARY_TIMING_PACKET()
 }
 
 QString PacketParser::parse_RPTSUB_SUPPL_TIMING_PACKET()
-{
+{/*
     if (data.length() != 68) {
-        return QString("Пакет RPTSUB_PRIMARY_TIMING_PACKET (0x8F-AB) имеет неверную длину");
+        return QString("Пакет RPTSUB_SUPPL_TIMING_PACKET (0x8F-AC) имеет неверную длину");
     }
-
+*/
     QString s = "Получен пакет RPTSUB_SUPPL_TIMING_PACKET (0x8F-AC):\n";
     s.append(QString("- Режим приемника: "));
     switch (data[1]) {
@@ -506,7 +523,7 @@ QString PacketParser::parse_RPTSUB_SUPPL_TIMING_PACKET()
         default: s.append("неизвестно");
     }
     s.append(QString("\n- Прогресс самоопроса, %: %0\n").arg((char)data[3] ? QString((char)data[3]) : QString("самоопрос в данный момент не проводится")));
-    s.append(QString("- Длительность удержания (текущего или последнего, если удержание было отключено), сек: %0\n").arg(TypesConverter::bytesToUInt32(data, 4)));\
+    s.append(QString("- Длительность удержания (текущего или последнего, если удержание было отключено), сек: %0\n").arg(TypesConverter::bytesToUInt32(data, 4)));
     s.append("- Критические сигналы:\n");
     s.append(QString("-- DAC at rail: %0\n").arg(data[8] & BIT(4) ? "ДА" : "нет"));
     s.append("- Не такие критические сигналы:\n");
@@ -536,7 +553,7 @@ QString PacketParser::parse_RPTSUB_SUPPL_TIMING_PACKET()
         default: s.append("неизвестно");
     }
     s.append(QString("\n- Дисциплинированная активность: "));
-    switch (data[2]) {
+    switch (data[13]) {
         case 0: s.append("лок фазы"); break;
         case 1: s.append("разогрев осциллятора"); break;
         case 2: s.append("лок частоты"); break;
@@ -559,5 +576,40 @@ QString PacketParser::parse_RPTSUB_SUPPL_TIMING_PACKET()
     s.append(QString("- Высота: %0\n").arg(TypesConverter::bytesToDouble(data, 52)));
     s.append(QString("- Ошибка квантизации PPS, нс: %0\n").arg(TypesConverter::bytesToSingle(data, 60)));
 
+    QDataStream dataStream(data);
+    //RPTSUB_SUPPL_TIMING_PACKET_report = new RPTSUB_SUPPL_TIMING_PACKET_reportStruct;
+   // dataStream.setFloatingPointPrecision();
+    dataStream >> RPTSUB_SUPPL_TIMING_PACKET_report.reportCode >> RPTSUB_SUPPL_TIMING_PACKET_report.reportSubcode
+            >> RPTSUB_SUPPL_TIMING_PACKET_report.receiverMode >> RPTSUB_SUPPL_TIMING_PACKET_report.discipliningMode
+            >> RPTSUB_SUPPL_TIMING_PACKET_report.selfSurveyProgress >> RPTSUB_SUPPL_TIMING_PACKET_report.holdoverDuration
+            >> RPTSUB_SUPPL_TIMING_PACKET_report.criticalAlarmsBF >> RPTSUB_SUPPL_TIMING_PACKET_report.minorAlarmsBF
+            >> RPTSUB_SUPPL_TIMING_PACKET_report.gpsDecodingStatus >> RPTSUB_SUPPL_TIMING_PACKET_report.discipliningActivity
+            >> RPTSUB_SUPPL_TIMING_PACKET_report.spare1 >> RPTSUB_SUPPL_TIMING_PACKET_report.spare2
+            >> RPTSUB_SUPPL_TIMING_PACKET_report.ppsOffset >> RPTSUB_SUPPL_TIMING_PACKET_report.clockOffset
+            >> RPTSUB_SUPPL_TIMING_PACKET_report.dacValue >> RPTSUB_SUPPL_TIMING_PACKET_report.dacVoltage
+            >> RPTSUB_SUPPL_TIMING_PACKET_report.temperature >> RPTSUB_SUPPL_TIMING_PACKET_report.latitude
+            >> RPTSUB_SUPPL_TIMING_PACKET_report.longitude >> RPTSUB_SUPPL_TIMING_PACKET_report.altitude
+            >> RPTSUB_SUPPL_TIMING_PACKET_report.ppsQuantizationError;
+    // --- or... ---
+   // memcpy(&RPTSUB_SUPPL_TIMING_PACKET_report, &data, sizeof(data));
+
+    /* Also:
+     * //constData() used because const is desired; otherwise, prefer data() don't forgetting deep copy issues
+    const void* poTemp = (const void*)byteArray.constData();
+    const MyStruct* poStruct = static_cast< const MyStruct* >(poTemp);
+    */
+
+    //updateInterfaceValues();
+
     return s;
+}
+
+void PacketParser::updateInterfaceValues(QQuickWindow *window)
+{
+    QObject *qmlObject = window->findChild<QObject *>("temperatureLabel");
+    if (!qmlObject) {
+        qDebug() << QString("Не удается найти QML-компонент %0").arg("temperatureLabel");
+        return;
+    }
+    qmlObject->setProperty("text", QVariant(QString("Температура, С: %0 (обновлено ...)").arg(RPTSUB_SUPPL_TIMING_PACKET_report.temperature)));
 }

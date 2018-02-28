@@ -16,8 +16,8 @@ SOURCES += main.cpp \
     comhandler.cpp \
     converter.cpp \
     packetparser.cpp \
-    qmldataobtainer.cpp \
-    qbytehelper.cpp
+    qbytehelper.cpp \
+    qmldatahelper.cpp
 
 RESOURCES += qml.qrc
 
@@ -36,6 +36,6 @@ HEADERS += \
     comhandler.h \
     converter.h \
     packetparser.h \
-    qmldataobtainer.h \
     kinda_trimble_shared.h \
-    qbytehelper.h
+    qbytehelper.h \
+    qmldatahelper.h

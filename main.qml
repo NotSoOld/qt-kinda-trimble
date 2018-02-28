@@ -7,8 +7,8 @@ import QtQml 2.2
 Window {
     id: main_window
     visible: true
-    width: 800
-    height: 600
+    width: 1000
+    height: 1000
     color: "#ffffff"
     opacity: 1
     title: qsTr("Kinda Trimble")
@@ -59,10 +59,10 @@ Window {
 
     Rectangle {
         id: rectangle
-        x: 450
+        x: 445
         y: 65
-        width: 334
-        height: 500
+        width: 521
+        height: 904
         color: "#00000000"
         border.color: "#a9a9a9"
 
@@ -216,5 +216,13 @@ Window {
             com_init_window.show();
             main_window.hide();
         }
+    }
+
+    Label {
+        id: temperatureLabel
+        objectName: "temperatureLabel"
+        x: 24
+        y: 591
+        text: "Температура, С:"
     }
 }

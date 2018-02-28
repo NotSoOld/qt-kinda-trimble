@@ -8,7 +8,7 @@
 #include "converter.h"
 #include "packetparser.h"
 #include "qbytehelper.h"
-#include "qmldataobtainer.h"
+#include "qmldatahelper.h"
 
 class COMHandler : public QThread
 {

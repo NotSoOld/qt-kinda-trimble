@@ -1,4 +1,4 @@
-#include "qmldataobtainer.h"
+#include "qmldatahelper.h"
 
 /*
 QMLDataObtainer::QMLDataObtainer(QObject *parent) : QObject(parent)
@@ -7,7 +7,7 @@ QMLDataObtainer::QMLDataObtainer(QObject *parent) : QObject(parent)
 }
 */
 
-bool QMLDataObtainer::getBoolFromQML(QQuickWindow *window, const char *qmlName, const char *propertyName)
+bool QMLDataHelper::getBoolFromQML(QQuickWindow *window, const char *qmlName, const char *propertyName)
 {
     QObject *qmlObject = window->findChild<QObject *>(qmlName);
     if (!qmlObject) {
@@ -17,7 +17,7 @@ bool QMLDataObtainer::getBoolFromQML(QQuickWindow *window, const char *qmlName, 
     return qmlObject->property(propertyName).toBool();
 }
 
-int QMLDataObtainer::getIntFromQML(QQuickWindow *window, const char *qmlName, const char *propertyName)
+int QMLDataHelper::getIntFromQML(QQuickWindow *window, const char *qmlName, const char *propertyName)
 {
     QObject *qmlObject = window->findChild<QObject *>(qmlName);
     if (!qmlObject) {
@@ -27,7 +27,7 @@ int QMLDataObtainer::getIntFromQML(QQuickWindow *window, const char *qmlName, co
     return qmlObject->property(propertyName).toInt();
 }
 
-double QMLDataObtainer::getDoubleFromQML(QQuickWindow *window, const char *qmlName, const char *propertyName)
+double QMLDataHelper::getDoubleFromQML(QQuickWindow *window, const char *qmlName, const char *propertyName)
 {
     QObject *qmlObject = window->findChild<QObject *>(qmlName);
     if (!qmlObject) {

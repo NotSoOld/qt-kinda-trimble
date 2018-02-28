@@ -34,8 +34,53 @@ public:
     QString parse_REPORT_SATELLITE_SELECTION_LIST();
     QString parse_RPTSUB_PRIMARY_TIMING_PACKET();
     QString parse_RPTSUB_SUPPL_TIMING_PACKET();
+
+    struct RPTSUB_FIRMWARE_VERSION_reportStruct {
+        quint8 reportCode;
+        quint8 reportSubcode;
+        quint8 reserved;
+        quint8 majorVersion;
+        quint8 minorVersion;
+        quint8 buildNumber;
+        quint8 month;
+        quint8 day;
+        quint16 year;
+        quint8 productNameLength;
+        QString productName;
+    } RPTSUB_FIRMWARE_VERSION_report;
+
+    struct RPTSUB_SUPPL_TIMING_PACKET_reportStruct {
+        quint8 reportCode;
+        quint8 reportSubcode;
+        quint8 receiverMode;
+        quint8 discipliningMode;
+        quint8 selfSurveyProgress;
+        quint32 holdoverDuration;
+        quint16 criticalAlarmsBF;
+        quint16 minorAlarmsBF;
+        quint8 gpsDecodingStatus;
+        quint8 discipliningActivity;
+        quint8 spare1;
+        quint8 spare2;
+        float ppsOffset;
+        float clockOffset;
+        quint32 dacValue;
+        float dacVoltage;
+        float temperature;
+        double latitude;
+        double longitude;
+        double altitude;
+        float ppsQuantizationError;
+        quint8 spare3;
+        quint8 spare4;
+        quint8 spare5;
+    } RPTSUB_SUPPL_TIMING_PACKET_report;
+
+    void updateInterfaceValues(QQuickWindow *);
+
 private:
     QByteArray data;
+    byte reportCode;
 
 signals:
 
