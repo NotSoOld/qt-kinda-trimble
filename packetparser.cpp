@@ -3,7 +3,7 @@
 PacketParser::PacketParser(QByteArray data)
 {
     this->data.clear();
-    reportCode = (byte)data[0];
+    _reportCode = (byte)data[0];
     for (int i = 2; i < data.length() - 1; i++) {
         this->data.append(data[i]);
     }
@@ -11,7 +11,7 @@ PacketParser::PacketParser(QByteArray data)
 
 byte PacketParser::reportCode()
 {
-    return reportCode;
+    return _reportCode;
 }
 
 byte PacketParser::reportSubcode()
@@ -52,14 +52,14 @@ QString PacketParser::parse_RPTSUB_FIRMWARE_VERSION()
     QDataStream dataStream(data);
     //RPTSUB_FIRMWARE_VERSION_report = new RPTSUB_FIRMWARE_VERSION_reportStruct;    // It is already allocated in stack
 
-    dataStream >> RPTSUB_FIRMWARE_VERSION_report.reportCode >> RPTSUB_FIRMWARE_VERSION_report.reportSubcode
+    dataStream >> RPTSUB_FIRMWARE_VERSION_report.reportSubcode
             >> RPTSUB_FIRMWARE_VERSION_report.reserved >> RPTSUB_FIRMWARE_VERSION_report.majorVersion
             >> RPTSUB_FIRMWARE_VERSION_report.minorVersion >> RPTSUB_FIRMWARE_VERSION_report.buildNumber
             >> RPTSUB_FIRMWARE_VERSION_report.month >> RPTSUB_FIRMWARE_VERSION_report.day
             >> RPTSUB_FIRMWARE_VERSION_report.year >> RPTSUB_FIRMWARE_VERSION_report.productNameLength
             >> RPTSUB_FIRMWARE_VERSION_report.productName;
     // --- or... ---
-    memcpy(&RPTSUB_FIRMWARE_VERSION_report, &data, sizeof(data));
+    //memcpy(&RPTSUB_FIRMWARE_VERSION_report, &data, sizeof(data));
 
     return res;
 }
@@ -570,7 +570,7 @@ QString PacketParser::parse_RPTSUB_SUPPL_TIMING_PACKET()
     s.append(QString("- Сдвиг клока, ppb: %0\n").arg(TypesConverter::bytesToSingle(data, 20)));
     s.append(QString("- Значение DAC: %0\n").arg(TypesConverter::bytesToUInt32(data, 24)));
     s.append(QString("- Напряжение на DAC: %0V\n").arg(TypesConverter::bytesToSingle(data, 28)));
-    s.append(QString("- Температура: %0\n").arg(TypesConverter::bytesToSingle(data, 32)));
+    s.append(QString("- Температура: %0\n").arg(TypesConverter::bytesToSingle(data, 32), 0, 'f'));
     s.append(QString("- Широта: %0\n").arg(TypesConverter::bytesToDouble(data, 36)));
     s.append(QString("- Долгота: %0\n").arg(TypesConverter::bytesToDouble(data, 44)));
     s.append(QString("- Высота: %0\n").arg(TypesConverter::bytesToDouble(data, 52)));
@@ -578,8 +578,8 @@ QString PacketParser::parse_RPTSUB_SUPPL_TIMING_PACKET()
 
     QDataStream dataStream(data);
     //RPTSUB_SUPPL_TIMING_PACKET_report = new RPTSUB_SUPPL_TIMING_PACKET_reportStruct;
-   // dataStream.setFloatingPointPrecision();
-    dataStream >> RPTSUB_SUPPL_TIMING_PACKET_report.reportCode >> RPTSUB_SUPPL_TIMING_PACKET_report.reportSubcode
+    dataStream.setFloatingPointPrecision(QDataStream::SinglePrecision);
+    dataStream >> RPTSUB_SUPPL_TIMING_PACKET_report.reportSubcode
             >> RPTSUB_SUPPL_TIMING_PACKET_report.receiverMode >> RPTSUB_SUPPL_TIMING_PACKET_report.discipliningMode
             >> RPTSUB_SUPPL_TIMING_PACKET_report.selfSurveyProgress >> RPTSUB_SUPPL_TIMING_PACKET_report.holdoverDuration
             >> RPTSUB_SUPPL_TIMING_PACKET_report.criticalAlarmsBF >> RPTSUB_SUPPL_TIMING_PACKET_report.minorAlarmsBF
@@ -587,19 +587,26 @@ QString PacketParser::parse_RPTSUB_SUPPL_TIMING_PACKET()
             >> RPTSUB_SUPPL_TIMING_PACKET_report.spare1 >> RPTSUB_SUPPL_TIMING_PACKET_report.spare2
             >> RPTSUB_SUPPL_TIMING_PACKET_report.ppsOffset >> RPTSUB_SUPPL_TIMING_PACKET_report.clockOffset
             >> RPTSUB_SUPPL_TIMING_PACKET_report.dacValue >> RPTSUB_SUPPL_TIMING_PACKET_report.dacVoltage
-            >> RPTSUB_SUPPL_TIMING_PACKET_report.temperature >> RPTSUB_SUPPL_TIMING_PACKET_report.latitude
-            >> RPTSUB_SUPPL_TIMING_PACKET_report.longitude >> RPTSUB_SUPPL_TIMING_PACKET_report.altitude
-            >> RPTSUB_SUPPL_TIMING_PACKET_report.ppsQuantizationError;
+            >> RPTSUB_SUPPL_TIMING_PACKET_report.temperature;
+    dataStream.setFloatingPointPrecision(QDataStream::DoublePrecision);
+    dataStream >> RPTSUB_SUPPL_TIMING_PACKET_report.latitude
+            >> RPTSUB_SUPPL_TIMING_PACKET_report.longitude >> RPTSUB_SUPPL_TIMING_PACKET_report.altitude;
+    dataStream.setFloatingPointPrecision(QDataStream::SinglePrecision);
+    dataStream >> RPTSUB_SUPPL_TIMING_PACKET_report.ppsQuantizationError;
+    // Test:
+    qDebug() << RPTSUB_SUPPL_TIMING_PACKET_report.dacVoltage;
     // --- or... ---
-   // memcpy(&RPTSUB_SUPPL_TIMING_PACKET_report, &data, sizeof(data));
+    /*
+    memcpy(&RPTSUB_SUPPL_TIMING_PACKET_report, &data, sizeof(data));
+    // Test:
+    qDebug() << RPTSUB_SUPPL_TIMING_PACKET_report.dacVoltage;
+    */
 
     /* Also:
      * //constData() used because const is desired; otherwise, prefer data() don't forgetting deep copy issues
     const void* poTemp = (const void*)byteArray.constData();
     const MyStruct* poStruct = static_cast< const MyStruct* >(poTemp);
     */
-
-    //updateInterfaceValues();
 
     return s;
 }

@@ -36,7 +36,7 @@ public:
     QString parse_RPTSUB_SUPPL_TIMING_PACKET();
 
     struct RPTSUB_FIRMWARE_VERSION_reportStruct {
-        quint8 reportCode;
+
         quint8 reportSubcode;
         quint8 reserved;
         quint8 majorVersion;
@@ -50,7 +50,7 @@ public:
     } RPTSUB_FIRMWARE_VERSION_report;
 
     struct RPTSUB_SUPPL_TIMING_PACKET_reportStruct {
-        quint8 reportCode;
+
         quint8 reportSubcode;
         quint8 receiverMode;
         quint8 discipliningMode;
@@ -80,7 +80,7 @@ public:
 
 private:
     QByteArray data;
-    byte reportCode;
+    byte _reportCode;
 
 signals:
 

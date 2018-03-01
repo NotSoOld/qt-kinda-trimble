@@ -9,7 +9,8 @@
 #define PI 3.1415926535898
 #define DLE 0x10
 #define ETX 0x03
-#define BIT(x) (1 << (7 - x))
+//#define BIT(x) (1 << (7 - x))
+#define BIT(x) (1 << x)
 
 #define COMMAND_FIRMWARE_INFO                           0x1C
 #define     CMDSUB_FIRMWARE_VERSION                     0x01
