@@ -1,4 +1,6 @@
 #include "comhandler.h"
+#include <QQuickView>
+#include <QQuickItem>
 
 QSerialPort *COMHandler::com;
 QString COMHandler::name;
@@ -6,7 +8,15 @@ QByteArray COMHandler::readedData;
 byte COMHandler::previouslyReadedChar;
 
 void COMHandler::configureCOM(QString portName, int baudRate, int dataBits, int parity, int flowControl, int stopBits)
-{
+{/*
+    QQuickView view;
+    view.setSource(QUrl(QStringLiteral("qrc:/satellite_status_template.qml")));
+    view.show();
+    QQuickItem *object = view.rootObject();
+    object->setX(25);
+    object->setY(720);
+    return;
+*/
     if (com && com->isOpen()) {
         finishCOM();
     }
@@ -128,7 +138,7 @@ void COMHandler::receiveReport()
         message.append(parser->parse_REPORT_SOFTWARE_VERSION_INFO());
         break;
     case REPORT_TRACKED_SATELLITES_SINGAL_LVL:
-        message.append(parser->parse_REPORT_TRACKED_SATELLITES_SINGAL_LVL());
+        message.append(parser->parse_REPORT_TRACKED_SATELLITES_SINGAL_LVL(window));
         break;
     case REPORT_SINGLE_LLA_POS:
         message.append(parser->parse_REPORT_SINGLE_LLA_POS());

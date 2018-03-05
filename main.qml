@@ -1,8 +1,10 @@
 import QtQuick 2.6
 import QtQuick.Window 2.2
-import QtQuick.Controls 1.5
+import QtQuick.Controls 1.4
 import QtQuick.Controls 2.2
 import QtQml 2.2
+import QtCharts 2.2
+import "./" as MyQML
 
 Window {
     id: main_window
@@ -56,7 +58,37 @@ Window {
     function onAppendReceivedtext(s) {
         receivedText.append(s+"\n\n--------------------------\n")
     }
+/*
+    function onUpdateSatelliteInfo(index, sat_no, sat_lvl) {
+        var obj;
+        if (index === 1) obj = template1;
+        else if (index === 2) obj = template2;
+        else if (index === 3) obj = template3;
+        else if (index === 4) obj = template4;
+        else if (index === 5) obj = template5;
+        else if (index === 6) obj = template6;
+        else if (index === 7) obj = template7;
+        else if (index === 8) obj = template8;
+        else if (index === 9) obj = template9;
+        else if (index === 10) obj = template10;
+        else if (index === 11) obj = template11;
+        else if (index === 12) obj = template12;
+        template1.visible = false;
+        template2.visible = false;
+        template3.visible = false;
+        template4.visible = false;
+        template5.visible = false;
+        template6.visible = false;
+        template7.visible = false;
+        template8.visible = false;
+        template9.visible = false;
+        template10.visible = false;
+        template11.visible = false;
+        template12.visible = false;
+        obj.visible = true;
 
+    }
+*/
     Rectangle {
         id: rectangle
         x: 445
@@ -225,4 +257,193 @@ Window {
         y: 591
         text: "Температура, С:"
     }
+
+    Label {
+        id: latitudeOutLabel
+        objectName: "latitudeOutLabel"
+        x: 24
+        y: 611
+        text: "Широта:"
+    }
+
+    Label {
+        id: longitudeOutLabel
+        objectName: "longitudeOutLabel"
+        x: 24
+        y: 631
+        text: "Долгота:"
+    }
+
+    Label {
+        id: altitudeOutLabel
+        objectName: "altitudeOutLabel"
+        x: 24
+        y: 651
+        text: "Высота, м:"
+    }
+
+    Text {
+        id: text2
+        x: 30
+        y: 694
+        text: qsTr("Спутники и уровни их сигнала")
+        textFormat: Text.RichText
+        font.pixelSize: 14
+        font.italic: false
+        font.bold: true
+    }
+
+    MyQML.Satellite_status_template {
+        id: template1
+        objectName: "template1"
+        x: 24
+        y: 720
+        visible: false
+    }
+
+    MyQML.Satellite_status_template {
+        id: template2
+        objectName: "template2"
+        x: 24
+        y: 740
+        visible: false
+    }
+
+    MyQML.Satellite_status_template {
+        id: template3
+        objectName: "template3"
+        x: 24
+        y: 760
+        visible: false
+    }
+
+    MyQML.Satellite_status_template {
+        id: template4
+        objectName: "template4"
+        x: 24
+        y: 780
+        visible: false
+    }
+
+    MyQML.Satellite_status_template {
+        id: template5
+        objectName: "template5"
+        x: 24
+        y: 800
+        visible: false
+    }
+
+    MyQML.Satellite_status_template {
+        id: template6
+        objectName: "template6"
+        x: 24
+        y: 820
+        visible: false
+    }
+
+    MyQML.Satellite_status_template {
+        id: template7
+        objectName: "template7"
+        x: 24
+        y: 840
+        visible: false
+    }
+
+    MyQML.Satellite_status_template {
+        id: template8
+        objectName: "template8"
+        x: 24
+        y: 860
+        visible: false
+    }
+
+    MyQML.Satellite_status_template {
+        id: template9
+        objectName: "template9"
+        x: 24
+        y: 880
+        visible: false
+    }
+
+    MyQML.Satellite_status_template {
+        id: template10
+        objectName: "template10"
+        x: 24
+        y: 900
+        visible: false
+    }
+
+    MyQML.Satellite_status_template {
+        id: template11
+        objectName: "template11"
+        x: 24
+        y: 920
+        visible: false
+    }
+
+    MyQML.Satellite_status_template {
+        id: template12
+        objectName: "template12"
+        x: 24
+        y: 940
+        visible: false
+    }
+/*
+    Flickable {
+        x: 100
+        y: 650
+        width: 300
+        height: 300
+        interactive: true
+        boundsBehavior: Flickable.StopAtBounds
+        contentHeight: myChart.height
+        contentWidth: myChart.width
+        clip: true
+/*
+        Image {
+            id: img
+            width: 535
+            height: 492
+            source: "./images/satellites_levels/excellent.png"
+            fillMode: Image.PreserveAspectFit
+        }*/
+
+        ChartView {
+            id: myChart
+            x: 0
+            y: 0
+            width: 500
+            height: 500
+
+            MouseArea {
+                anchors.fill: parent
+                property int lastX: 0
+                property int lastY: 0
+                onPressed: {
+                    lastX = mouse.x
+                    lastY = mouse.y
+                }
+
+                onPositionChanged: {
+                    if (lastX !== mouse.x) {
+                        myChart.scrollRight(lastX - mouse.x)
+                        lastX = mouse.x
+                    }
+                    if (lastY !== mouse.y) {
+                        myChart.scrollDown(lastY - mouse.y)
+                        lastY = mouse.y
+                    }
+                }
+            }
+
+            SplineSeries {
+           // LineSeries {
+                XYPoint { x: 0; y: 0 }
+                XYPoint { x: 3; y: 3 }
+                XYPoint { x: -3; y: 4 }
+                XYPoint { x: -3; y: -4 }
+                XYPoint { x: -2; y: 4 }
+            }
+        }
+    //}
 }

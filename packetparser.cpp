@@ -1,4 +1,5 @@
 #include "packetparser.h"
+#include <QQuickView>
 
 PacketParser::PacketParser(QByteArray data)
 {
@@ -166,13 +167,36 @@ QString PacketParser::parse_REPORT_SOFTWARE_VERSION_INFO()
             .arg(data[5]).arg(data[6]).arg(data[7]).arg(data[8]).arg(data[9]);
 }
 
-QString PacketParser::parse_REPORT_TRACKED_SATELLITES_SINGAL_LVL()
+QString PacketParser::parse_REPORT_TRACKED_SATELLITES_SINGAL_LVL(QQuickWindow *window)
 {
     QString message = "-- Уровни сигналов (пакет 0x47): ";
+
+    for (int i = 0; i < 12; i++) {
+        QObject *qmlObject = window->findChild<QObject *>(QString("template%0").arg(i + 1));
+        qmlObject->setProperty("visible", "false");
+    }
+
     // Первый байт - количество присланных пар "номер спутника - уровень сигнала".
     for (byte i = 0; i < data[1]; i++) {
-       message.append(QString("Спутник %0: %1").arg(data[i * 5 + 2]).arg(TypesConverter::bytesToSingle(data, i * 5 + 3)));
+        float signalLevel = TypesConverter::bytesToSingle(data, i * 5 + 3);
+
+        message.append(QString("Спутник %0: %1").arg(data[i * 5 + 2]).arg(signalLevel));
+
+        QObject *qmlObject = window->findChild<QObject *>(QString("template%0").arg(i + 1));
+        qmlObject->setProperty("visible", "true");
+        QObject *textObject = qmlObject->findChild<QObject *>("mainLabel");
+        textObject->setProperty("text", QVariant(QString("Спутник %0: %1").arg(data[i * 5 + 2]).arg(signalLevel)));
+        QObject *imageObject = qmlObject->findChild<QObject *>("sat_signal_image");
+        if (signalLevel > 50)
+            imageObject->setProperty("source", "./images/satellites_levels/excellent.png");
+        else if (signalLevel > 30)
+            imageObject->setProperty("source", "./images/satellites_levels/good.png");
+        else if (signalLevel > 15)
+            imageObject->setProperty("source", "./images/satellites_levels/fair.png");
+        else
+            imageObject->setProperty("source", "./images/satellites_levels/weak.png");
     }
+
     return message;
 }
 
@@ -614,9 +638,11 @@ QString PacketParser::parse_RPTSUB_SUPPL_TIMING_PACKET()
 void PacketParser::updateInterfaceValues(QQuickWindow *window)
 {
     QObject *qmlObject = window->findChild<QObject *>("temperatureLabel");
-    if (!qmlObject) {
-        qDebug() << QString("Не удается найти QML-компонент %0").arg("temperatureLabel");
-        return;
-    }
-    qmlObject->setProperty("text", QVariant(QString("Температура, С: %0 (обновлено ...)").arg(RPTSUB_SUPPL_TIMING_PACKET_report.temperature)));
+    qmlObject->setProperty("text", QVariant(QString("Температура, С: %0").arg(RPTSUB_SUPPL_TIMING_PACKET_report.temperature, 0, 'f')));
+    qmlObject = window->findChild<QObject *>("latitudeOutLabel");
+    qmlObject->setProperty("text", QVariant(QString("Широта: %0").arg(RPTSUB_SUPPL_TIMING_PACKET_report.latitude, 0, 'f')));
+    qmlObject = window->findChild<QObject *>("longitudeOutLabel");
+    qmlObject->setProperty("text", QVariant(QString("Долгота: %0").arg(RPTSUB_SUPPL_TIMING_PACKET_report.longitude, 0, 'f')));
+    qmlObject = window->findChild<QObject *>("altitudeOutLabel");
+    qmlObject->setProperty("text", QVariant(QString("Высота, м: %0").arg(RPTSUB_SUPPL_TIMING_PACKET_report.altitude, 0, 'f')));
 }

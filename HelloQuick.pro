@@ -1,4 +1,4 @@
-QT += quick core serialport qml gui quickcontrols2
+QT += quick core serialport qml gui quickcontrols2 charts
 CONFIG += c++11
 
 # The following define makes your compiler emit warnings if you use
@@ -39,3 +39,9 @@ HEADERS += \
     kinda_trimble_shared.h \
     qbytehelper.h \
     qmldatahelper.h
+
+DISTFILES += \
+    images/satellites_levels/excellent.png \
+    images/satellites_levels/fair.png \
+    images/satellites_levels/good.png \
+    images/satellites_levels/weak.png

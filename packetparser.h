@@ -23,7 +23,7 @@ public:
     QString parse_REPORT_SINGLE_XYZ_POS();
     QString parse_REPORT_SINGLE_VELOCITY_FIX_XYZ();
     QString parse_REPORT_SOFTWARE_VERSION_INFO();
-    QString parse_REPORT_TRACKED_SATELLITES_SINGAL_LVL();
+    QString parse_REPORT_TRACKED_SATELLITES_SINGAL_LVL(QQuickWindow *);
     QString parse_REPORT_SINGLE_LLA_POS();
     QString parse_REPORT_REQUEST_IO_OPTIONS();
     QString parse_REPORT_SINGLE_VELOCITY_FIX_ENU();

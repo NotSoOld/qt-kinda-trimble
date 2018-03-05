@@ -1,4 +1,4 @@
-#include <QGuiApplication>
+#include <QApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlEngine>
 #include <QQmlContext>
@@ -12,7 +12,7 @@ QQuickWindow *window;
 
 int main(int argc, char *argv[])
 {
-    QGuiApplication app(argc, argv);
+    QApplication app(argc, argv);
     QQmlApplicationEngine engine;
 
     QQuickStyle::setStyle("Material");

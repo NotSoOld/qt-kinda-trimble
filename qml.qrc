@@ -9,5 +9,10 @@
         <file>autopacket_masking.qml</file>
         <file>timing_packets.qml</file>
         <file>COMInit.qml</file>
+        <file>Satellite_status_template.qml</file>
+        <file>images/satellites_levels/excellent.png</file>
+        <file>images/satellites_levels/fair.png</file>
+        <file>images/satellites_levels/good.png</file>
+        <file>images/satellites_levels/weak.png</file>
     </qresource>
 </RCC>
