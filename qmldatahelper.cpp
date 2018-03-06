@@ -1,15 +1,10 @@
 #include "qmldatahelper.h"
 
-/*
-QMLDataObtainer::QMLDataObtainer(QObject *parent) : QObject(parent)
-{
+QQuickWindow *QMLDataHelper::mainWindow;
 
-}
-*/
-
-bool QMLDataHelper::getBoolFromQML(QQuickWindow *window, const char *qmlName, const char *propertyName)
+bool QMLDataHelper::getBoolFromQML(const char *qmlName, const char *propertyName)
 {
-    QObject *qmlObject = window->findChild<QObject *>(qmlName);
+    QObject *qmlObject = mainWindow->findChild<QObject *>(qmlName);
     if (!qmlObject) {
         qDebug() << QString("Не удается найти QML-компонент %0").arg(qmlName);
         exit(1);
@@ -17,9 +12,9 @@ bool QMLDataHelper::getBoolFromQML(QQuickWindow *window, const char *qmlName, co
     return qmlObject->property(propertyName).toBool();
 }
 
-int QMLDataHelper::getIntFromQML(QQuickWindow *window, const char *qmlName, const char *propertyName)
+int QMLDataHelper::getIntFromQML(const char *qmlName, const char *propertyName)
 {
-    QObject *qmlObject = window->findChild<QObject *>(qmlName);
+    QObject *qmlObject = mainWindow->findChild<QObject *>(qmlName);
     if (!qmlObject) {
         qDebug() << QString("Не удается найти QML-компонент %0").arg(qmlName);
         exit(1);
@@ -27,9 +22,9 @@ int QMLDataHelper::getIntFromQML(QQuickWindow *window, const char *qmlName, cons
     return qmlObject->property(propertyName).toInt();
 }
 
-double QMLDataHelper::getDoubleFromQML(QQuickWindow *window, const char *qmlName, const char *propertyName)
+double QMLDataHelper::getDoubleFromQML(const char *qmlName, const char *propertyName)
 {
-    QObject *qmlObject = window->findChild<QObject *>(qmlName);
+    QObject *qmlObject = mainWindow->findChild<QObject *>(qmlName);
     if (!qmlObject) {
         qDebug() << QString("Не удается найти QML-компонент %0").arg(qmlName);
         exit(1);

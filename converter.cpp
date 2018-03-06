@@ -24,7 +24,7 @@ QByteArray TypesConverter::toByteArray(float f)
     return res;
 }
 
-QByteArray TypesConverter::toByteArray(unsigned short f)
+QByteArray TypesConverter::toByteArray(quint16 f)
 {
     _uint16 *result = (_uint16 *)calloc(1, sizeof(_uint16));
     result->value = f;
@@ -36,7 +36,7 @@ QByteArray TypesConverter::toByteArray(unsigned short f)
     return res;
 }
 
-QByteArray TypesConverter::toByteArray(unsigned int f)
+QByteArray TypesConverter::toByteArray(quint32 f)
 {
     _uint32 *result = (_uint32 *)calloc(1, sizeof(_uint32));
     result->value = f;
@@ -49,46 +49,46 @@ QByteArray TypesConverter::toByteArray(unsigned int f)
 }
 
 
-unsigned int TypesConverter::bytesToUInt32(QByteArray bytes, int start)
+quint32 TypesConverter::bytesToUInt32(QByteArray bytes, int start)
 {
     _uint32 *result = (_uint32 *)calloc(1, sizeof(_uint32));
     for (int i = start; i < start + 4; i++) {
         result->bytes[i - start] = bytes[i];
     }
-    unsigned int res = result->value;
+    quint32 res = result->value;
     free(result);
     return res;
 }
 
-int TypesConverter::bytesToSInt32(QByteArray bytes, int start)
+qint32 TypesConverter::bytesToSInt32(QByteArray bytes, int start)
 {
     _sint32 *result = (_sint32 *)calloc(1, sizeof(_sint32));
     for (int i = start; i < start + 4; i++) {
         result->bytes[i - start] = bytes[i];
     }
-    int res = result->value;
+    qint32 res = result->value;
     free(result);
     return res;
 }
 
-unsigned short TypesConverter::bytesToUInt16(QByteArray bytes, int start)
+quint16 TypesConverter::bytesToUInt16(QByteArray bytes, int start)
 {
     _uint16 *result = (_uint16 *)calloc(1, sizeof(_uint16));
     for (int i = start; i < start + 2; i++) {
         result->bytes[i - start] = bytes[i];
     }
-    unsigned short res = result->value;
+    quint16 res = result->value;
     free(result);
     return res;
 }
 
-short TypesConverter::bytesToSInt16(QByteArray bytes, int start)
+qint16 TypesConverter::bytesToSInt16(QByteArray bytes, int start)
 {
     _sint16 *result = (_sint16 *)calloc(1, sizeof(_sint16));
     for (int i = start; i < start + 2; i++) {
         result->bytes[i - start] = bytes[i];
     }
-    short res = result->value;
+    qint16 res = result->value;
     free(result);
     return res;
 }

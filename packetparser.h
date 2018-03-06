@@ -1,11 +1,9 @@
 #ifndef PACKETPARSER_H
 #define PACKETPARSER_H
 
-#include <QObject>
-#include <QtCore>
-#include <QDebug>
-#include <converter.h>
-#include <comhandler.h>
+#include "kinda_trimble_shared.h"
+#include <QQuickView>
+#include "comhandler.h"
 
 class PacketParser : public QObject
 {
@@ -18,12 +16,12 @@ public:
     QString parse_REPORT_UNPARSABLE();
     QString parse_RPTSUB_FIRMWARE_VERSION();
     QString parse_RPTSUB_HARDWARE_COMPONENT_INFO();
-    QString parse_REPORT_DOUBLE_XYZ_POS();
+    QString parse_REPORT_DOUBLE_XYZ_POS(COMHandler *);
     QString parse_REPORT_DOUBLE_LLA_POS();
     QString parse_REPORT_SINGLE_XYZ_POS();
     QString parse_REPORT_SINGLE_VELOCITY_FIX_XYZ();
     QString parse_REPORT_SOFTWARE_VERSION_INFO();
-    QString parse_REPORT_TRACKED_SATELLITES_SINGAL_LVL(QQuickWindow *);
+    QString parse_REPORT_TRACKED_SATELLITES_SINGAL_LVL();
     QString parse_REPORT_SINGLE_LLA_POS();
     QString parse_REPORT_REQUEST_IO_OPTIONS();
     QString parse_REPORT_SINGLE_VELOCITY_FIX_ENU();
@@ -76,11 +74,11 @@ public:
         quint8 spare5;
     } RPTSUB_SUPPL_TIMING_PACKET_report;
 
-    void updateInterfaceValues(QQuickWindow *);
+    void updateInterfaceValues();
 
 private:
     QByteArray data;
-    byte _reportCode;
+    quint8 _reportCode;
 
 signals:
 

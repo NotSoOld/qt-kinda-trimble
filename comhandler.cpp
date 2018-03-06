@@ -1,6 +1,4 @@
 #include "comhandler.h"
-#include <QQuickView>
-#include <QQuickItem>
 
 QSerialPort *COMHandler::com;
 QString COMHandler::name;
@@ -8,15 +6,7 @@ QByteArray COMHandler::readedData;
 byte COMHandler::previouslyReadedChar;
 
 void COMHandler::configureCOM(QString portName, int baudRate, int dataBits, int parity, int flowControl, int stopBits)
-{/*
-    QQuickView view;
-    view.setSource(QUrl(QStringLiteral("qrc:/satellite_status_template.qml")));
-    view.show();
-    QQuickItem *object = view.rootObject();
-    object->setX(25);
-    object->setY(720);
-    return;
-*/
+{
     if (com && com->isOpen()) {
         finishCOM();
     }
@@ -77,7 +67,7 @@ void COMHandler::readFromCOM()
         char readedChar;
         com->getChar(&readedChar);
         //qDebug() << QString("reading 0x%0, prev read 0x%1").arg((byte)readedChar, 1, 16).arg(previouslyReadedChar, 1, 16);
-        if (previouslyReadedChar == DLE && (byte)readedChar == ETX) {
+        if (previouslyReadedChar == DLE && (quint8)readedChar == ETX) {
             // Обнаружен конец пакета. ETX также отбрасываем.
             //qDebug() << readedData;
             receiveReport();
@@ -88,12 +78,12 @@ void COMHandler::readFromCOM()
 
         }
 
-        else if (!(previouslyReadedChar == DLE && (byte)readedChar == DLE)) {
+        else if (!(previouslyReadedChar == DLE && (quint8)readedChar == DLE)) {
             // Если обнаружен стаффинг байта DLE, не нужно заносить его в полученные данные.
             readedData.append(readedChar);
         }
 
-        previouslyReadedChar = (byte)readedChar;
+        previouslyReadedChar = (quint8)readedChar;
     }
 }
 
@@ -123,7 +113,7 @@ void COMHandler::receiveReport()
         }
         break;
     case REPORT_DOUBLE_XYZ_POS:
-        message.append(parser->parse_REPORT_DOUBLE_XYZ_POS());
+        message.append(parser->parse_REPORT_DOUBLE_XYZ_POS(this));
         break;
     case REPORT_DOUBLE_LLA_POS:
         message.append(parser->parse_REPORT_DOUBLE_LLA_POS());
@@ -138,7 +128,7 @@ void COMHandler::receiveReport()
         message.append(parser->parse_REPORT_SOFTWARE_VERSION_INFO());
         break;
     case REPORT_TRACKED_SATELLITES_SINGAL_LVL:
-        message.append(parser->parse_REPORT_TRACKED_SATELLITES_SINGAL_LVL(window));
+        message.append(parser->parse_REPORT_TRACKED_SATELLITES_SINGAL_LVL());
         break;
     case REPORT_SINGLE_LLA_POS:
         message.append(parser->parse_REPORT_SINGLE_LLA_POS());
@@ -171,7 +161,7 @@ void COMHandler::receiveReport()
             break;
         case RPTSUB_SUPPL_TIMING_PACKET:
             message.append(parser->parse_RPTSUB_SUPPL_TIMING_PACKET());
-            parser->updateInterfaceValues(window);
+            parser->updateInterfaceValues();
             break;
         default:
             message.append(QString("Это точно был пакет REPORT_SUPER (0х8F)? Подкод %0 не распознан.")
@@ -179,113 +169,18 @@ void COMHandler::receiveReport()
         }
         break;
     default:
-        message = QString("Неизвестный пакет 0x%0").arg(parser->reportCode(), 1, 16);
+        message = QString("Неизвестный пакет 0x%0 ЛИБО проблемы с пониманием. Пакет отброшен").arg(parser->reportCode(), 1, 16);
     }
     emit appendReceivedText(message);
 }
 
 
-void COMHandler::build_COMMAND_SET_IO_OPTIONS(QByteArray *cmd)
-{
-    bool ecefChecked = QMLDataHelper::getBoolFromQML(window, "eCEFcheck", "checked");
-    bool llaChecked = QMLDataHelper::getBoolFromQML(window, "lLAcheck", "checked");
-    bool precision = QMLDataHelper::getBoolFromQML(window, "doublePrecRB", "checked");
-    bool gpsTime = QMLDataHelper::getBoolFromQML(window, "gpsTimeRB", "checked");
-    bool mslChecked = QMLDataHelper::getBoolFromQML(window, "mslRB", "checked");
-    bool ecefVelChecked = QMLDataHelper::getBoolFromQML(window, "ecef_vel_check", "checked");
-    bool enuVelChecked = QMLDataHelper::getBoolFromQML(window, "enu_vel_check", "checked");
-    bool raw_data_report_checked = QMLDataHelper::getBoolFromQML(window, "raw_data_report_check", "checked");
-    bool dbhz_out_checked = QMLDataHelper::getBoolFromQML(window, "dbhz_out_RB", "checked");
 
-    QByteArrayHelper::appendAndStuff(cmd, (byte)(
-               (ecefChecked ? BIT(0) : 0) |
-               (llaChecked ? BIT(1) : 0) |
-               (mslChecked ? BIT(2) : 0) |
-               (precision ? BIT(4) : 0)
-              ));
-    QByteArrayHelper::appendAndStuff(cmd, (byte)(
-               (ecefVelChecked ? BIT(0) : 0) |
-               (enuVelChecked ? BIT(1) : 0)
-              ));
-    QByteArrayHelper::appendAndStuff(cmd, (byte)(gpsTime ? 0 : BIT(0)));
-    QByteArrayHelper::appendAndStuff(cmd, (byte)(
-               (raw_data_report_checked ? BIT(0) : 0) |
-               (dbhz_out_checked ? BIT(3) : 0)
-              ));
-
-    qDebug() << *cmd;
-}
-
-void COMHandler::build_COMMAND_ACCURATE_INIT_POS_XYZ(QByteArray *cmd)
-{
-    double initX = QMLDataHelper::getDoubleFromQML(window, "init_x_text", "text");
-    double initY = QMLDataHelper::getDoubleFromQML(window, "init_y_text", "text");
-    double initZ = QMLDataHelper::getDoubleFromQML(window, "init_z_text", "text");
-    QByteArrayHelper::appendAndStuff(cmd, initX);
-    QByteArrayHelper::appendAndStuff(cmd, initY);
-    QByteArrayHelper::appendAndStuff(cmd, initZ);
-
-    qDebug() << *cmd;
-}
-
-void COMHandler::build_COMMAND_ACCURATE_INIT_POS_LLA(QByteArray *cmd)
-{
-    double initLat = QMLDataHelper::getDoubleFromQML(window, "init_lat_text", "text");
-    double initLong = QMLDataHelper::getDoubleFromQML(window, "init_long_text", "text");
-    double initAlt = QMLDataHelper::getDoubleFromQML(window, "init_alt_text", "text");
-    QByteArrayHelper::appendAndStuff(cmd, initLat);
-    QByteArrayHelper::appendAndStuff(cmd, initLong);
-    QByteArrayHelper::appendAndStuff(cmd, initAlt);
-
-    qDebug() << *cmd;
-}
-
-void COMHandler::build_COMMAND_REQUEST_SATELLITE_SYSTEM_DATA(QByteArray *cmd)
-{
-    byte typeOfData = (byte)QMLDataHelper::getIntFromQML(window, "typeOfDataComboBox", "currentIndex") + 2;
-    byte satelliteIndex = (byte)QMLDataHelper::getIntFromQML(window, "satellite_selection_spinner1", "value");
-    QByteArrayHelper::appendAndStuff(cmd, typeOfData);
-    QByteArrayHelper::appendAndStuff(cmd, satelliteIndex);
-
-    qDebug() << *cmd;
-}
-
-void COMHandler::build_COMMAND_SET_REQUEST_SATELLITES_AND_HEALTH(QByteArray *cmd)
-{
-    byte satelliteIndex = (byte)QMLDataHelper::getIntFromQML(window, "satellites_and_health_spinner", "value");
-    QByteArrayHelper::appendAndStuff(cmd, satelliteIndex);
-
-    qDebug() << *cmd;
-}
-
-void COMHandler::build_CMDSUB_SET_PACKET_BROADCAST_MASK(QByteArray *cmd)
-{
-    bool maskPrimaryPackets = QMLDataHelper::getBoolFromQML(window, "primaryPacketMaskingBit", "checked");
-    bool maskSupplPackets = QMLDataHelper::getBoolFromQML(window, "supplPacketMaskingBit", "checked");
-    bool maskOtherPackets = QMLDataHelper::getBoolFromQML(window, "otherPacketsMaskingBit", "checked");
-    QByteArrayHelper::appendAndStuff(cmd, (byte)(
-                       (maskPrimaryPackets ? BIT(0) : 0) |
-                       (maskSupplPackets ? BIT(2) : 0) |
-                       (maskOtherPackets ? BIT(6) : 0)
-                      ));
-    QByteArrayHelper::appendAndStuff(cmd, (byte)0);
-    QByteArrayHelper::appendAndStuff(cmd, (byte)0);
-    QByteArrayHelper::appendAndStuff(cmd, (byte)0);
-
-    qDebug() << *cmd;
-}
-
-void COMHandler::build_CMDSUB_REQUEST_TIMING_PACKET(QByteArray *cmd)
-{
-    byte typeOfRequest = (byte)QMLDataHelper::getIntFromQML(window, "timingPacketItem", "timingPacketType");
-    QByteArrayHelper::appendAndStuff(cmd, typeOfRequest);
-
-    qDebug() << *cmd;
-}
 
 void COMHandler::send_command(int code, int subcode)
 {
     QByteArray cmd;
+    CommandBuilder *cmdBuilder = new CommandBuilder();
     //qDebug() << code;
     //qDebug() << subcode;
 
@@ -293,17 +188,20 @@ void COMHandler::send_command(int code, int subcode)
     // Некоторые пакеты содержат только код команды,
     // либо код команды и ее подкод. Для таких пакетов
     // дополнительный метод не нужен.
-    QByteArrayHelper::appendAndStuff(&cmd, (byte)code);
+    qDebug() << cmd;
+    QByteArrayHelper::appendAndStuff(&cmd, (quint8)code);
+    qDebug() << cmd;
     if (subcode > 0) {
-        QByteArrayHelper::appendAndStuff(&cmd, (byte)subcode);
+        QByteArrayHelper::appendAndStuff(&cmd, (quint8)subcode);
     }
+    qDebug() << cmd;
     // Для команд, которые содержат дополнительную информацию,
     // выбирается соответствующий метод.
-    switch ((byte)code) {
+    switch ((quint8)code) {
     case COMMAND_SET_IO_OPTIONS:
         // (Если == -1, то это запрос настроек, а не их установка.)
         if (subcode == 0) {
-            build_COMMAND_SET_IO_OPTIONS(&cmd);
+            cmdBuilder->build_COMMAND_SET_IO_OPTIONS(&cmd);
         }
         break;
     case COMMAND_SATELLITE_SELECTION:
@@ -312,42 +210,43 @@ void COMHandler::send_command(int code, int subcode)
         // Индекс спутника для этих команд приходит в subcode.
         // Подкод == 0 не добавится выше, поэтому это нужно сделать отдельно.
         if (subcode == 0) {
-            cmd.append((byte)subcode);
+            cmd.append((quint8)subcode);
         }
         break;
     case COMMAND_ACCURATE_INIT_POS_XYZ:
-        build_COMMAND_ACCURATE_INIT_POS_XYZ(&cmd);
+        cmdBuilder->build_COMMAND_ACCURATE_INIT_POS_XYZ(&cmd);
         break;
     case COMMAND_ACCURATE_INIT_POS_LLA:
-        build_COMMAND_ACCURATE_INIT_POS_LLA(&cmd);
+        cmdBuilder->build_COMMAND_ACCURATE_INIT_POS_LLA(&cmd);
         break;
     case COMMAND_REQUEST_SATELLITE_SYSTEM_DATA:
         // Подкод здесь всегда == 1, он же - первый информационный байт (см. документацию).
-        build_COMMAND_REQUEST_SATELLITE_SYSTEM_DATA(&cmd);
+        cmdBuilder->build_COMMAND_REQUEST_SATELLITE_SYSTEM_DATA(&cmd);
         break;
     case COMMAND_SET_REQUEST_SATELLITES_AND_HEALTH:
         // Для всех возможных операций (1 - 6) номер операции уже пришел в подкоде.
         // Для всех операций также нужно добавить номер спутника, которого эта операция касается
         // (для операций 3 и 6 номер спутника не важен, однако пакет всё равно нужно дополнить).
-        build_COMMAND_SET_REQUEST_SATELLITES_AND_HEALTH(&cmd);
+        cmdBuilder->build_COMMAND_SET_REQUEST_SATELLITES_AND_HEALTH(&cmd);
         break;
     case COMMAND_SUPER:
         // Суперпакетов TSIP много, нужно выбрать нужный метод по подкоду.
-        switch((byte)subcode) {
+        switch((quint8)subcode) {
         case CMDSUB_SET_PACKET_BROADCAST_MASK:
-            build_CMDSUB_SET_PACKET_BROADCAST_MASK(&cmd);
+            cmdBuilder->build_CMDSUB_SET_PACKET_BROADCAST_MASK(&cmd);
             break;
         case CMDSUB_REQUEST_PRIMARY_TIMING_PACKET:
         case CMDSUB_REQUEST_SUPPL_TIMING_PACKET:
             // Здесь необходимо добавить лишь код, обозначающий, как прислать этот пакет.
             // Для обоих пакетов коды значат одно и то же, поэтому одного метода достаточно.
-            build_CMDSUB_REQUEST_TIMING_PACKET(&cmd);
+            cmdBuilder->build_CMDSUB_REQUEST_TIMING_PACKET(&cmd);
             break;
         }
     }
-
+qDebug() << cmd;
     cmd.append(DLE);
     cmd.append(ETX);
+    qDebug() << cmd;
     //qDebug() << "Starting to write to com...";
     com->write(cmd.constData(), cmd.length());
     com->waitForBytesWritten(300);

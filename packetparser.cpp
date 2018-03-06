@@ -1,10 +1,11 @@
 #include "packetparser.h"
-#include <QQuickView>
+
+//QQuickWindow *mainWindow;
 
 PacketParser::PacketParser(QByteArray data)
 {
     this->data.clear();
-    _reportCode = (byte)data[0];
+    _reportCode = (quint8)data[1];
     for (int i = 2; i < data.length() - 1; i++) {
         this->data.append(data[i]);
     }
@@ -17,7 +18,7 @@ byte PacketParser::reportCode()
 
 byte PacketParser::reportSubcode()
 {
-    return data[0];
+    return (quint8)data[0];
 }
 
 QString PacketParser::parse_REPORT_UNPARSABLE()
@@ -26,7 +27,7 @@ QString PacketParser::parse_REPORT_UNPARSABLE()
     res.append("Невозможно разобрать то, что Вы отправили.\n"
                "Содержимое отправленного пакета:\n");
     for (int i = 0; i < data.length(); i++) {
-        res.append(QString("%0 ").arg((byte)data[i], 1, 16));
+        res.append(QString("%0 ").arg((quint8)data[i], 1, 16));
     }
     return res;
 }
@@ -81,7 +82,7 @@ QString PacketParser::parse_RPTSUB_HARDWARE_COMPONENT_INFO()
     return res;
 }
 
-QString PacketParser::parse_REPORT_DOUBLE_XYZ_POS()
+QString PacketParser::parse_REPORT_DOUBLE_XYZ_POS(COMHandler *com)
 {
     if (data.length() != 36) {
         return QString("Пакет REPORT_DOUBLE_XYZ_POS (0x83) имеет неверную длину");
@@ -92,6 +93,9 @@ QString PacketParser::parse_REPORT_DOUBLE_XYZ_POS()
     double Z = TypesConverter::bytesToDouble(data, 16);
     double clockBias = TypesConverter::bytesToDouble(data, 24);
     float timeOfFix = TypesConverter::bytesToSingle(data, 32);
+
+    emit com->newValuesGained(QVariant(X), QVariant(Y));
+
     return QString("Получен пакет REPORT_DOUBLE_XYZ_POS (0x83):\n \
                      -- Позиция XYZ: (%0; %1; %2)\n \
                      -- Clock bias: %3\n-- Time of fix: %4")
@@ -167,12 +171,12 @@ QString PacketParser::parse_REPORT_SOFTWARE_VERSION_INFO()
             .arg(data[5]).arg(data[6]).arg(data[7]).arg(data[8]).arg(data[9]);
 }
 
-QString PacketParser::parse_REPORT_TRACKED_SATELLITES_SINGAL_LVL(QQuickWindow *window)
+QString PacketParser::parse_REPORT_TRACKED_SATELLITES_SINGAL_LVL()
 {
     QString message = "-- Уровни сигналов (пакет 0x47): ";
 
     for (int i = 0; i < 12; i++) {
-        QObject *qmlObject = window->findChild<QObject *>(QString("template%0").arg(i + 1));
+        QObject *qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>(QString("template%0").arg(i + 1));
         qmlObject->setProperty("visible", "false");
     }
 
@@ -182,7 +186,7 @@ QString PacketParser::parse_REPORT_TRACKED_SATELLITES_SINGAL_LVL(QQuickWindow *w
 
         message.append(QString("Спутник %0: %1").arg(data[i * 5 + 2]).arg(signalLevel));
 
-        QObject *qmlObject = window->findChild<QObject *>(QString("template%0").arg(i + 1));
+        QObject *qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>(QString("template%0").arg(i + 1));
         qmlObject->setProperty("visible", "true");
         QObject *textObject = qmlObject->findChild<QObject *>("mainLabel");
         textObject->setProperty("text", QVariant(QString("Спутник %0: %1").arg(data[i * 5 + 2]).arg(signalLevel)));
@@ -468,29 +472,29 @@ QString PacketParser::parse_REPORT_SATELLITE_SELECTION_LIST()
     QString s = "Получен пакет REPORT_SATELLITE_SELECTION_LIST (0x6D):\n";
     QString fix_dimension = "";
     // Здесь 224 - маска старших трех битов, 7 - младших трех битов.
-    if ((data[0] & (byte)224) >> 5 == 1) {
+    if ((data[0] & (quint8)224) >> 5 == 1) {
         fix_dimension = "1D clock fix";
     }
-    else if ((data[0] & (byte)224) >> 5 == 3) {
+    else if ((data[0] & (quint8)224) >> 5 == 3) {
         fix_dimension = "2D fix";
     }
-    else if ((data[0] & (byte)224) >> 5 == 4) {
+    else if ((data[0] & (quint8)224) >> 5 == 4) {
         fix_dimension = "3D fix";
     }
-    else if ((data[0] & (byte)224) >> 5 == 5) {
+    else if ((data[0] & (quint8)224) >> 5 == 5) {
         fix_dimension = "OD clock fix";
     }
     s.append(QString("- Fix dimension: %0\n").arg(fix_dimension));
 
     s.append(QString("- Fix mode: %0\n").arg((data[0] & BIT(3)) ? "manual" : "auto"));
-    s.append(QString("- Количество спутников в fix: %0\n").arg(data[0] & (byte)15));
+    s.append(QString("- Количество спутников в fix: %0\n").arg(data[0] & (quint8)15));
     s.append(QString("- PDOP: %0\n").arg(TypesConverter::bytesToSingle(data, 1)));
     s.append(QString("- HDOP: %0\n").arg(TypesConverter::bytesToSingle(data, 5)));
     s.append(QString("- VDOP: %0\n").arg(TypesConverter::bytesToSingle(data, 9)));
     s.append(QString("- TDOP: %0\n").arg(TypesConverter::bytesToSingle(data, 13)));
     s.append(QString("Список всех включенных спутников (отрицательное значение означает, \
                     что спутник отвергнут для использования в алгоритме T-RAIM):\n"));
-    for (int i = 17; i < 17 + (data[0] & (byte)15); i++) {
+    for (int i = 17; i < 17 + (data[0] & (quint8)15); i++) {
         s.append(QString("SV PRN: %0\n").arg(data[i]));
     }
 
@@ -635,14 +639,14 @@ QString PacketParser::parse_RPTSUB_SUPPL_TIMING_PACKET()
     return s;
 }
 
-void PacketParser::updateInterfaceValues(QQuickWindow *window)
+void PacketParser::updateInterfaceValues()
 {
-    QObject *qmlObject = window->findChild<QObject *>("temperatureLabel");
+    QObject *qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("temperatureLabel");
     qmlObject->setProperty("text", QVariant(QString("Температура, С: %0").arg(RPTSUB_SUPPL_TIMING_PACKET_report.temperature, 0, 'f')));
-    qmlObject = window->findChild<QObject *>("latitudeOutLabel");
+    qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("latitudeOutLabel");
     qmlObject->setProperty("text", QVariant(QString("Широта: %0").arg(RPTSUB_SUPPL_TIMING_PACKET_report.latitude, 0, 'f')));
-    qmlObject = window->findChild<QObject *>("longitudeOutLabel");
+    qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("longitudeOutLabel");
     qmlObject->setProperty("text", QVariant(QString("Долгота: %0").arg(RPTSUB_SUPPL_TIMING_PACKET_report.longitude, 0, 'f')));
-    qmlObject = window->findChild<QObject *>("altitudeOutLabel");
+    qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("altitudeOutLabel");
     qmlObject->setProperty("text", QVariant(QString("Высота, м: %0").arg(RPTSUB_SUPPL_TIMING_PACKET_report.altitude, 0, 'f')));
 }

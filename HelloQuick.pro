@@ -17,7 +17,8 @@ SOURCES += main.cpp \
     converter.cpp \
     packetparser.cpp \
     qbytehelper.cpp \
-    qmldatahelper.cpp
+    qmldatahelper.cpp \
+    cmdbuilder.cpp
 
 RESOURCES += qml.qrc
 
@@ -38,7 +39,8 @@ HEADERS += \
     packetparser.h \
     kinda_trimble_shared.h \
     qbytehelper.h \
-    qmldatahelper.h
+    qmldatahelper.h \
+    cmdbuilder.h
 
 DISTFILES += \
     images/satellites_levels/excellent.png \

@@ -9,8 +9,8 @@ import "./" as MyQML
 Window {
     id: main_window
     visible: true
-    width: 1000
-    height: 1000
+    width: 1500
+    height: 950
     color: "#ffffff"
     opacity: 1
     title: qsTr("Kinda Trimble")
@@ -58,43 +58,13 @@ Window {
     function onAppendReceivedtext(s) {
         receivedText.append(s+"\n\n--------------------------\n")
     }
-/*
-    function onUpdateSatelliteInfo(index, sat_no, sat_lvl) {
-        var obj;
-        if (index === 1) obj = template1;
-        else if (index === 2) obj = template2;
-        else if (index === 3) obj = template3;
-        else if (index === 4) obj = template4;
-        else if (index === 5) obj = template5;
-        else if (index === 6) obj = template6;
-        else if (index === 7) obj = template7;
-        else if (index === 8) obj = template8;
-        else if (index === 9) obj = template9;
-        else if (index === 10) obj = template10;
-        else if (index === 11) obj = template11;
-        else if (index === 12) obj = template12;
-        template1.visible = false;
-        template2.visible = false;
-        template3.visible = false;
-        template4.visible = false;
-        template5.visible = false;
-        template6.visible = false;
-        template7.visible = false;
-        template8.visible = false;
-        template9.visible = false;
-        template10.visible = false;
-        template11.visible = false;
-        template12.visible = false;
-        obj.visible = true;
 
-    }
-*/
     Rectangle {
         id: rectangle
         x: 445
         y: 65
         width: 521
-        height: 904
+        height: 875
         color: "#00000000"
         border.color: "#a9a9a9"
 
@@ -388,62 +358,104 @@ Window {
         y: 940
         visible: false
     }
-/*
-    Flickable {
-        x: 100
-        y: 650
-        width: 300
-        height: 300
-        interactive: true
-        boundsBehavior: Flickable.StopAtBounds
-        contentHeight: myChart.height
-        contentWidth: myChart.width
-        clip: true
-/*
-        Image {
-            id: img
-            width: 535
-            height: 492
-            source: "./images/satellites_levels/excellent.png"
-            fillMode: Image.PreserveAspectFit
-        }*/
 
-        ChartView {
-            id: myChart
-            x: 0
-            y: 0
-            width: 500
-            height: 500
+    function onGainNewValues(nx, ny) {
+        myLineSeries.append(parseFloat(nx), parseFloat(ny));
+        myScatterSeries.append(parseFloat(nx), parseFloat(ny));
+    }
 
-            MouseArea {
-                anchors.fill: parent
-                property int lastX: 0
-                property int lastY: 0
-                onPressed: {
+    ChartView {
+        id: myChart
+        objectName: "myChart"
+        //legend.visible: false
+
+        x: 991
+        y: 65
+        width: 500
+        height: 500
+        dropShadowEnabled: true
+        plotAreaColor: "#00000000"
+        antialiasing: true
+
+        MouseArea {
+            id: mouse_area
+            anchors.fill: parent
+            property int lastX: 0
+            property int lastY: 0
+            onPressed: {
+                lastX = mouse.x
+                lastY = mouse.y
+            }
+
+            onPositionChanged: {
+                if (lastX !== mouse.x) {
+                    myChart.scrollRight(lastX - mouse.x)
                     lastX = mouse.x
+                }
+                if (lastY !== mouse.y) {
+                    myChart.scrollDown(lastY - mouse.y)
                     lastY = mouse.y
                 }
-
-                onPositionChanged: {
-                    if (lastX !== mouse.x) {
-                        myChart.scrollRight(lastX - mouse.x)
-                        lastX = mouse.x
-                    }
-                    if (lastY !== mouse.y) {
-                        myChart.scrollDown(lastY - mouse.y)
-                        lastY = mouse.y
-                    }
-                }
-            }
-
-            SplineSeries {
-           // LineSeries {
-                XYPoint { x: 0; y: 0 }
-                XYPoint { x: 3; y: 3 }
-                XYPoint { x: -3; y: 4 }
-                XYPoint { x: -3; y: -4 }
-                XYPoint { x: -2; y: 4 }
+                //console.log(lastX, lastY)
             }
         }
-    //}
+
+        Button {
+            id: zoomOutButton
+            x: 349
+            y: 16
+            width: 60
+            height: 50
+            text: qsTr("-")
+            padding: 0
+            rightPadding: 0
+            leftPadding: 0
+            bottomPadding: 0
+            topPadding: 0
+            font.pointSize: 15
+            font.bold: true
+            onClicked: {
+                myChart.zoomOut()
+            }
+        }
+
+        Button {
+            id: zoomInButton
+            x: 415
+            y: 16
+            width: 60
+            height: 50
+            text: qsTr("+")
+            padding: 0
+            rightPadding: 0
+            leftPadding: 0
+            bottomPadding: 0
+            topPadding: 0
+            font.pointSize: 15
+            font.bold: true
+            onClicked: {
+                myChart.zoomIn()
+            }
+        }
+
+        SplineSeries {
+            id: myLineSeries
+            XYPoint { x: 0; y: 5 }
+            XYPoint { x: -3; y: -4 }
+            XYPoint { x: 4; y: 1 }
+            XYPoint { x: -4; y: 1 }
+            XYPoint { x: 3; y: -4 }
+            XYPoint { x: 0; y: 5 }
+        }
+        ScatterSeries {
+            id: myScatterSeries
+            XYPoint { x: 0; y: 5 }
+            XYPoint { x: -3; y: -4 }
+            XYPoint { x: 4; y: 1 }
+            XYPoint { x: -4; y: 1 }
+            XYPoint { x: 3; y: -4 }
+            XYPoint { x: 0; y: 5 }
+        }
+
+    }
 }

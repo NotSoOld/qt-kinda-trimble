@@ -7,11 +7,13 @@ class QMLDataHelper : public QObject
 {
     Q_OBJECT
 public:
-    //explicit QMLDataObtainer(QObject *parent = nullptr);
+    // Находится здесь для всех классов, т.к. периодически тому или иному методу
+    // нужен доступ к главному окну программы.
+    static QQuickWindow *mainWindow;
 
-    static bool getBoolFromQML(QQuickWindow *, const char *, const char *);
-    static int getIntFromQML(QQuickWindow *, const char *, const char *);
-    static double getDoubleFromQML(QQuickWindow *, const char *, const char *);
+    static bool getBoolFromQML(const char *, const char *);
+    static int getIntFromQML(const char *, const char *);
+    static double getDoubleFromQML(const char *, const char *);
 signals:
 
 public slots:

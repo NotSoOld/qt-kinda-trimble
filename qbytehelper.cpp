@@ -1,12 +1,5 @@
 #include "qbytehelper.h"
 
-/*
-QByteHelper::QByteHelper(QObject *parent) : QObject(parent)
-{
-
-}
-*/
-
 void QByteArrayHelper::appendAndStuff(QByteArray *bytes, double d)
 {
     QByteArray doubleBytes = TypesConverter::toByteArray(d);
@@ -23,7 +16,7 @@ void QByteArrayHelper::appendAndStuff(QByteArray *bytes, float f)
     }
 }
 
-void QByteArrayHelper::appendAndStuff(QByteArray *bytes, unsigned short f)
+void QByteArrayHelper::appendAndStuff(QByteArray *bytes, quint16 f)
 {
     QByteArray shortBytes = TypesConverter::toByteArray(f);
     for (int i = 0; i < 2; i++) {
@@ -31,7 +24,7 @@ void QByteArrayHelper::appendAndStuff(QByteArray *bytes, unsigned short f)
     }
 }
 
-void QByteArrayHelper::appendAndStuff(QByteArray *bytes, unsigned int f)
+void QByteArrayHelper::appendAndStuff(QByteArray *bytes, quint32 f)
 {
     QByteArray intBytes = TypesConverter::toByteArray(f);
     for (int i = 0; i < 4; i++) {
@@ -39,7 +32,7 @@ void QByteArrayHelper::appendAndStuff(QByteArray *bytes, unsigned int f)
     }
 }
 
-void QByteArrayHelper::appendAndStuff(QByteArray *bytes, byte b)
+void QByteArrayHelper::appendAndStuff(QByteArray *bytes, quint8 b)
 {
     //qDebug() << "bytes version called";
     bytes->append(b);

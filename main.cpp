@@ -4,11 +4,12 @@
 #include <QQmlContext>
 #include <QQuickWindow>
 #include <QQuickStyle>
-#include <comhandler.h>
+#include "comhandler.h"
+#include "qmldatahelper.h"
 
 COMHandler handler;
 COMHandler receiverThread;
-QQuickWindow *window;
+//QQuickWindow *window;
 
 int main(int argc, char *argv[])
 {
@@ -21,16 +22,16 @@ int main(int argc, char *argv[])
     if (engine.rootObjects().isEmpty())
         return -1;
 
-    window = qobject_cast<QQuickWindow *>(engine.rootObjects().value(0));
-    if (!window) {
+    QMLDataHelper::mainWindow = qobject_cast<QQuickWindow *>(engine.rootObjects().value(0));
+    if (!QMLDataHelper::mainWindow) {
         qDebug() << QString("Не удается найти основное окно");
         exit(1);
     }
-    handler.window = window;
-    receiverThread.window = window;
+    //handler.window = window;
+    //receiverThread.window = window;
 
     QObject::connect(
-                window,
+                QMLDataHelper::mainWindow,
                 SIGNAL(sig_send_command(int, int)),
                 &handler,
                 SLOT(send_command(int, int))
@@ -39,15 +40,22 @@ int main(int argc, char *argv[])
     QObject::connect(
                 &receiverThread,
                 SIGNAL(appendReceivedText(QVariant)),
-                window,
+                QMLDataHelper::mainWindow,
                 SLOT(onAppendReceivedtext(QVariant))
     );
 
     QObject::connect(
-                window,
+                QMLDataHelper::mainWindow,
                 SIGNAL(sig_open_port(QString, int, int, int, int, int)),
                 &receiverThread,
                 SLOT(configureCOM(QString, int, int, int, int, int))
+    );
+
+    QObject::connect(
+                &receiverThread,
+                SIGNAL(newValuesGained(QVariant, QVariant)),
+                QMLDataHelper::mainWindow,
+                SLOT(onGainNewValues(QVariant, QVariant))
     );
 
    // receiverThread.methodToStartThreadWith = &COMHandler::receiveReport;
