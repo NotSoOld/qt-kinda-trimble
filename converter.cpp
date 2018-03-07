@@ -52,8 +52,8 @@ QByteArray TypesConverter::toByteArray(quint32 f)
 quint32 TypesConverter::bytesToUInt32(QByteArray bytes, int start)
 {
     _uint32 *result = (_uint32 *)calloc(1, sizeof(_uint32));
-    for (int i = start; i < start + 4; i++) {
-        result->bytes[i - start] = bytes[i];
+    for (int i = 0, j = 3; j >= 0; i++, j--) {
+        result->bytes[j] = (quint8)bytes[start + i];
     }
     quint32 res = result->value;
     free(result);
@@ -63,8 +63,8 @@ quint32 TypesConverter::bytesToUInt32(QByteArray bytes, int start)
 qint32 TypesConverter::bytesToSInt32(QByteArray bytes, int start)
 {
     _sint32 *result = (_sint32 *)calloc(1, sizeof(_sint32));
-    for (int i = start; i < start + 4; i++) {
-        result->bytes[i - start] = bytes[i];
+    for (int i = 0, j = 3; j >= 0; i++, j--) {
+        result->bytes[j] = (quint8)bytes[start + i];
     }
     qint32 res = result->value;
     free(result);
@@ -74,8 +74,8 @@ qint32 TypesConverter::bytesToSInt32(QByteArray bytes, int start)
 quint16 TypesConverter::bytesToUInt16(QByteArray bytes, int start)
 {
     _uint16 *result = (_uint16 *)calloc(1, sizeof(_uint16));
-    for (int i = start; i < start + 2; i++) {
-        result->bytes[i - start] = bytes[i];
+    for (int i = 0, j = 1; j >= 0; i++, j--) {
+        result->bytes[j] = (quint8)bytes[start + i];
     }
     quint16 res = result->value;
     free(result);
@@ -85,8 +85,8 @@ quint16 TypesConverter::bytesToUInt16(QByteArray bytes, int start)
 qint16 TypesConverter::bytesToSInt16(QByteArray bytes, int start)
 {
     _sint16 *result = (_sint16 *)calloc(1, sizeof(_sint16));
-    for (int i = start; i < start + 2; i++) {
-        result->bytes[i - start] = bytes[i];
+    for (int i = 0, j = 1; j >= 0; i++, j--) {
+        result->bytes[j] = (quint8)bytes[start + i];
     }
     qint16 res = result->value;
     free(result);
@@ -96,8 +96,9 @@ qint16 TypesConverter::bytesToSInt16(QByteArray bytes, int start)
 float TypesConverter::bytesToSingle(QByteArray bytes, int start)
 {
     _single *result = (_single *)calloc(1, sizeof(_single));
-    for (int i = 0, j = 3; j < 4; i++, j--) {
-        result->bytes[j] = (byte)(bytes[start + i]);
+    for (int i = 0, j = 3; j >= 0; i++, j--) {
+        //qDebug() << QString("i = %0, j = %1, start = %2").arg(i).arg(j).arg(start);
+        result->bytes[j] = (quint8)bytes[start + i];
     }
     float res = result->value;
     free(result);
@@ -107,8 +108,8 @@ float TypesConverter::bytesToSingle(QByteArray bytes, int start)
 double TypesConverter::bytesToDouble(QByteArray bytes, int start)
 {
     _double *result = (_double *)calloc(1, sizeof(_double));
-    for (int i = start; i < start + 8; i++) {
-        result->bytes[i - start] = bytes[i];
+    for (int i = 0, j = 7; j >= 0; i++, j--) {
+        result->bytes[j] = (quint8)bytes[start + i];
     }
     double res = result->value;
     free(result);

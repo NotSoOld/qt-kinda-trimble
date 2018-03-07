@@ -13,19 +13,19 @@ void CommandBuilder::build_COMMAND_SET_IO_OPTIONS(QByteArray *cmd)
     bool dbhz_out_checked = QMLDataHelper::getBoolFromQML("dbhz_out_RB", "checked");
 
     QByteArrayHelper::appendAndStuff(cmd, (quint8)(
-               (ecefChecked ? BIT(0) : 0) |
-               (llaChecked ? BIT(1) : 0) |
-               (mslChecked ? BIT(2) : 0) |
-               (precision ? BIT(4) : 0)
+               (ecefChecked ? BIT0 : 0) |
+               (llaChecked ? BIT1 : 0) |
+               (mslChecked ? BIT2 : 0) |
+               (precision ? BIT4 : 0)
               ));
     QByteArrayHelper::appendAndStuff(cmd, (quint8)(
-               (ecefVelChecked ? BIT(0) : 0) |
-               (enuVelChecked ? BIT(1) : 0)
+               (ecefVelChecked ? BIT0 : 0) |
+               (enuVelChecked ? BIT1 : 0)
               ));
-    QByteArrayHelper::appendAndStuff(cmd, (quint8)(gpsTime ? 0 : BIT(0)));
+    QByteArrayHelper::appendAndStuff(cmd, (quint8)(gpsTime ? 0 : BIT0));
     QByteArrayHelper::appendAndStuff(cmd, (quint8)(
-               (raw_data_report_checked ? BIT(0) : 0) |
-               (dbhz_out_checked ? BIT(3) : 0)
+               (raw_data_report_checked ? BIT0 : 0) |
+               (dbhz_out_checked ? BIT3 : 0)
               ));
 
     qDebug() << *cmd;
@@ -79,10 +79,11 @@ void CommandBuilder::build_CMDSUB_SET_PACKET_BROADCAST_MASK(QByteArray *cmd)
     bool maskSupplPackets = QMLDataHelper::getBoolFromQML("supplPacketMaskingBit", "checked");
     bool maskOtherPackets = QMLDataHelper::getBoolFromQML("otherPacketsMaskingBit", "checked");
     QByteArrayHelper::appendAndStuff(cmd, (quint8)(
-                       (maskPrimaryPackets ? BIT(0) : 0) |
-                       (maskSupplPackets ? BIT(2) : 0) |
-                       (maskOtherPackets ? BIT(6) : 0)
+                       (maskPrimaryPackets ? BIT0 : ZERO_BYTE) |
+                       (maskSupplPackets ? BIT2 : ZERO_BYTE) |
+                       (maskOtherPackets ? BIT6 : ZERO_BYTE)
                       ));
+
     QByteArrayHelper::appendAndStuff(cmd, ZERO_BYTE);
     QByteArrayHelper::appendAndStuff(cmd, ZERO_BYTE);
     QByteArrayHelper::appendAndStuff(cmd, ZERO_BYTE);

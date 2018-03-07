@@ -10,8 +10,8 @@ class PacketParser : public QObject
     Q_OBJECT
 public:
     PacketParser(QByteArray);
-    byte reportCode();
-    byte reportSubcode();
+    quint8 reportCode();
+    quint8 reportSubcode();
 
     QString parse_REPORT_UNPARSABLE();
     QString parse_RPTSUB_FIRMWARE_VERSION();
@@ -32,6 +32,7 @@ public:
     QString parse_REPORT_SATELLITE_SELECTION_LIST();
     QString parse_RPTSUB_PRIMARY_TIMING_PACKET();
     QString parse_RPTSUB_SUPPL_TIMING_PACKET();
+    QString parse_RPTSUB_PACKET_BROADCAST_MASK();
 
     struct RPTSUB_FIRMWARE_VERSION_reportStruct {
 

@@ -10,8 +10,19 @@
 #define DLE ((quint8)0x10)
 #define ETX ((quint8)0x03)
 #define ZERO_BYTE ((quint8)0)
-//#define BIT(x) (1 << (7 - x))
-#define BIT(x) ((quint8)(1 << x))
+//#define BIT(x) ((quint8)(1 << (7 - x)))
+
+// Похоже, что используется именно такое именование битов, хотя битовые поля всё еще под большим вопросом...
+//#define BIT(x) ((quint8)(1 << x))
+#define BIT0 ((quint8)1)
+#define BIT1 ((quint8)2)
+#define BIT2 ((quint8)4)
+#define BIT3 ((quint8)8)
+#define BIT4 ((quint8)16)
+#define BIT5 ((quint8)32)
+#define BIT6 ((quint8)64)
+#define BIT7 ((quint8)128)
+
 
 #define COMMAND_FIRMWARE_INFO                           ((quint8)0x1C)
 #define     CMDSUB_FIRMWARE_VERSION                     ((quint8)0x01)

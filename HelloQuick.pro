@@ -41,9 +41,3 @@ HEADERS += \
     qbytehelper.h \
     qmldatahelper.h \
     cmdbuilder.h
-
-DISTFILES += \
-    images/satellites_levels/excellent.png \
-    images/satellites_levels/fair.png \
-    images/satellites_levels/good.png \
-    images/satellites_levels/weak.png

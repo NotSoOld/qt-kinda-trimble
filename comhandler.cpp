@@ -163,6 +163,9 @@ void COMHandler::receiveReport()
             message.append(parser->parse_RPTSUB_SUPPL_TIMING_PACKET());
             parser->updateInterfaceValues();
             break;
+        case RPTSUB_PACKET_BROADCAST_MASK:
+            message.append(parser->parse_RPTSUB_PACKET_BROADCAST_MASK());
+            break;
         default:
             message.append(QString("Это точно был пакет REPORT_SUPER (0х8F)? Подкод %0 не распознан.")
                            .arg(parser->reportSubcode(), 1, 16));
@@ -171,6 +174,7 @@ void COMHandler::receiveReport()
     default:
         message = QString("Неизвестный пакет 0x%0 ЛИБО проблемы с пониманием. Пакет отброшен").arg(parser->reportCode(), 1, 16);
     }
+   // qDebug() << "went here";
     emit appendReceivedText(message);
 }
 
@@ -188,13 +192,13 @@ void COMHandler::send_command(int code, int subcode)
     // Некоторые пакеты содержат только код команды,
     // либо код команды и ее подкод. Для таких пакетов
     // дополнительный метод не нужен.
-    qDebug() << cmd;
+    //qDebug() << cmd;
     QByteArrayHelper::appendAndStuff(&cmd, (quint8)code);
-    qDebug() << cmd;
+    //qDebug() << cmd;
     if (subcode > 0) {
         QByteArrayHelper::appendAndStuff(&cmd, (quint8)subcode);
     }
-    qDebug() << cmd;
+    //qDebug() << cmd;
     // Для команд, которые содержат дополнительную информацию,
     // выбирается соответствующий метод.
     switch ((quint8)code) {
@@ -243,14 +247,12 @@ void COMHandler::send_command(int code, int subcode)
             break;
         }
     }
-qDebug() << cmd;
+
+    qDebug() << cmd.length();
     cmd.append(DLE);
     cmd.append(ETX);
-    qDebug() << cmd;
-    //qDebug() << "Starting to write to com...";
     com->write(cmd.constData(), cmd.length());
     com->waitForBytesWritten(300);
-    //qDebug() << "finished writing to com";
 }
 
 void COMHandler::run()
