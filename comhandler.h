@@ -4,6 +4,7 @@
 #include "kinda_trimble_shared.h"
 
 #include <QSerialPort>
+#include <QSerialPortInfo>
 #include <QThread>
 #include "converter.h"
 #include "qbytehelper.h"
@@ -25,7 +26,7 @@ public:
     static QSerialPort *com;
     static QByteArray readedData;
     static quint8 previouslyReadedChar;
-    //QQuickWindow *window;
+    static QList<QSerialPortInfo> portsList;
 
 signals:
     void appendReceivedText(QVariant s);
@@ -33,7 +34,8 @@ signals:
 public slots:
     void send_command(int, int);
     void readFromCOM();
-    void configureCOM(QString, int, int, int, int, int);
+    void configureCOM(int, int, int, int, int, int);
+    void getSerialPortsList();
 };
 #include "packetparser.h"
 

@@ -4,12 +4,50 @@ QSerialPort *COMHandler::com;
 QString COMHandler::name;
 QByteArray COMHandler::readedData;
 byte COMHandler::previouslyReadedChar;
+QList<QSerialPortInfo> COMHandler::portsList;
 
-void COMHandler::configureCOM(QString portName, int baudRate, int dataBits, int parity, int flowControl, int stopBits)
+void COMHandler::getSerialPortsList()
 {
-    if (com && com->isOpen()) {
-        finishCOM();
+    // Перед обновлением списка доступных портов (а это происходит
+    // только при открытии/переоткрытии линии) нужно закрыть старое
+    //соединение, чтобы оно отображалось в списке доступных.
+    finishCOM();
+
+    portsList = QSerialPortInfo::availablePorts();
+    int openPortsNumber = portsList.length();
+    for (int i = 0; i < openPortsNumber; i++) {
+        /*
+        qDebug() << portsList[i].portName();
+        qDebug() << portsList[i].serialNumber();
+        qDebug() << portsList[i].description();
+        qDebug() << portsList[i].manufacturer();
+        qDebug() << portsList[i].systemLocation();
+        */
+        if (portsList[i].isBusy()) {
+            portsList.removeAt(i);
+            i--;
+            openPortsNumber--;
+        }
     }
+
+    QVariantList portNamesList;
+    for (int i = 0; i < openPortsNumber; i++) {
+        portNamesList.append(QVariant(QString("%0 (%1)").arg(portsList[i].description()).arg(portsList[i].portName())));
+    }
+
+    QObject *portsComboBox = QMLDataHelper::mainWindow->findChild<QObject *>("com_init_window");
+    portsComboBox = portsComboBox->findChild<QObject *>("portsComboBox");
+    portsComboBox->setProperty("model", portNamesList);
+    portsComboBox->setProperty("currentIndex", 0);
+}
+
+void COMHandler::configureCOM(int portIndex, int baudRate, int dataBits, int parity, int flowControl, int stopBits)
+{
+    // Если порт уже был открыт, его сначала нужно закрыть.
+    // Однако он не может оказаться в списке, если он уже открыт, так что...
+    //finishCOM();
+
+    QString portName = portsList[portIndex].portName();
     com = new QSerialPort(portName);
     com->setBaudRate(baudRate);
     switch (dataBits) {
@@ -49,11 +87,17 @@ void COMHandler::configureCOM(QString portName, int baudRate, int dataBits, int 
                 &COMHandler::readFromCOM
     );
 
-    emit appendReceivedText(QString("VirtualCOM %0 подключен с параметрами: %1").arg(portName).arg(baudRate));
+    emit appendReceivedText(QString("VirtualCOM %0 (%1) подключен")
+                            .arg(portsList[portIndex].description()).arg(portName));
 }
 
 void COMHandler::finishCOM()
 {
+    if (com == nullptr)
+        return;
+    if (!(com->isOpen()))
+        return;
+
     com->clear();
     com->close();
     delete com;
@@ -71,7 +115,7 @@ void COMHandler::readFromCOM()
             // Обнаружен конец пакета. ETX также отбрасываем.
             //qDebug() << readedData;
             receiveReport();
-            // После вызова этой функции всё содержимое readedData было разобрано
+            // После вызова метода выше всё содержимое readedData было разобрано
             // (оно содержало полный пакет), поэтому теперь можно его очистить.
             readedData.clear();
            // qDebug() << "cleared readed data";
@@ -79,7 +123,7 @@ void COMHandler::readFromCOM()
         }
 
         else if (!(previouslyReadedChar == DLE && (quint8)readedChar == DLE)) {
-            // Если обнаружен стаффинг байта DLE, не нужно заносить его в полученные данные.
+            // Если обнаружено экранирование байта DLE, не нужно заносить его в полученные данные.
             readedData.append(readedChar);
         }
 
@@ -139,6 +183,9 @@ void COMHandler::receiveReport()
     case REPORT_SINGLE_VELOCITY_FIX_ENU:
         message.append(parser->parse_REPORT_SINGLE_VELOCITY_FIX_ENU());
         break;
+    case REPORT_LAST_FIX_INFO:
+        message.append(parser->parse_REPORT_LAST_FIX_INFO());
+        break;
     case REPORT_GPS_SYSTEM_DATA:
         message.append(parser->parse_REPORT_GPS_SYSTEM_DATA());
         break;
@@ -161,7 +208,7 @@ void COMHandler::receiveReport()
             break;
         case RPTSUB_SUPPL_TIMING_PACKET:
             message.append(parser->parse_RPTSUB_SUPPL_TIMING_PACKET());
-            parser->updateInterfaceValues();
+            //parser->updateInterfaceValues();
             break;
         case RPTSUB_PACKET_BROADCAST_MASK:
             message.append(parser->parse_RPTSUB_PACKET_BROADCAST_MASK());
@@ -172,9 +219,9 @@ void COMHandler::receiveReport()
         }
         break;
     default:
-        message = QString("Неизвестный пакет 0x%0 ЛИБО проблемы с пониманием. Пакет отброшен").arg(parser->reportCode(), 1, 16);
+        message = QString("Неизвестный пакет 0x%0 ЛИБО проблемы с пониманием. Пакет отброшен")
+                .arg(parser->reportCode(), 1, 16);
     }
-   // qDebug() << "went here";
     emit appendReceivedText(message);
 }
 
@@ -185,25 +232,21 @@ void COMHandler::send_command(int code, int subcode)
 {
     QByteArray cmd;
     CommandBuilder *cmdBuilder = new CommandBuilder();
-    //qDebug() << code;
-    //qDebug() << subcode;
+    qDebug() << code;
+    qDebug() << subcode;
 
     cmd.append(DLE);
-    // Некоторые пакеты содержат только код команды,
-    // либо код команды и ее подкод. Для таких пакетов
-    // дополнительный метод не нужен.
-    //qDebug() << cmd;
+    // Некоторые пакеты содержат только код команды, либо код команды и ее подкод.
+    // Для таких пакетов дополнительный метод не нужен.
     QByteArrayHelper::appendAndStuff(&cmd, (quint8)code);
-    //qDebug() << cmd;
     if (subcode > 0) {
         QByteArrayHelper::appendAndStuff(&cmd, (quint8)subcode);
     }
-    //qDebug() << cmd;
     // Для команд, которые содержат дополнительную информацию,
     // выбирается соответствующий метод.
     switch ((quint8)code) {
     case COMMAND_SET_IO_OPTIONS:
-        // (Если == -1, то это запрос настроек, а не их установка.)
+        // (Если == -1, то это запрос настроек, а не их установка, и формирование пакета не требуется.)
         if (subcode == 0) {
             cmdBuilder->build_COMMAND_SET_IO_OPTIONS(&cmd);
         }
@@ -211,8 +254,8 @@ void COMHandler::send_command(int code, int subcode)
     case COMMAND_SATELLITE_SELECTION:
     case COMMAND_REQUEST_LAST_RAW_MEASUREMENT:
     case COMMAND_REQUEST_SATELLITE_TRACKING_STATUS:
-        // Индекс спутника для этих команд приходит в subcode.
-        // Подкод == 0 не добавится выше, поэтому это нужно сделать отдельно.
+        // Индекс спутника для этих команд приходит в subcode. При этом
+        // подкод == 0 не добавится выше, поэтому это нужно сделать отдельно.
         if (subcode == 0) {
             cmd.append((quint8)subcode);
         }
@@ -248,7 +291,7 @@ void COMHandler::send_command(int code, int subcode)
         }
     }
 
-    qDebug() << cmd.length();
+    qDebug() << cmd;
     cmd.append(DLE);
     cmd.append(ETX);
     com->write(cmd.constData(), cmd.length());

@@ -25,6 +25,7 @@ public:
     QString parse_REPORT_SINGLE_LLA_POS();
     QString parse_REPORT_REQUEST_IO_OPTIONS();
     QString parse_REPORT_SINGLE_VELOCITY_FIX_ENU();
+    QString parse_REPORT_LAST_FIX_INFO();
     QString parse_REPORT_GPS_SYSTEM_DATA();
     QString parse_REPORT_STATUS_SATELLITE_HEALTH();
     QString parse_REPORT_RAW_MEASUREMENT_DATA();
@@ -75,7 +76,7 @@ public:
         quint8 spare5;
     } RPTSUB_SUPPL_TIMING_PACKET_report;
 
-    void updateInterfaceValues();
+    //void updateInterfaceValues();
 
 private:
     QByteArray data;

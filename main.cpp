@@ -46,9 +46,16 @@ int main(int argc, char *argv[])
 
     QObject::connect(
                 QMLDataHelper::mainWindow,
-                SIGNAL(sig_open_port(QString, int, int, int, int, int)),
+                SIGNAL(sig_open_port(int, int, int, int, int, int)),
                 &receiverThread,
-                SLOT(configureCOM(QString, int, int, int, int, int))
+                SLOT(configureCOM(int, int, int, int, int, int))
+    );
+
+    QObject::connect(
+                QMLDataHelper::mainWindow,
+                SIGNAL(sig_get_serial_ports()),
+                &receiverThread,
+                SLOT(getSerialPortsList())
     );
 
     QObject::connect(
@@ -58,9 +65,21 @@ int main(int argc, char *argv[])
                 SLOT(onGainNewValues(QVariant, QVariant))
     );
 
+    // При первом запуске проще запустить этот слот отсюда, чем из QML.
+    receiverThread.getSerialPortsList();
+
    // receiverThread.methodToStartThreadWith = &COMHandler::receiveReport;
    // receiverThread.start();
-
+/*
+    QVariantList list;
+    list.append("foo");
+    list.append("bar");
+    list.append("baz");
+    QObject *comboBox = QMLDataHelper::mainWindow->findChild<QObject *>("com_init_window");
+    comboBox = comboBox->findChild<QObject *>("baudComboBox");
+    comboBox->setProperty("model", list);
+    comboBox->setProperty("currentIndex", 1);
+*/
     app.exec();
     receiverThread.terminate();
     COMHandler::finishCOM();

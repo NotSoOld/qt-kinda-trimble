@@ -32,7 +32,7 @@ Item {
         anchors.rightMargin: 32
         Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
         transformOrigin: Item.Center
-        source: "./images/satellites_levels/excellent.png"
+        source: "qrc:/images/satellites_levels/excellent.png"
         fillMode: Image.PreserveAspectFit
         sourceSize.height: 25
         sourceSize.width: 25

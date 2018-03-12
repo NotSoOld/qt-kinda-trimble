@@ -53,10 +53,19 @@ Window {
     property int     _CMDSUB_REQUEST_SUPPL_TIMING_PACKET         : 0xAC
 
     signal sig_send_command(int code, int subcode)
-    signal sig_open_port(string portName, int baud, int dataBits, int parity, int flowControl, int stopBits)
+    signal sig_open_port(int portIndex, int baud, int dataBits, int parity, int flowControl, int stopBits)
+    signal sig_get_serial_ports()
+
+    property int logCount: 0
 
     function onAppendReceivedtext(s) {
-        receivedText.append(s+"\n\n--------------------------\n")
+        logCount++;
+        if (logCount > 20) {
+            receivedText.clear();
+            logCount = 0;
+        }
+
+        receivedText.append(s+"\n\n--------------------------\n");
     }
 
     Rectangle {
@@ -64,7 +73,7 @@ Window {
         x: 445
         y: 65
         width: 521
-        height: 875
+        height: 500
         color: "#00000000"
         border.color: "#a9a9a9"
 
@@ -202,7 +211,7 @@ Window {
         onCloseWindow: {
             com_init_window.close();
             main_window.show();
-            sig_open_port(portName, baud, dataBits, parity, flowControl, stopBits);
+            sig_open_port(portIndex, baud, dataBits, parity, flowControl, stopBits);
         }
     }
 
@@ -215,6 +224,7 @@ Window {
         text: qsTr("Настройка VirtualCOM")
 
         onClicked: {
+            sig_get_serial_ports();
             com_init_window.show();
             main_window.hide();
         }
@@ -229,33 +239,33 @@ Window {
     }
 
     Label {
-        id: latitudeOutLabel
+        id: latitudePosLabel
         objectName: "latitudeOutLabel"
-        x: 24
-        y: 611
+        x: 247
+        y: 605
         text: "Широта:"
     }
 
     Label {
-        id: longitudeOutLabel
+        id: longitudePosLabel
         objectName: "longitudeOutLabel"
-        x: 24
-        y: 631
+        x: 247
+        y: 625
         text: "Долгота:"
     }
 
     Label {
-        id: altitudeOutLabel
+        id: altitudePosLabel
         objectName: "altitudeOutLabel"
-        x: 24
-        y: 651
+        x: 247
+        y: 645
         text: "Высота, м:"
     }
 
     Text {
         id: text2
-        x: 30
-        y: 694
+        x: 10
+        y: 625
         text: qsTr("Спутники и уровни их сигнала")
         textFormat: Text.RichText
         font.pixelSize: 14
@@ -267,7 +277,7 @@ Window {
         id: template1
         objectName: "template1"
         x: 24
-        y: 720
+        y: 657
         visible: false
     }
 
@@ -275,7 +285,7 @@ Window {
         id: template2
         objectName: "template2"
         x: 24
-        y: 740
+        y: 677
         visible: false
     }
 
@@ -283,7 +293,7 @@ Window {
         id: template3
         objectName: "template3"
         x: 24
-        y: 760
+        y: 697
         visible: false
     }
 
@@ -291,7 +301,7 @@ Window {
         id: template4
         objectName: "template4"
         x: 24
-        y: 780
+        y: 717
         visible: false
     }
 
@@ -299,7 +309,7 @@ Window {
         id: template5
         objectName: "template5"
         x: 24
-        y: 800
+        y: 737
         visible: false
     }
 
@@ -307,7 +317,7 @@ Window {
         id: template6
         objectName: "template6"
         x: 24
-        y: 820
+        y: 757
         visible: false
     }
 
@@ -315,7 +325,7 @@ Window {
         id: template7
         objectName: "template7"
         x: 24
-        y: 840
+        y: 777
         visible: false
     }
 
@@ -323,7 +333,7 @@ Window {
         id: template8
         objectName: "template8"
         x: 24
-        y: 860
+        y: 797
         visible: false
     }
 
@@ -331,7 +341,7 @@ Window {
         id: template9
         objectName: "template9"
         x: 24
-        y: 880
+        y: 817
         visible: false
     }
 
@@ -339,7 +349,7 @@ Window {
         id: template10
         objectName: "template10"
         x: 24
-        y: 900
+        y: 837
         visible: false
     }
 
@@ -347,7 +357,7 @@ Window {
         id: template11
         objectName: "template11"
         x: 24
-        y: 920
+        y: 857
         visible: false
     }
 
@@ -355,7 +365,7 @@ Window {
         id: template12
         objectName: "template12"
         x: 24
-        y: 940
+        y: 877
         visible: false
     }
 
@@ -376,6 +386,7 @@ Window {
         dropShadowEnabled: true
         plotAreaColor: "#00000000"
         antialiasing: true
+        visible: false
 
         MouseArea {
             id: mouse_area
@@ -457,5 +468,262 @@ Window {
             XYPoint { x: 0; y: 5 }
         }
 
+    }
+
+    Text {
+        id: text3
+        x: 247
+        y: 582
+        text: qsTr("Позиция GPS (LLA)")
+        font.bold: true
+        font.pixelSize: 14
+        font.italic: false
+        textFormat: Text.RichText
+    }
+
+    Label {
+        id: llaPositionBiasLabel
+        x: 247
+        y: 665
+        text: "Погрешность:"
+        objectName: "llaPositionBiasLabel"
+    }
+
+    Label {
+        id: llaPositionFixLabel
+        x: 247
+        y: 685
+        text: "Отметка времени:"
+        objectName: "llaPositionFixLabel"
+    }
+
+    Label {
+        id: xPositionLabel
+        x: 247
+        y: 732
+        text: "X:"
+        objectName: "xPositionLabel"
+    }
+
+    Label {
+        id: yPositionLabel
+        x: 247
+        y: 752
+        text: "Y:"
+        objectName: "yPositionLabel"
+    }
+
+    Label {
+        id: zPositionLabel
+        x: 247
+        y: 772
+        text: "Z:"
+        objectName: "zPositionLabel"
+    }
+
+    Text {
+        id: text4
+        x: 247
+        y: 709
+        text: qsTr("Позиция GPS (XYZ)")
+        font.bold: true
+        font.pixelSize: 14
+        font.italic: false
+        textFormat: Text.RichText
+    }
+
+    Label {
+        id: xyzPositionBiasLabel
+        x: 247
+        y: 792
+        text: "Погрешность:"
+        objectName: "xyzPositionBiasLabel"
+    }
+
+    Label {
+        id: xyzPositionFixLabel
+        x: 247
+        y: 812
+        text: "Отметка времени:"
+        objectName: "xyzPositionFixLabel"
+    }
+
+    Label {
+        id: eastVelocityLabel
+        x: 527
+        y: 605
+        text: "Скорость: восточная:"
+        objectName: "eastVelocityLabel"
+    }
+
+    Label {
+        id: northVelocityLabel
+        x: 527
+        y: 625
+        text: "северная:"
+        objectName: "northVelocityLabel"
+    }
+
+    Label {
+        id: upVelocityLabel
+        x: 527
+        y: 645
+        text: "по высоте:"
+        objectName: "upVelocityLabel"
+    }
+
+    Text {
+        id: text5
+        x: 527
+        y: 582
+        text: qsTr("Скорость GPS (ENU)")
+        font.bold: true
+        font.pixelSize: 14
+        font.italic: false
+        textFormat: Text.RichText
+    }
+
+    Label {
+        id: enuVelocityBiasLabel
+        x: 527
+        y: 665
+        text: "Погрешность:"
+        objectName: "enuVelocityBiasLabel"
+    }
+
+    Label {
+        id: enuVelocityFixLabel
+        x: 527
+        y: 685
+        text: "Отметка времени:"
+        objectName: "enuVelocityFixLabel"
+    }
+
+
+    Text {
+        id: text6
+        x: 527
+        y: 709
+        text: qsTr("Скорость GPS (XYZ)")
+        font.bold: true
+        font.pixelSize: 14
+        font.italic: false
+        textFormat: Text.RichText
+    }
+
+    Label {
+        id: xVelocityLabel
+        x: 527
+        y: 732
+        text: "X:"
+        objectName: "xVelocityLabel"
+    }
+
+    Label {
+        id: yVelocityLabel
+        x: 527
+        y: 752
+        text: "Y:"
+        objectName: "yVelocityLabel"
+    }
+
+    Label {
+        id: zVelocityLabel
+        x: 527
+        y: 772
+        text: "Z:"
+        objectName: "zVelocityLabel"
+    }
+
+    Label {
+        id: xyzVelocityBiasLabel
+        x: 527
+        y: 792
+        text: "Погрешность:"
+        objectName: "xyzVelocityBiasLabel"
+    }
+
+    Label {
+        id: xyzVelocityFixLabel
+        x: 527
+        y: 812
+        text: "Отметка времени:"
+        objectName: "xyzVelocityFixLabel"
+    }
+
+    Text {
+        id: text7
+        x: 805
+        y: 582
+        text: qsTr("Информация о прошивке:")
+        font.bold: true
+        font.pixelSize: 14
+        font.italic: false
+        textFormat: Text.RichText
+    }
+
+    Label {
+        id: _RPTSUB_FIRMWARE_VERSION_label
+        x: 805
+        y: 605
+        text: ""
+        objectName: "_RPTSUB_FIRMWARE_VERSION_label"
+    }
+
+    Text {
+        id: text8
+        x: 805
+        y: 709
+        text: qsTr("Информация о плате:")
+        font.bold: true
+        font.pixelSize: 14
+        font.italic: false
+        textFormat: Text.RichText
+    }
+
+    Label {
+        id: _RPTSUB_HARDWARE_COMPONENT_INFO_label
+        x: 805
+        y: 725
+        text: ""
+        objectName: "_RPTSUB_HARDWARE_COMPONENT_INFO_label"
+    }
+
+    Text {
+        id: text9
+        x: 805
+        y: 825
+        text: qsTr("Информация о ПО платы:")
+        font.bold: true
+        font.pixelSize: 14
+        font.italic: false
+        textFormat: Text.RichText
+    }
+
+    Label {
+        id: _REPORT_SOFTWARE_VERSION_INFO_label
+        x: 805
+        y: 841
+        text: ""
+        objectName: "_REPORT_SOFTWARE_VERSION_INFO_label"
+    }
+
+    Text {
+        id: text10
+        x: 1131
+        y: 582
+        text: qsTr("Текущие настройки ввода-вывода GPS:")
+        font.bold: true
+        font.pixelSize: 14
+        font.italic: false
+        textFormat: Text.RichText
+    }
+
+    Label {
+        id: _REPORT_REQUEST_IO_OPTIONS_label
+        x: 1131
+        y: 598
+        text: ""
+        objectName: "_REPORT_REQUEST_IO_OPTIONS_label"
     }
 }

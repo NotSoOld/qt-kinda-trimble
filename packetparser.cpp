@@ -34,17 +34,24 @@ QString PacketParser::parse_REPORT_UNPARSABLE()
 QString PacketParser::parse_RPTSUB_FIRMWARE_VERSION()
 {
     QString res;
+    QString info;
 
     res.append("Получен пакет RPTSUB_FIRMWARE_VERSION (0x1C / 0x81):\n");
-    res.append(QString("- Major версия прошивки: %0\n").arg((quint8)data[2]));
-    res.append(QString("- Minor версия прошивки: %0\n").arg((quint8)data[3]));
-    res.append(QString("- Номер сборки прошивки: %0\n").arg((quint8)data[4]));
-    res.append(QString("- Дата сборки прошивки: %0/%1/%2\n").arg((quint8)data[5]).arg((quint8)data[6]).arg(TypesConverter::bytesToUInt16(data, 7)));
-    res.append(QString("- ID прошивки: "));
+    info.append(QString("- Major версия прошивки: %0\n").arg((quint8)data[2]));
+    info.append(QString("- Minor версия прошивки: %0\n").arg((quint8)data[3]));
+    info.append(QString("- Номер сборки прошивки: %0\n").arg((quint8)data[4]));
+    info.append(QString("- Дата сборки прошивки: %0/%1/%2\n").arg((quint8)data[5]).arg((quint8)data[6]).arg(TypesConverter::bytesToUInt16(data, 7)));
+    info.append(QString("- ID прошивки: "));
     for (quint8 i = 0; i < (quint8)data[9]; i++) {
-        res.append((char)data[10 + i]);
+        info.append((char)data[10 + i]);
     }
+    res.append(info);
 
+    QObject *qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("_RPTSUB_FIRMWARE_VERSION_label");
+    qmlObject->setProperty("text", QVariant(info));
+
+
+/*
     QDataStream dataStream(data);
 
     dataStream >> RPTSUB_FIRMWARE_VERSION_report.reportSubcode
@@ -53,34 +60,33 @@ QString PacketParser::parse_RPTSUB_FIRMWARE_VERSION()
             >> RPTSUB_FIRMWARE_VERSION_report.month >> RPTSUB_FIRMWARE_VERSION_report.day
             >> RPTSUB_FIRMWARE_VERSION_report.year >> RPTSUB_FIRMWARE_VERSION_report.productNameLength
             >> RPTSUB_FIRMWARE_VERSION_report.productName;
-    // --- or... ---
-    //memcpy(&RPTSUB_FIRMWARE_VERSION_report, &data, sizeof(data));
-
+*/
     return res;
 }
 
 QString PacketParser::parse_RPTSUB_HARDWARE_COMPONENT_INFO()
 {
     QString res;
+    QString info;
 
     res.append("Получен пакет RPTSUB_FIRMWARE_VERSION (0x1C / 0x83):\n");
-    res.append(QString("- Серийный номер платы: %0\n").arg(TypesConverter::bytesToUInt32(data, 1)));
-    res.append(QString("- Дата сборки платы: %0/%1/%2, %3 часов\n").arg((quint8)data[5]).arg((quint8)data[6]).arg(TypesConverter::bytesToUInt16(data, 7)).arg((quint8)data[9]));
-    res.append(QString("- Код платы, ассоциированный с ID: %0\n").arg(TypesConverter::bytesToUInt16(data, 10)));
-    res.append(QString("- ID платы: "));
+    info.append(QString("- Серийный номер платы: %0\n").arg(TypesConverter::bytesToUInt32(data, 1)));
+    info.append(QString("- Дата сборки платы: %0/%1/%2, %3 часов\n").arg((quint8)data[5]).arg((quint8)data[6]).arg(TypesConverter::bytesToUInt16(data, 7)).arg((quint8)data[9]));
+    info.append(QString("- Код платы, ассоциированный с ID: %0\n").arg(TypesConverter::bytesToUInt16(data, 10)));
+    info.append(QString("- ID платы: "));
     for (quint8 i = 0; i < (quint8)data[12]; i++) {
-        res.append((char)data[13 + i]);
+        info.append((char)data[13 + i]);
     }
+    res.append(info);
+
+    QObject *qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("_RPTSUB_HARDWARE_COMPONENT_INFO_label");
+    qmlObject->setProperty("text", QVariant(info));
 
     return res;
 }
 
 QString PacketParser::parse_REPORT_DOUBLE_XYZ_POS(COMHandler *com)
-{/*
-    if (data.length() != 36) {
-        return QString("Пакет REPORT_DOUBLE_XYZ_POS (0x83) имеет неверную длину");
-    }
-*/
+{
     QString res;
     res.append("Получен пакет REPORT_DOUBLE_XYZ_POS (0x83):\n");
     res.append(QString("- Позиция (Х; Y; Z): (%0 м; %1 м; %2 м)\n").arg(TypesConverter::bytesToDouble(data, 0)).arg(TypesConverter::bytesToDouble(data, 8))
@@ -88,23 +94,28 @@ QString PacketParser::parse_REPORT_DOUBLE_XYZ_POS(COMHandler *com)
     res.append(QString("- Clock bias: %0\n").arg(TypesConverter::bytesToDouble(data, 24)));
     res.append(QString("- Time of fix: %0\n").arg(TypesConverter::bytesToDouble(data, 32)));
 
-
     double X = TypesConverter::bytesToDouble(data, 0);
     double Y = TypesConverter::bytesToDouble(data, 8);
     double Z = TypesConverter::bytesToDouble(data, 16);
 
-    emit com->newValuesGained(QVariant(X), QVariant(Y));
+//    emit com->newValuesGained(QVariant(X), QVariant(Y));
+
+    QObject *qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("xPositionLabel");
+    qmlObject->setProperty("text", QVariant(QString("Позиция по Х: %0 м").arg(X, 0, 'f')));
+    qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("yPositionLabel");
+    qmlObject->setProperty("text", QVariant(QString("Позиция по Y: %0 м").arg(Y, 0, 'f')));
+    qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("zPositionLabel");
+    qmlObject->setProperty("text", QVariant(QString("Позиция по Z: %0 м").arg(Z, 0, 'f', 4)));
+    qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("xyzPositionBiasLabel");
+    qmlObject->setProperty("text", QVariant(QString("Погрешность: %0 м").arg(TypesConverter::bytesToSingle(data, 24), 0, 'f', 6)));
+    qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("xyzPositionFixLabel");
+    qmlObject->setProperty("text", QVariant(QString("Отметка времени измерения: %0 сек").arg(TypesConverter::bytesToSingle(data, 32), 0, 'f', 4)));
 
     return res;
 }
 
 QString PacketParser::parse_REPORT_DOUBLE_LLA_POS()
-{/*
-    if (data.length() != 36) {
-        return QString("Пакет REPORT_DOUBLE_LLA_POS (0x84) имеет неверную длину");
-    }
-*/
-
+{
     QString res;
     res.append("Получен пакет REPORT_DOUBLE_LLA_POS (0x84):\n");
     res.append(QString("- Позиция LLA: (%0 рад; %1 рад; %2 м)\n").arg(TypesConverter::bytesToDouble(data, 0))
@@ -112,19 +123,26 @@ QString PacketParser::parse_REPORT_DOUBLE_LLA_POS()
     res.append(QString("- Clock bias: %0\n").arg(TypesConverter::bytesToDouble(data, 24)));
     res.append(QString("- Time of fix: %0\n").arg(TypesConverter::bytesToDouble(data, 32)));
 
-    double latitude = TypesConverter::bytesToDouble(data, 0);
-    double longitude = TypesConverter::bytesToDouble(data, 8);
+    double latitude = TypesConverter::bytesToDouble(data, 0) * (180 / PI);
+    double longitude = TypesConverter::bytesToDouble(data, 8) * (180 / PI);
     double altitude = TypesConverter::bytesToDouble(data, 16);
+
+    QObject *qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("latitudePosLabel");
+    qmlObject->setProperty("text", QVariant(QString("%0 градусов %1 широты").arg(latitude, 0, 'f').arg(latitude > 0 ? "северной" : "южной")));
+    qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("longitudePosLabel");
+    qmlObject->setProperty("text", QVariant(QString("%0 градусов %1 долготы").arg(longitude, 0, 'f').arg(longitude > 0 ? "восточной" : "западной")));
+    qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("altitudePosLabel");
+    qmlObject->setProperty("text", QVariant(QString("Высота над уровнем моря: %0 м").arg(altitude, 0, 'f', 4)));
+    qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("llaPositionBiasLabel");
+    qmlObject->setProperty("text", QVariant(QString("Погрешность: %0 м").arg(TypesConverter::bytesToSingle(data, 24), 0, 'f', 6)));
+    qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("llaPositionFixLabel");
+    qmlObject->setProperty("text", QVariant(QString("Отметка времени измерения: %0 сек").arg(TypesConverter::bytesToSingle(data, 32), 0, 'f', 4)));
 
     return res;
 }
 
 QString PacketParser::parse_REPORT_SINGLE_XYZ_POS()
-{/*
-    if (data.length() != 16) {
-        return QString("Пакет REPORT_SINGLE_XYZ_POS (0x42) имеет неверную длину");
-    }
-*/
+{
     QString res;
     res.append("Получен пакет REPORT_SINGLE_XYZ_POS (0x42):\n");
     res.append(QString("- Позиция (Х; Y; Z): (%0 м; %1 м; %2 м)\n").arg(TypesConverter::bytesToSingle(data, 0))
@@ -135,15 +153,22 @@ QString PacketParser::parse_REPORT_SINGLE_XYZ_POS()
     float Y = TypesConverter::bytesToSingle(data, 4);
     float Z = TypesConverter::bytesToSingle(data, 8);
 
+    QObject *qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("xPositionLabel");
+    qmlObject->setProperty("text", QVariant(QString("Позиция по Х: %0 м").arg(X, 0, 'f')));
+    qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("yPositionLabel");
+    qmlObject->setProperty("text", QVariant(QString("Позиция по Y: %0 м").arg(Y, 0, 'f')));
+    qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("zPositionLabel");
+    qmlObject->setProperty("text", QVariant(QString("Позиция по Z: %0 м").arg(Z, 0, 'f', 4)));
+    qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("xyzPositionBiasLabel");
+    qmlObject->setProperty("text", QVariant(QString("Погрешность: %0 м").arg(TypesConverter::bytesToSingle(data, 8), 0, 'f', 6)));
+    qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("xyzPositionFixLabel");
+    qmlObject->setProperty("text", QVariant(QString("Отметка времени измерения: %0 сек").arg(TypesConverter::bytesToSingle(data, 12), 0, 'f', 4)));
+
     return res;
 }
 
 QString PacketParser::parse_REPORT_SINGLE_VELOCITY_FIX_XYZ()
-{/*
-    if (data.length() != 20) {
-        return QString("Пакет REPORT_SINGLE_VELOCITY_FIX_XYZ (0x43) имеет неверную длину");
-    }
-*/
+{
     QString res;
     res.append("Получен пакет REPORT_SINGLE_VELOCITY_FIX_XYZ (0x43):\n");
     res.append(QString("- Скорость (Х; Y; Z): (%0 м/с; %1 м/с; %2 м/с)\n").arg(TypesConverter::bytesToSingle(data, 0))
@@ -155,24 +180,36 @@ QString PacketParser::parse_REPORT_SINGLE_VELOCITY_FIX_XYZ()
     float Y_vel = TypesConverter::bytesToSingle(data, 4);
     float Z_vel = TypesConverter::bytesToSingle(data, 8);
 
+    QObject *qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("xVelocityLabel");
+    qmlObject->setProperty("text", QVariant(QString("Скорость по Х: %0 м/с").arg(X_vel, 0, 'f', 3)));
+    qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("yVelocityLabel");
+    qmlObject->setProperty("text", QVariant(QString("Скорость по Y: %0 м/с").arg(Y_vel, 0, 'f', 3)));
+    qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("zVelocityLabel");
+    qmlObject->setProperty("text", QVariant(QString("Скорость по Z: %0 м/с").arg(Z_vel, 0, 'f', 3)));
+    qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("xyzVelocityBiasLabel");
+    qmlObject->setProperty("text", QVariant(QString("Погрешность: %0 м/с").arg(TypesConverter::bytesToSingle(data, 12), 0, 'f', 4)));
+    qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("xyzVelocityFixLabel");
+    qmlObject->setProperty("text", QVariant(QString("Отметка времени измерения: %0 сек").arg(TypesConverter::bytesToSingle(data, 16), 0, 'f', 4)));
+
     return res;
 }
 
 QString PacketParser::parse_REPORT_SOFTWARE_VERSION_INFO()
-{/*
-    if (data.length() != 10) {
-        return QString("Пакет REPORT_SOFTWARE_VERSION_INFO (0x45) имеет неверную длину");
-    }
-*/
+{
+    QString s = "Получен пакет REPORT_SOFTWARE_VERSION_INFO (0x45):\n";
+    QString info;
+    info.append("---- Данные с уровня приложения:\n");
+    info.append(QString("-- Major версия приложения: %0\n").arg((quint8)data[0]));
+    info.append(QString("-- Minor версия приложения: %0\n").arg((quint8)data[1]));
+    info.append(QString("-- Дата: %0/%1/%2\n").arg((quint8)data[3]).arg((quint8)data[2]).arg((quint8)data[4] + 1900));
+    info.append("---- Данные с уровня ядра:\n");
+    info.append(QString("-- Major версия ядра GPS: %0\n").arg((quint8)data[5]));
+    info.append(QString("-- Minor версия ядра GPS: %0\n").arg((quint8)data[6]));
+    info.append(QString("-- Дата: %0/%1/%2\n").arg((quint8)data[8]).arg((quint8)data[7]).arg((quint8)data[9] + 1900));
+    s.append(info);
 
-    QString s = "Получен пакет REPORT_SOFTWARE_VERSION_INFO (0x45):\n---- Данные с уровня приложения:\n";
-    s.append(QString("-- Major версия приложения: %0\n").arg((quint8)data[0]));
-    s.append(QString("-- Minor версия приложения: %0\n").arg((quint8)data[1]));
-    s.append(QString("-- Дата: %0/%1/%2\n").arg((quint8)data[3]).arg((quint8)data[2]).arg((quint8)data[4]));
-    s.append("---- Данные с уровня ядра:\n");
-    s.append(QString("-- Major версия ядра GPS: %0\n").arg((quint8)data[5]));
-    s.append(QString("-- Minor версия ядра GPS: %0\n").arg((quint8)data[6]));
-    s.append(QString("-- Дата: %0/%1/%2\n").arg((quint8)data[8]).arg((quint8)data[7]).arg((quint8)data[9]));
+    QObject *qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("_REPORT_SOFTWARE_VERSION_INFO_label");
+    qmlObject->setProperty("text", QVariant(info));
 
     return s;
 }
@@ -210,25 +247,20 @@ QString PacketParser::parse_REPORT_TRACKED_SATELLITES_SINGAL_LVL()
             qDebug() << "no image object";
         }
         if (signalLevel > 50)
-            imageObject->setProperty("source", QVariant("./images/satellites_levels/excellent.png"));
+            imageObject->setProperty("source", QVariant("qrc:/images/satellites_levels/excellent.png"));
         else if (signalLevel > 30)
-            imageObject->setProperty("source", QVariant("./images/satellites_levels/good.png"));
+            imageObject->setProperty("source", QVariant("qrc:/images/satellites_levels/good.png"));
         else if (signalLevel > 15)
-            imageObject->setProperty("source", QVariant("./images/satellites_levels/fair.png"));
+            imageObject->setProperty("source", QVariant("qrc:/images/satellites_levels/fair.png"));
         else
-            imageObject->setProperty("source", QVariant("./images/satellites_levels/weak.png"));
+            imageObject->setProperty("source", QVariant("qrc:/images/satellites_levels/weak.png"));
     }
 
     return message;
 }
 
 QString PacketParser::parse_REPORT_SINGLE_LLA_POS()
-{/*
-    if (data.length() != 20) {
-        return QString("Пакет REPORT_SINGLE_LLA_POS (0x4A) имеет неверную длину");
-    }
-*/
-
+{
     QString res;
     res.append("Получен пакет REPORT_SINGLE_LLA_POS (0x4A):\n");
     res.append(QString("- Позиция LLA: (%0 рад; %1 рад; %2 м)\n").arg(TypesConverter::bytesToSingle(data, 0))
@@ -236,50 +268,56 @@ QString PacketParser::parse_REPORT_SINGLE_LLA_POS()
     res.append(QString("- Clock bias: %0\n").arg(TypesConverter::bytesToSingle(data, 12)));
     res.append(QString("- Time of fix: %0\n").arg(TypesConverter::bytesToSingle(data, 16)));
 
-    float latitude = TypesConverter::bytesToSingle(data, 0);
-    float longitude = TypesConverter::bytesToSingle(data, 4);
+    float latitude = TypesConverter::bytesToSingle(data, 0) * (180 / PI);
+    float longitude = TypesConverter::bytesToSingle(data, 4) * (180 / PI);
     float altitude = TypesConverter::bytesToSingle(data, 8);
 
+    QObject *qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("latitudePosLabel");
+    qmlObject->setProperty("text", QVariant(QString("%0 градусов %1 широты").arg(latitude, 0, 'f').arg(latitude > 0 ? "северной" : "южной")));
+    qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("longitudePosLabel");
+    qmlObject->setProperty("text", QVariant(QString("%0 градусов %1 долготы").arg(longitude, 0, 'f').arg(longitude > 0 ? "восточной" : "западной")));
+    qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("altitudePosLabel");
+    qmlObject->setProperty("text", QVariant(QString("Высота над уровнем моря: %0 м").arg(altitude, 0, 'f', 4)));
+    qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("llaPositionBiasLabel");
+    qmlObject->setProperty("text", QVariant(QString("Погрешность: %0 м").arg(TypesConverter::bytesToSingle(data, 12), 0, 'f', 6)));
+    qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("llaPositionFixLabel");
+    qmlObject->setProperty("text", QVariant(QString("Отметка времени измерения: %0 сек").arg(TypesConverter::bytesToSingle(data, 16), 0, 'f', 4)));
     return res;
 }
 
 QString PacketParser::parse_REPORT_REQUEST_IO_OPTIONS()
-{/*
-    if (data.length() != 4) {
-        return QString("Пакет REPORT_REQUEST_IO_OPTIONS (0x55) имеет неверную длину");
-    }
-*/
-    QString s = "Получен пакет REPORT_REQUEST_IO_OPTIONS (0x55):\n-- Данные о позиционировании:\n";
+{
+    QString s = "Получен пакет REPORT_REQUEST_IO_OPTIONS (0x55):\n";
+    QString info = "-- Данные о позиционировании:\n";
 
     // Данные о позиционировании.
-    s.append(QString("---- ECEF: %0\n").arg((data[0] & BIT0) ? "вкл" : "выкл"));
-    s.append(QString("---- LLA: %0\n").arg((data[0] & BIT1) ? "вкл" : "выкл"));
-    s.append(QString("---- HAE или MSL геоид: %0\n").arg(data[0] & BIT2 ? "MSL геоид" : "HAE"));
-    s.append(QString("---- Точность: %0\n").arg(data[0] & BIT4 ? "double" : "single"));
+    info.append(QString("---- ECEF: %0\n").arg((data[0] & BIT0) ? "вкл" : "выкл"));
+    info.append(QString("---- LLA: %0\n").arg((data[0] & BIT1) ? "вкл" : "выкл"));
+    info.append(QString("---- HAE или MSL геоид: %0\n").arg(data[0] & BIT2 ? "MSL геоид" : "HAE"));
+    info.append(QString("---- Точность: %0\n").arg(data[0] & BIT4 ? "double" : "single"));
 
     // Данные о скорости.
-    s.append("-- Данные о скорости:\n");
-    s.append(QString("---- ECEF: %0\n").arg((data[1] & BIT0) ? "вкл" : "выкл"));
-    s.append(QString("---- ENU: %0\n").arg((data[1] & BIT1) ? "вкл" : "выкл"));
+    info.append("-- Данные о скорости:\n");
+    info.append(QString("---- ECEF: %0\n").arg((data[1] & BIT0) ? "вкл" : "выкл"));
+    info.append(QString("---- ENU: %0\n").arg((data[1] & BIT1) ? "вкл" : "выкл"));
 
     // Данные о времени.
-    s.append(QString("-- Тайминг: %0\n").arg((data[2] & BIT0) ? "UTC" : "GPS"));
+    info.append(QString("-- Тайминг: %0\n").arg((data[2] & BIT0) ? "UTC" : "GPS"));
 
     // Разное.
-    s.append("-- Разное:\n");
-    s.append(QString("---- Пакет 5А: %0\n").arg((data[3] & BIT0) ? "вкл" : "выкл"));
-    s.append(QString("---- Единицы вывода: %0\n").arg((data[3] & BIT3) ? "dB-Hz" : "AMU"));
+    info.append("-- Разное:\n");
+    info.append(QString("---- Пакет 5А: %0\n").arg((data[3] & BIT0) ? "вкл" : "выкл"));
+    info.append(QString("---- Единицы вывода: %0\n").arg((data[3] & BIT3) ? "dB-Hz" : "AMU"));
+    s.append(info);
+
+    QObject *qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("_REPORT_REQUEST_IO_OPTIONS_label");
+    qmlObject->setProperty("text", QVariant(info));
 
     return s;
 }
 
 QString PacketParser::parse_REPORT_SINGLE_VELOCITY_FIX_ENU()
-{/*
-    if (data.length() != 20) {
-        return QString("Пакет REPORT_SINGLE_VELOCITY_FIX_ENU (0x56) имеет неверную длину");
-    }
-*/
-
+{
     QString res;
     res.append("Получен пакет REPORT_SINGLE_VELOCITY_FIX_ENU (0x56):\n");
     res.append(QString("- Скорость (восток; север; по высоте): (%0 м/с; %1 м/с; %2 м/с)\n").arg(TypesConverter::bytesToSingle(data, 0))
@@ -290,6 +328,39 @@ QString PacketParser::parse_REPORT_SINGLE_VELOCITY_FIX_ENU()
     float east_vel = TypesConverter::bytesToSingle(data, 0);
     float north_vel = TypesConverter::bytesToSingle(data, 4);
     float up_vel = TypesConverter::bytesToSingle(data, 8);
+
+    QObject *qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("eastVelocityLabel");
+    qmlObject->setProperty("text", QVariant(QString("Скорость: %0 м/с на %1").arg(east_vel, 0, 'f', 3).arg(east_vel > 0 ? "восток" : "запад")));
+    qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("northVelocityLabel");
+    qmlObject->setProperty("text", QVariant(QString("          %0 м/с на %1").arg(north_vel, 0, 'f', 3).arg(north_vel > 0 ? "север" : "юг")));
+    qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("upVelocityLabel");
+    qmlObject->setProperty("text", QVariant(QString("          %0 м/с %1").arg(up_vel, 0, 'f', 3).arg(up_vel > 0 ? "вверх" : "вниз")));
+    qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("enuVelocityBiasLabel");
+    qmlObject->setProperty("text", QVariant(QString("Погрешность: %0 м/с").arg(TypesConverter::bytesToSingle(data, 12), 0, 'f', 4)));
+    qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("enuVelocityFixLabel");
+    qmlObject->setProperty("text", QVariant(QString("Отметка времени измерения: %0 сек").arg(TypesConverter::bytesToSingle(data, 16), 0, 'f', 4)));
+
+    return res;
+}
+
+QString PacketParser::parse_REPORT_LAST_FIX_INFO()
+{
+    QString res;
+    res.append("Получен пакет REPORT_LAST_FIX_INFO (0x57):\n");
+    res.append(QString("- Источник информации: %0\n").arg((quint8)data[0] == (quint8)0 ? "старый фикс" : "новый фикс"));
+    res.append(QString("- Режим фикса: "));
+    switch ((quint8)data[1]) {
+        case 0: res.append("нет предыдущего фикса"); break;
+        case 1: res.append("только время, 1-SV"); break;
+        case 2: res.append("2D clock hold"); break;
+        case 3: res.append("2D"); break;
+        case 4: res.append("3D"); break;
+        case 5: res.append("переопределенный clock"); break;
+        case 6: res.append("ссылка DGPS"); break;
+        default: res.append("неизвестно");
+    }
+    res.append(QString("\n- Время последнего фикса, сек. GPS: %0\n").arg(TypesConverter::bytesToSingle(data, 2)));
+    res.append(QString("- Неделя последнего фикса: %0\n").arg(TypesConverter::bytesToUInt16(data, 6)));
 
     return res;
 }
@@ -404,11 +475,7 @@ QString PacketParser::parse_REPORT_GPS_SYSTEM_DATA()
 }
 
 QString PacketParser::parse_REPORT_STATUS_SATELLITE_HEALTH()
-{/*
-    if (data.length() != 33) {
-        return QString("Пакет REPORT_STATUS_SATELLITE_HEALTH (0x59) имеет неверную длину");
-    }
-*/
+{
     QString s = "";
     if ((int)data[0] == 3) {
         // Пришла информация о включении спутников.
@@ -429,11 +496,7 @@ QString PacketParser::parse_REPORT_STATUS_SATELLITE_HEALTH()
 }
 
 QString PacketParser::parse_REPORT_RAW_MEASUREMENT_DATA()
-{/*
-    if (data.length() != 25) {
-        return QString("Пакет REPORT_RAW_MEASUREMENT_DATA (0x5A) имеет неверную длину");
-    }
-*/
+{
     QString s = "Получен пакет REPORT_RAW_MEASUREMENT_DATA (0x5A):\n";
     s.append(QString("- Номер спутника (SV PRN): %0\n").arg((quint8)data[0]));
     s.append(QString("- Длина сэмпла, мс: %0\n").arg(TypesConverter::bytesToSingle(data, 1)));
@@ -446,11 +509,7 @@ QString PacketParser::parse_REPORT_RAW_MEASUREMENT_DATA()
 }
 
 QString PacketParser::parse_REPORT_SATELLITE_TRACKING_STATUS()
-{/*
-    if (data.length() != 24) {
-        return QString("Пакет REPORT_SATELLITE_TRACKING_STATUS (0x5C) имеет неверную длину");
-    }
-*/
+{
     QString s = "Получен пакет REPORT_SATELLITE_TRACKING_STATUS (0x5C):\n";
     s.append(QString("- Номер спутника (SV PRN): %0\n").arg((quint8)data[0]));
     s.append(QString("- Номер канала: %0\n").arg(((quint8)data[1] & (BIT3 | BIT2 | BIT1 | BIT0)) + 1));
@@ -533,11 +592,7 @@ QString PacketParser::parse_REPORT_SATELLITE_SELECTION_LIST()
 }
 
 QString PacketParser::parse_RPTSUB_PRIMARY_TIMING_PACKET()
-{/*
-    if (data.length() != 17) {
-        return QString("Пакет RPTSUB_PRIMARY_TIMING_PACKET (0x8F-AB) имеет неверную длину");
-    }
-*/
+{
     QString s = "Получен пакет RPTSUB_PRIMARY_TIMING_PACKET (0x8F-AB):\n";
     s.append(QString("- Секунды недели GPS: %0\n").arg(TypesConverter::bytesToUInt32(data, 1)));
     s.append(QString("- Номер недели GPS: %0\n").arg(TypesConverter::bytesToUInt16(data, 5)));
@@ -555,11 +610,7 @@ QString PacketParser::parse_RPTSUB_PRIMARY_TIMING_PACKET()
 }
 
 QString PacketParser::parse_RPTSUB_SUPPL_TIMING_PACKET()
-{/*
-    if (data.length() != 68) {
-        return QString("Пакет RPTSUB_SUPPL_TIMING_PACKET (0x8F-AC) имеет неверную длину");
-    }
-*/
+{
     QString s = "Получен пакет RPTSUB_SUPPL_TIMING_PACKET (0x8F-AC):\n";
 
     s.append(QString("- Режим приемника: "));
@@ -568,8 +619,8 @@ QString PacketParser::parse_RPTSUB_SUPPL_TIMING_PACKET()
         case 1: s.append("один спутник (время)"); break;
         case 3: s.append("горизонтальный (2D)"); break;
         case 4: s.append("полная позиция (3D)"); break;
-        case 7: s.append("переопределенные часы"); break;
-        default: s.append("неизвестно");
+        case 7: s.append("переопределенный clock"); break;
+        default: s.append("неизвестно (ошибка!)");
     }
 
     s.append(QString("\n- Режим дисциплинирования: "));
@@ -581,7 +632,7 @@ QString PacketParser::parse_RPTSUB_SUPPL_TIMING_PACKET()
         case 4: s.append("восстановление"); break;
         case 5: s.append("не используется"); break;
         case 6: s.append("дисциплинирование выключено"); break;
-        default: s.append("неизвестно");
+        default: s.append("неизвестно (ошибка!)");
     }
 
     s.append(QString("\n- Прогресс самоопроса, %: %0\n").arg((int)data[3] != 0 ? QString((quint8)data[3]) : QString("самоопрос в данный момент не проводится")));
@@ -613,7 +664,7 @@ QString PacketParser::parse_RPTSUB_SUPPL_TIMING_PACKET()
         case (quint8)0x0B: s.append("только три юзабельных sat"); break;
         case (quint8)0x0C: s.append("выбранный sat неюзабелен"); break;
         case (quint8)0x10: s.append("TRAIM отбросил фикс"); break;
-        default: s.append("неизвестно");
+        default: s.append("неизвестно (ошибка!)");
     }
 
     s.append(QString("\n- Дисциплинированная активность: "));
@@ -628,7 +679,7 @@ QString PacketParser::parse_RPTSUB_SUPPL_TIMING_PACKET()
         case (quint8)7: s.append("не используется"); break;
         case (quint8)8: s.append("режим восстановления"); break;
         case (quint8)9: s.append("калибровка/управление напряжением"); break;
-        default: s.append("неизвестно");
+        default: s.append("неизвестно (ошибка!)");
     }
 
     s.append(QString("\n- Сдвиг PPS, нс: %0\n").arg(TypesConverter::bytesToSingle(data, 16)));
@@ -639,14 +690,28 @@ QString PacketParser::parse_RPTSUB_SUPPL_TIMING_PACKET()
 
     s.append(QString("- Напряжение на DAC: %0V\n").arg(TypesConverter::bytesToSingle(data, 28)));
 
-    s.append(QString("- Температура: %0 град. С\n").arg(round(TypesConverter::bytesToSingle(data, 32)), 0, 'f', 2));
+    s.append(QString("- Температура: %0 град. С\n").arg(TypesConverter::bytesToSingle(data, 32), 0, 'f', 2));
 
     s.append(QString("- Широта, рад: %0\n").arg(TypesConverter::bytesToDouble(data, 36), 0, 'f'));
     s.append(QString("- Долгота, рад: %0\n").arg(TypesConverter::bytesToDouble(data, 44), 0, 'f'));
     s.append(QString("- Высота, м: %0\n").arg(TypesConverter::bytesToDouble(data, 52), 0, 'f'));
     s.append(QString("- Ошибка квантизации PPS, нс: %0\n").arg(TypesConverter::bytesToSingle(data, 60), 0, 'f'));
 
+    double latitude = TypesConverter::bytesToDouble(data, 36) * (180 / PI);
+    double longitude = TypesConverter::bytesToDouble(data, 44) * (180 / PI);
 
+    QObject *qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("temperatureLabel");
+    qmlObject->setProperty("text", QVariant(QString("Температура: %0 град. C").arg(TypesConverter::bytesToSingle(data, 32), 0, 'f', 2)));
+    qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("latitudeOutLabel");
+    qmlObject->setProperty("text", QVariant(QString("%0 градусов %1 широты").arg(latitude, 0, 'f').arg(latitude > 0 ? "северной" : "южной")));
+    qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("longitudeOutLabel");
+    qmlObject->setProperty("text", QVariant(QString("%0 градусов %1 долготы").arg(longitude, 0, 'f').arg(longitude > 0 ? "восточной" : "западной")));
+    qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("altitudeOutLabel");
+    qmlObject->setProperty("text", QVariant(QString("Высота над уровнем моря: %0 м").arg(TypesConverter::bytesToDouble(data, 52), 0, 'f', 4)));
+
+
+
+/*
     QDataStream dataStream(data);
     //RPTSUB_SUPPL_TIMING_PACKET_report = new RPTSUB_SUPPL_TIMING_PACKET_reportStruct;
     dataStream.setFloatingPointPrecision(QDataStream::SinglePrecision);
@@ -664,36 +729,25 @@ QString PacketParser::parse_RPTSUB_SUPPL_TIMING_PACKET()
             >> RPTSUB_SUPPL_TIMING_PACKET_report.longitude >> RPTSUB_SUPPL_TIMING_PACKET_report.altitude;
     dataStream.setFloatingPointPrecision(QDataStream::SinglePrecision);
     dataStream >> RPTSUB_SUPPL_TIMING_PACKET_report.ppsQuantizationError;
-    // Test:
-    //qDebug() << RPTSUB_SUPPL_TIMING_PACKET_report.dacVoltage;
 
-    // --- or... ---
-    /*
-    memcpy(&RPTSUB_SUPPL_TIMING_PACKET_report, &data, sizeof(data));
-    // Test:
-    qDebug() << RPTSUB_SUPPL_TIMING_PACKET_report.dacVoltage;
-    */
-
-    /* Also:
-     * //constData() used because const is desired; otherwise, prefer data() don't forgetting deep copy issues
-    const void* poTemp = (const void*)byteArray.constData();
-    const MyStruct* poStruct = static_cast< const MyStruct* >(poTemp);
-    */
-
+*/
     return s;
 }
 
-void PacketParser::updateInterfaceValues()
+/*void PacketParser::updateInterfaceValues()
 {
+
     QObject *qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("temperatureLabel");
-    qmlObject->setProperty("text", QVariant(QString("Температура, С: %0").arg(RPTSUB_SUPPL_TIMING_PACKET_report.temperature, 0, 'f')));
+    qmlObject->setProperty("text", QVariant(QString("Температура: %0 град. C").arg(RPTSUB_SUPPL_TIMING_PACKET_report.temperature, 0, 'f', 2)));
     qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("latitudeOutLabel");
-    qmlObject->setProperty("text", QVariant(QString("Широта: %0").arg(RPTSUB_SUPPL_TIMING_PACKET_report.latitude, 0, 'f')));
+    qmlObject->setProperty("text", QVariant(QString("Широта: %0").arg(RPTSUB_SUPPL_TIMING_PACKET_report.latitude * (180 / PI), 0, 'f')));
     qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("longitudeOutLabel");
-    qmlObject->setProperty("text", QVariant(QString("Долгота: %0").arg(RPTSUB_SUPPL_TIMING_PACKET_report.longitude, 0, 'f')));
+    qmlObject->setProperty("text", QVariant(QString("Долгота: %0").arg(RPTSUB_SUPPL_TIMING_PACKET_report.longitude * (180 / PI), 0, 'f')));
     qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("altitudeOutLabel");
-    qmlObject->setProperty("text", QVariant(QString("Высота, м: %0").arg(RPTSUB_SUPPL_TIMING_PACKET_report.altitude, 0, 'f')));
+    qmlObject->setProperty("text", QVariant(QString("Высота над уровнем моря: %0 м").arg(RPTSUB_SUPPL_TIMING_PACKET_report.altitude, 0, 'f', 4)));
+
 }
+*/
 
 QString PacketParser::parse_RPTSUB_PACKET_BROADCAST_MASK()
 {

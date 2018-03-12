@@ -78,15 +78,17 @@ void CommandBuilder::build_CMDSUB_SET_PACKET_BROADCAST_MASK(QByteArray *cmd)
     bool maskPrimaryPackets = QMLDataHelper::getBoolFromQML("primaryPacketMaskingBit", "checked");
     bool maskSupplPackets = QMLDataHelper::getBoolFromQML("supplPacketMaskingBit", "checked");
     bool maskOtherPackets = QMLDataHelper::getBoolFromQML("otherPacketsMaskingBit", "checked");
-    QByteArrayHelper::appendAndStuff(cmd, (quint8)(
-                       (maskPrimaryPackets ? BIT0 : ZERO_BYTE) |
-                       (maskSupplPackets ? BIT2 : ZERO_BYTE) |
-                       (maskOtherPackets ? BIT6 : ZERO_BYTE)
-                      ));
 
-    QByteArrayHelper::appendAndStuff(cmd, ZERO_BYTE);
-    QByteArrayHelper::appendAndStuff(cmd, ZERO_BYTE);
-    QByteArrayHelper::appendAndStuff(cmd, ZERO_BYTE);
+    quint8 infoByte = (quint8)(
+                (maskPrimaryPackets ? BIT0 : ZERO_BYTE) |
+                (maskSupplPackets ? BIT2 : ZERO_BYTE) |
+                (maskOtherPackets ? BIT6 : ZERO_BYTE)
+               );
+
+    QByteArrayHelper::appendAndStuff(cmd, infoByte);
+    QByteArrayHelper::appendAndStuff(cmd, infoByte);
+    QByteArrayHelper::appendAndStuff(cmd, infoByte);
+    QByteArrayHelper::appendAndStuff(cmd, infoByte);
 
     qDebug() << *cmd;
 }
