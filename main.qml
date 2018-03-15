@@ -60,12 +60,12 @@ Window {
 
     function onAppendReceivedtext(s) {
         logCount++;
-        if (logCount > 20) {
+        if (logCount > 100) {
             receivedText.clear();
             logCount = 0;
         }
 
-        receivedText.append(s+"\n\n--------------------------\n");
+        receivedText.append(s+"\n");
     }
 
     Rectangle {
@@ -107,6 +107,7 @@ Window {
         width: 400
         height: 40
         clip: true
+        objectName: "tabsMain"
 
         TabButton {
             id: essentialsTab
@@ -233,9 +234,10 @@ Window {
     Label {
         id: temperatureLabel
         objectName: "temperatureLabel"
-        x: 24
-        y: 591
+        x: 527
+        y: 874
         text: "Температура, С:"
+        font.pointSize: 9
     }
 
     Label {
@@ -265,7 +267,7 @@ Window {
     Text {
         id: text2
         x: 10
-        y: 625
+        y: 582
         text: qsTr("Спутники и уровни их сигнала")
         textFormat: Text.RichText
         font.pixelSize: 14
@@ -276,96 +278,96 @@ Window {
     MyQML.Satellite_status_template {
         id: template1
         objectName: "template1"
-        x: 24
-        y: 657
+        x: 25
+        y: 633
         visible: false
     }
 
     MyQML.Satellite_status_template {
         id: template2
         objectName: "template2"
-        x: 24
-        y: 677
+        x: 25
+        y: 653
         visible: false
     }
 
     MyQML.Satellite_status_template {
         id: template3
         objectName: "template3"
-        x: 24
-        y: 697
+        x: 25
+        y: 673
         visible: false
     }
 
     MyQML.Satellite_status_template {
         id: template4
         objectName: "template4"
-        x: 24
-        y: 717
+        x: 25
+        y: 693
         visible: false
     }
 
     MyQML.Satellite_status_template {
         id: template5
         objectName: "template5"
-        x: 24
-        y: 737
+        x: 25
+        y: 713
         visible: false
     }
 
     MyQML.Satellite_status_template {
         id: template6
         objectName: "template6"
-        x: 24
-        y: 757
+        x: 25
+        y: 733
         visible: false
     }
 
     MyQML.Satellite_status_template {
         id: template7
         objectName: "template7"
-        x: 24
-        y: 777
+        x: 25
+        y: 753
         visible: false
     }
 
     MyQML.Satellite_status_template {
         id: template8
         objectName: "template8"
-        x: 24
-        y: 797
+        x: 25
+        y: 773
         visible: false
     }
 
     MyQML.Satellite_status_template {
         id: template9
         objectName: "template9"
-        x: 24
-        y: 817
+        x: 25
+        y: 793
         visible: false
     }
 
     MyQML.Satellite_status_template {
         id: template10
         objectName: "template10"
-        x: 24
-        y: 837
+        x: 25
+        y: 813
         visible: false
     }
 
     MyQML.Satellite_status_template {
         id: template11
         objectName: "template11"
-        x: 24
-        y: 857
+        x: 25
+        y: 833
         visible: false
     }
 
     MyQML.Satellite_status_template {
         id: template12
         objectName: "template12"
-        x: 24
-        y: 877
+        x: 25
+        y: 853
         visible: false
     }
 
@@ -381,8 +383,8 @@ Window {
 
         x: 991
         y: 65
-        width: 500
-        height: 500
+        width: 475
+        height: 245
         dropShadowEnabled: true
         plotAreaColor: "#00000000"
         antialiasing: true
@@ -666,7 +668,7 @@ Window {
         id: _RPTSUB_FIRMWARE_VERSION_label
         x: 805
         y: 605
-        text: ""
+        text: "(не получена)"
         objectName: "_RPTSUB_FIRMWARE_VERSION_label"
     }
 
@@ -684,8 +686,8 @@ Window {
     Label {
         id: _RPTSUB_HARDWARE_COMPONENT_INFO_label
         x: 805
-        y: 725
-        text: ""
+        y: 732
+        text: "(не получена)"
         objectName: "_RPTSUB_HARDWARE_COMPONENT_INFO_label"
     }
 
@@ -703,8 +705,8 @@ Window {
     Label {
         id: _REPORT_SOFTWARE_VERSION_INFO_label
         x: 805
-        y: 841
-        text: ""
+        y: 845
+        text: "(не получена)"
         objectName: "_REPORT_SOFTWARE_VERSION_INFO_label"
     }
 
@@ -722,8 +724,91 @@ Window {
     Label {
         id: _REPORT_REQUEST_IO_OPTIONS_label
         x: 1131
-        y: 598
-        text: ""
+        y: 605
+        text: "(не получены)"
         objectName: "_REPORT_REQUEST_IO_OPTIONS_label"
+    }
+
+    Label {
+        id: fixedSVsLabel
+        x: 10
+        y: 605
+        text: "- спутников в фиксе:"
+        objectName: "fixedSVsLabel"
+    }
+
+    Label {
+        id: timeLabel
+        x: 527
+        y: 850
+        text: "Дата и время:"
+        font.pointSize: 9
+        objectName: "timeLabel"
+    }
+
+    Text {
+        id: text11
+        x: 176
+        y: 836
+        text: qsTr("Включение спутников для отслеживания")
+        font.pixelSize: 14
+        font.bold: true
+        textFormat: Text.RichText
+        font.italic: false
+    }
+
+    Label {
+        id: enabledSVsLabel
+        x: 239
+        y: 859
+        text: "вкл/выкл"
+        objectName: "enabledSVsLabel"
+    }
+
+    Text {
+        id: text12
+        x: 1114
+        y: 785
+        text: qsTr("Учет здоровья спутников для их использования")
+        font.pixelSize: 14
+        font.bold: true
+        textFormat: Text.RichText
+        font.italic: false
+    }
+
+    Label {
+        id: healthEnabledSVsLabel
+        x: 1214
+        y: 812
+        text: "прин/игнор"
+        objectName: "healthEnabledSVsLabel"
+    }
+
+    Text {
+        id: text13
+        x: 991
+        y: 321
+        text: qsTr("Состояние GPS-модуля")
+        font.pixelSize: 14
+        font.bold: true
+        textFormat: Text.RichText
+        font.italic: false
+    }
+
+    Label {
+        id: supplInfoLabel
+        x: 991
+        y: 344
+        text: "(не получено)"
+        objectName: "supplInfoLabel"
+    }
+
+    Label {
+        id: dacVoltageLabel
+        x: 527
+        y: 898
+        text: "Напряжение на ЦАП, В:"
+        objectName: "dacVoltageLabel"
+        font.pointSize: 9
     }
 }

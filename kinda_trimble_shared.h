@@ -1,19 +1,19 @@
 #ifndef KINDA_TRIMBLE_SHARED_H
 #define KINDA_TRIMBLE_SHARED_H
 
+// Содержит всё, что необходимо остальным файлам .h и .cpp: include'ы, константы и макросы.
+
 #include <QObject>
 #include <QtCore>
 #include <QQuickWindow>
 #include <QDebug>
 
+// Константы.
 #define PI ((double)3.1415926535898)
 #define DLE ((quint8)0x10)
 #define ETX ((quint8)0x03)
 #define ZERO_BYTE ((quint8)0)
-//#define BIT(x) ((quint8)(1 << (7 - x)))
-
-// Похоже, что используется именно такое именование битов, хотя битовые поля всё еще под большим вопросом...
-//#define BIT(x) ((quint8)(1 << x))
+// Похоже, что используется именно такое именование битов (bit numbering).
 #define BIT0 ((quint8)1)
 #define BIT1 ((quint8)2)
 #define BIT2 ((quint8)4)
@@ -23,7 +23,7 @@
 #define BIT6 ((quint8)64)
 #define BIT7 ((quint8)128)
 
-
+// Байты кодов и подкодов пакетов команд и запросов.
 #define COMMAND_FIRMWARE_INFO                           ((quint8)0x1C)
 #define     CMDSUB_FIRMWARE_VERSION                     ((quint8)0x01)
 #define     CMDSUB_HARDWARE_COMPONENT_INFO              ((quint8)0x03)

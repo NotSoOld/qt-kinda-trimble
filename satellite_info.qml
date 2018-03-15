@@ -47,16 +47,16 @@ Item {
         Label {
             id: label
             x: 25
-            y: 132
-            text: qsTr("Режим одного спутника:")
+            y: 131
+            text: qsTr("Настройки выбора одного спутника\n(GPS будет использовать только его):")
         }
 
         Button {
             id: auto_one_satellite_selection_button
             x: 25
-            y: 168
+            y: 175
             width: 186
-            height: 58
+            height: 51
             text: qsTr("Выбрать наилучший\nавтоматически")
             font.pointSize: 7
             onClicked: {
@@ -152,6 +152,15 @@ Item {
             height: 39
             model: ["Альманах", "Здоровье, toa, WNa", "Ионосфера", "UTC", "Ephemeris"]
             objectName: "typeOfDataComboBox"
+        }
+
+        Rectangle {
+            id: rectangle2
+            x: 0
+            y: 117
+            width: 400
+            height: 2
+            color: "#7d7d7d"
         }
     }
 }

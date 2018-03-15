@@ -1,5 +1,10 @@
 #include "qbytehelper.h"
 
+// При вызове любого из методов для экранирования многобайтовых величин побайтно
+// будет сначала вызван метод класса TypesConverter, разбивающий величину на массив байт,
+// а затем каждый байт этого массива будет экранирован версией метода appendAndStuff() для однобайтовой величины
+// (определен самым последним).
+
 void QByteArrayHelper::appendAndStuff(QByteArray *bytes, double d)
 {
     QByteArray doubleBytes = TypesConverter::toByteArray(d);
@@ -38,7 +43,7 @@ void QByteArrayHelper::appendAndStuff(QByteArray *bytes, quint8 b)
 {
     qDebug() << "bytes version called";
     bytes->append(b);
-    // DLE в сообщении необходимо "застаффить".
+    // DLE в сообщении необходимо заэкранировать.
     if (b == DLE) {
         bytes->append(DLE);
     }

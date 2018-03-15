@@ -1,5 +1,9 @@
 #include "converter.h"
 
+// Конвертирует double (8 байт) в массив из 8 байт, используя объединение
+// (в объединении все поля занимают ОДНО И ТО ЖЕ пространство в памяти,
+// поэтому если поместить в 8-байтовое объединение число double, а затем получить из объединения
+// массив из 8 байт, то они будут содержать в точности байты этого числа).
 QByteArray TypesConverter::toByteArray(double d)
 {
     _double *result = (_double *)calloc(1, sizeof(_double));
@@ -12,6 +16,7 @@ QByteArray TypesConverter::toByteArray(double d)
     return res;
 }
 
+// См. выше, только в float 4 байта.
 QByteArray TypesConverter::toByteArray(float f)
 {
     _single *result = (_single *)calloc(1, sizeof(_single));
@@ -24,6 +29,7 @@ QByteArray TypesConverter::toByteArray(float f)
     return res;
 }
 
+// См. выше, только в quint16 2 байта.
 QByteArray TypesConverter::toByteArray(quint16 f)
 {
     _uint16 *result = (_uint16 *)calloc(1, sizeof(_uint16));
@@ -36,6 +42,7 @@ QByteArray TypesConverter::toByteArray(quint16 f)
     return res;
 }
 
+// См. выше, только в quint32 4 байта.
 QByteArray TypesConverter::toByteArray(quint32 f)
 {
     _uint32 *result = (_uint32 *)calloc(1, sizeof(_uint32));
@@ -48,7 +55,9 @@ QByteArray TypesConverter::toByteArray(quint32 f)
     return res;
 }
 
-
+// Делает с помощью объединения обратную операцию: записывает массив байт (в обратном порядке!)
+// в объединение, а затем получает из него число из 4 байтов.
+// Методы ниже делают то же самое, только количество байтов варьируется.
 quint32 TypesConverter::bytesToUInt32(QByteArray bytes, int start)
 {
     _uint32 *result = (_uint32 *)calloc(1, sizeof(_uint32));
@@ -97,7 +106,6 @@ float TypesConverter::bytesToSingle(QByteArray bytes, int start)
 {
     _single *result = (_single *)calloc(1, sizeof(_single));
     for (int i = 0, j = 3; j >= 0; i++, j--) {
-        //qDebug() << QString("i = %0, j = %1, start = %2").arg(i).arg(j).arg(start);
         result->bytes[j] = (quint8)bytes[start + i];
     }
     float res = result->value;

@@ -5,6 +5,11 @@
 #include "qmldatahelper.h"
 #include "qbytehelper.h"
 
+// Класс CommandBuilder содержит в себе все методы для сборки настраиваемых пакетов перед отправкой.
+// Если код и подкод помещаются в пакет до вызова этих методов (иногда вместо подкода
+// вставляется первый байт пакета, об этом будет предупреждено в комментариях), то
+// остальные данные из интерфейса QML добавляются именно методами этого класса.
+// Каждый метод написан отдельно под каждый пакет.
 class CommandBuilder : public QObject
 {
     Q_OBJECT
@@ -17,9 +22,6 @@ public:
     void build_CMDSUB_SET_PACKET_BROADCAST_MASK(QByteArray *);
     void build_CMDSUB_REQUEST_TIMING_PACKET(QByteArray *);
 
-signals:
-
-public slots:
 };
 
 #endif // CMDBUILDER_H

@@ -82,9 +82,6 @@ private:
     QByteArray data;
     quint8 _reportCode;
 
-signals:
-
-public slots:
 };
 
 #endif // PACKETPARSER_H
