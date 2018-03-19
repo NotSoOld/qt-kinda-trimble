@@ -1,4 +1,4 @@
-// Общие комментарии к методам см. здесь.
+// Общие комментарии к методам см. здесь:
 #include "comhandler.h"
 
 // Потому что они статические.
@@ -133,7 +133,7 @@ void COMHandler::requestEssentialInfo(unsigned long delay)
 
 void COMHandler::finishCOM()
 {
-    // Полное уни[что]жение (но сначала нужно проверить на возможность того, что делаем, конечно).
+    // Полное уни[что]жение (но сначала нужно проверить на возможность совершения того, что делаем, конечно).
     if (com == nullptr)
         return;
     if (!(com->isOpen()))
@@ -181,93 +181,10 @@ void COMHandler::receiveReport()
     // без экранирования, но с начальным DLE и конечным DLE.
     // Конструктор парсера пакетов PacketParser сам отбросит всё лишнее.
     QString message = "";
-    // Создаем новый парсер пакетов, отдавая ему прочитанный пакет, и выбираем нужный метод для разбора пакета
+    // Создаем новый парсер пакетов, отдавая ему прочитанный пакет, и вызываем метод для разбора пакета
     // по коду пакета (и подкоду, когда он есть), чтобы получить данные для интерфейса и лога.
     PacketParser *parser = new PacketParser(readedData);
-    switch (parser->reportCode()) {
-    case REPORT_UNPARSABLE:
-        message.append(parser->parse_REPORT_UNPARSABLE());
-        break;
-    case REPORT_FIRMWARE_INFO:
-        switch (parser->reportSubcode()) {
-        case RPTSUB_FIRMWARE_VERSION:
-            message.append(parser->parse_RPTSUB_FIRMWARE_VERSION());
-            break;
-        case RPTSUB_HARDWARE_COMPONENT_INFO:
-            message.append(parser->parse_RPTSUB_HARDWARE_COMPONENT_INFO());
-            break;
-        default:
-            message.append(QString("Подкод пакета REPORT_FIRMWARE_INFO (0х1С) %0 не распознан.")
-                           .arg(parser->reportSubcode(), 1, 16));
-        }
-        break;
-    case REPORT_DOUBLE_XYZ_POS:
-        message.append(parser->parse_REPORT_DOUBLE_XYZ_POS(this));
-        break;
-    case REPORT_DOUBLE_LLA_POS:
-        message.append(parser->parse_REPORT_DOUBLE_LLA_POS());
-        break;
-    case REPORT_SINGLE_XYZ_POS:
-        message.append(parser->parse_REPORT_SINGLE_XYZ_POS());
-        break;
-    case REPORT_SINGLE_VELOCITY_FIX_XYZ:
-        message.append(parser->parse_REPORT_SINGLE_VELOCITY_FIX_XYZ());
-        break;
-    case REPORT_SOFTWARE_VERSION_INFO:
-        message.append(parser->parse_REPORT_SOFTWARE_VERSION_INFO());
-        break;
-    case REPORT_TRACKED_SATELLITES_SINGAL_LVL:
-        message.append(parser->parse_REPORT_TRACKED_SATELLITES_SINGAL_LVL());
-        break;
-    case REPORT_SINGLE_LLA_POS:
-        message.append(parser->parse_REPORT_SINGLE_LLA_POS());
-        break;
-    case REPORT_REQUEST_IO_OPTIONS:
-        message.append(parser->parse_REPORT_REQUEST_IO_OPTIONS());
-        break;
-    case REPORT_SINGLE_VELOCITY_FIX_ENU:
-        message.append(parser->parse_REPORT_SINGLE_VELOCITY_FIX_ENU());
-        break;
-    case REPORT_LAST_FIX_INFO:
-        message.append(parser->parse_REPORT_LAST_FIX_INFO());
-        break;
-    case REPORT_GPS_SYSTEM_DATA:
-        message.append(parser->parse_REPORT_GPS_SYSTEM_DATA());
-        break;
-    case REPORT_STATUS_SATELLITE_HEALTH:
-        message.append(parser->parse_REPORT_STATUS_SATELLITE_HEALTH());
-        break;
-    case REPORT_RAW_MEASUREMENT_DATA:
-        message.append(parser->parse_REPORT_RAW_MEASUREMENT_DATA());
-        break;
-    case REPORT_SATELLITE_TRACKING_STATUS:
-        message.append(parser->parse_REPORT_SATELLITE_TRACKING_STATUS());
-        break;
-    case REPORT_SATELLITE_SELECTION_LIST:
-        message.append(parser->parse_REPORT_SATELLITE_SELECTION_LIST());
-        break;
-    case REPORT_SUPER:
-        switch (parser->reportSubcode()) {
-        case RPTSUB_PRIMARY_TIMING_PACKET:
-            message.append(parser->parse_RPTSUB_PRIMARY_TIMING_PACKET());
-            break;
-        case RPTSUB_SUPPL_TIMING_PACKET:
-            message.append(parser->parse_RPTSUB_SUPPL_TIMING_PACKET());
-            //parser->updateInterfaceValues();
-            break;
-        case RPTSUB_PACKET_BROADCAST_MASK:
-            message.append(parser->parse_RPTSUB_PACKET_BROADCAST_MASK());
-            break;
-        default:
-            message.append(QString("Подкод пакета REPORT_SUPER (0х8F) %0 не распознан.")
-                           .arg(parser->reportSubcode(), 1, 16));
-        }
-        break;
-    default:
-        // Если код пакета никуда не подошел (всякое бывает)...
-        message = QString("Неизвестный пакет 0x%0 ЛИБО проблемы с пониманием. Пакет отброшен")
-                .arg(parser->reportCode(), 1, 16);
-    }
+    message = parser->analyseAndParse();
     // Отправляем данные для лога.
     // (Данные для интерфейса уже были отправлены внутри соответственного вызванного метода parser'a.)
     emit appendReceivedText(message);
@@ -277,7 +194,6 @@ void COMHandler::receiveReport()
 void COMHandler::send_command(int code, int subcode)
 {
     QByteArray cmd;
-    CommandBuilder *cmdBuilder = new CommandBuilder();
    // qDebug() << code;
    // qDebug() << subcode;
 
@@ -295,7 +211,7 @@ void COMHandler::send_command(int code, int subcode)
         // (Если subcode == -1, то он был добавлен ранее;
         // это запрос настроек, а не их установка, и формирование пакета не требуется.)
         if (subcode == 0) {
-            cmdBuilder->build_COMMAND_SET_IO_OPTIONS(&cmd);
+            CommandBuilder::build_COMMAND_SET_IO_OPTIONS(&cmd);
         }
         break;
     case COMMAND_SATELLITE_SELECTION:
@@ -308,32 +224,32 @@ void COMHandler::send_command(int code, int subcode)
         }
         break;
     case COMMAND_ACCURATE_INIT_POS_XYZ:
-        cmdBuilder->build_COMMAND_ACCURATE_INIT_POS_XYZ(&cmd);
+        CommandBuilder::build_COMMAND_ACCURATE_INIT_POS_XYZ(&cmd);
         break;
     case COMMAND_ACCURATE_INIT_POS_LLA:
-        cmdBuilder->build_COMMAND_ACCURATE_INIT_POS_LLA(&cmd);
+        CommandBuilder::build_COMMAND_ACCURATE_INIT_POS_LLA(&cmd);
         break;
     case COMMAND_REQUEST_SATELLITE_SYSTEM_DATA:
         // Подкод здесь всегда == 1, он же - первый информационный байт (см. документацию).
-        cmdBuilder->build_COMMAND_REQUEST_SATELLITE_SYSTEM_DATA(&cmd);
+        CommandBuilder::build_COMMAND_REQUEST_SATELLITE_SYSTEM_DATA(&cmd);
         break;
     case COMMAND_SET_REQUEST_SATELLITES_AND_HEALTH:
         // Для всех возможных операций (1 - 6) номер операции уже пришел в подкоде.
         // Для всех операций также нужно добавить номер спутника, которого эта операция касается
         // (для операций 3 и 6 номер спутника не важен, однако пакет всё равно нужно дополнить).
-        cmdBuilder->build_COMMAND_SET_REQUEST_SATELLITES_AND_HEALTH(&cmd);
+        CommandBuilder::build_COMMAND_SET_REQUEST_SATELLITES_AND_HEALTH(&cmd);
         break;
     case COMMAND_SUPER:
         // Суперпакетов TSIP много, нужно выбрать нужный метод по подкоду.
         switch((quint8)subcode) {
         case CMDSUB_SET_PACKET_BROADCAST_MASK:
-            cmdBuilder->build_CMDSUB_SET_PACKET_BROADCAST_MASK(&cmd);
+            CommandBuilder::build_CMDSUB_SET_PACKET_BROADCAST_MASK(&cmd);
             break;
         case CMDSUB_REQUEST_PRIMARY_TIMING_PACKET:
         case CMDSUB_REQUEST_SUPPL_TIMING_PACKET:
             // Здесь необходимо добавить лишь код, обозначающий, как прислать этот пакет.
             // Для обоих пакетов коды значат одно и то же, поэтому одного метода достаточно.
-            cmdBuilder->build_CMDSUB_REQUEST_TIMING_PACKET(&cmd);
+            CommandBuilder::build_CMDSUB_REQUEST_TIMING_PACKET(&cmd);
             break;
         }
     case COMMAND_INITIATE_RESET:
@@ -350,7 +266,7 @@ void COMHandler::send_command(int code, int subcode)
     com->waitForBytesWritten(300);
 }
 
-
+// Тоже осталось с незапамятных времен.
 void COMHandler::run()
 {
     (this->*methodToStartThreadWith)();

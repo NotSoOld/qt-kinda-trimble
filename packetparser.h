@@ -12,11 +12,13 @@ public:
     PacketParser(QByteArray);
     quint8 reportCode();
     quint8 reportSubcode();
+    QString analyseAndParse();
 
+private:
     QString parse_REPORT_UNPARSABLE();
     QString parse_RPTSUB_FIRMWARE_VERSION();
     QString parse_RPTSUB_HARDWARE_COMPONENT_INFO();
-    QString parse_REPORT_DOUBLE_XYZ_POS(COMHandler *);
+    QString parse_REPORT_DOUBLE_XYZ_POS(/*COMHandler **/);
     QString parse_REPORT_DOUBLE_LLA_POS();
     QString parse_REPORT_SINGLE_XYZ_POS();
     QString parse_REPORT_SINGLE_VELOCITY_FIX_XYZ();
@@ -34,7 +36,7 @@ public:
     QString parse_RPTSUB_PRIMARY_TIMING_PACKET();
     QString parse_RPTSUB_SUPPL_TIMING_PACKET();
     QString parse_RPTSUB_PACKET_BROADCAST_MASK();
-
+/*
     struct RPTSUB_FIRMWARE_VERSION_reportStruct {
 
         quint8 reportSubcode;
@@ -75,10 +77,9 @@ public:
         quint8 spare4;
         quint8 spare5;
     } RPTSUB_SUPPL_TIMING_PACKET_report;
-
+*/
     //void updateInterfaceValues();
 
-private:
     QByteArray data;
     quint8 _reportCode;
 
