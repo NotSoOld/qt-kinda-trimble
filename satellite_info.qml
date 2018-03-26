@@ -2,6 +2,8 @@ import QtQuick 2.1
 import QtQuick.Controls 1.0
 import QtQuick.Controls 2.2
 
+// Вкладка для работы со спутниками.
+
 Item {
     width: 400
     height: 500

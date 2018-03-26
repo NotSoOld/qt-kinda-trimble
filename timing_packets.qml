@@ -2,6 +2,8 @@ import QtQuick 2.1
 import QtQuick.Controls 1.0
 import QtQuick.Controls 2.2
 
+// Вкладка для получения пакетов по таймингу, если они не приходят сами.
+
 Item {
     width: 400
     height: 500
@@ -9,6 +11,8 @@ Item {
     anchors.fill: parent
     objectName: "timingPacketItem"
 
+    // Сигнал отправки пакета и так уже передает код и подкод суперпакета, а нужен еще третий байт для различения типа пакета.
+    // Он хранится в этой переменной и забирается кодом С++ во время формирования пакета.
     property int timingPacketType: 0;
 
     Rectangle {

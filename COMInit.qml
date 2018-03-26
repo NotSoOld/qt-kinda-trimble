@@ -3,6 +3,10 @@ import QtQuick.Controls 1.5
 import QtQuick.Window 2.3
 import QtQuick.Controls 2.2
 
+// Окно настройки и открытия порта VirtualCOM.
+// Если нажать на кнопку, будет подключение.
+// Если просто закрыть окно, подключения не случится, а программа закроется.
+
 Window {
     id: comInitWindow
 
@@ -11,8 +15,9 @@ Window {
     height: 480
     title: "Настройка подключения"
 
-    // Индекс записи о порте передается потому, что сама запись не несет в себе полезной информации об имени порта.
-    // Имя порта будет позже выбрано в С++ по этому индексу.
+    // Индекс записи о порте portIndex передается потому, что сама запись в выпадающем списке
+    // не несет в себе полезной информации об имени порта.
+    // Имя порта будет позже выбрано в коде С++ по этому индексу.
     signal closeWindow(int portIndex, int baud, int dataBits, int parity, int flowControl, int stopBits)
 
     Text {
@@ -35,22 +40,7 @@ Window {
         text: qsTr("Имя порта:")
         font.pixelSize: 16
     }
-/*
-    TextField {
-        id: portNameTextEdit
-        x: 211
-        y: 67
-        width: 90
-        height: 35
-        padding: 0
-        leftPadding: 0
-        rightPadding: 0
-        bottomPadding: 0
-        topPadding: 0
-        placeholderText: qsTr("COM")
-        font.pixelSize: 16
-    }
-*/
+
     Text {
         id: text3
         x: 18
@@ -59,6 +49,7 @@ Window {
         font.pixelSize: 16
     }
 
+    // Обновляется из С++ с помощью обращения по объектному имени.
     ComboBox {
         id: portsComboBox
         objectName: "portsComboBox"
@@ -151,6 +142,8 @@ Window {
         model: ["1", "1.5", "2"]
     }
 
+    // При нажатии этой кнопки главному окну отправляется сигнал, что мы хотим установить новое подключение
+    // с выбранными параметрами. Данное окно будет при этом закрыто главным окном.
     Button {
         id: button
         x: 224
@@ -172,6 +165,9 @@ Window {
         width: 502
         height: 61
         text: qsTr("ВНИМАНИЕ: если подключение уже существует, произойдет отключение и переподключение с новыми параметрами!")
+        // ...потому что при открытии данного окна соединение автоматически прерывается, иначе тот порт, который был занят,
+        // не будет отображаться в выпадающем списке, хотя, по сути, он уже свободен (был бы после переподключения. Или мы
+        // хотели подключиться к нему же, но его не было бы в списке).
         font.bold: false
         font.italic: true
         horizontalAlignment: Text.AlignHCenter

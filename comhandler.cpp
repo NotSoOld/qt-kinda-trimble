@@ -3,7 +3,6 @@
 
 // Потому что они статические.
 QSerialPort *COMHandler::com;
-QString COMHandler::name;
 QByteArray COMHandler::readedData;
 byte COMHandler::previouslyReadedChar;
 QList<QSerialPortInfo> COMHandler::portsList;
@@ -20,13 +19,6 @@ void COMHandler::getSerialPortsList()
     portsList = QSerialPortInfo::availablePorts();
     int openPortsNumber = portsList.length();
     for (int i = 0; i < openPortsNumber; i++) {
-        /*
-        qDebug() << portsList[i].portName();
-        qDebug() << portsList[i].serialNumber();
-        qDebug() << portsList[i].description();
-        qDebug() << portsList[i].manufacturer();
-        qDebug() << portsList[i].systemLocation();
-        */
         if (portsList[i].isBusy()) {
             portsList.removeAt(i);
             i--;
@@ -50,10 +42,6 @@ void COMHandler::getSerialPortsList()
 
 void COMHandler::configureCOM(int portIndex, int baudRate, int dataBits, int parity, int flowControl, int stopBits)
 {
-    // Если порт уже был открыт, его сначала нужно закрыть.
-    // UPD: Однако он не может оказаться в списке, если он уже открыт, так что закомментируем это...
-    //finishCOM();
-
     // По первому параметру - номеру выбора в выпадающем списке портов - можно найти наш порт в portsList.
     QString portName = portsList[portIndex].portName();
     // Создаем и настраиваем объект порта согласно пришедшим настройкам.
@@ -87,10 +75,8 @@ void COMHandler::configureCOM(int portIndex, int baudRate, int dataBits, int par
         default: com->setStopBits(QSerialPort::UnknownStopBits);
     }
     // Открываем и на всякий случай очищаем порт.
-    // (зачем хранится имя - уже забыл, видимо, когда-то это было нужно)
     com->open(QSerialPort::ReadWrite);
     com->clear();
-    name = portName;
     // Соединяем слот чтения данных и сигнал о приходе данных, на практике оказалось очень удобным.
     QObject::connect(
                 com,
@@ -110,7 +96,7 @@ void COMHandler::requestEssentialInfo(unsigned long delay)
 {
     // Просто возможность отсрочить получение информации (например, после перезагрузки стоит подождать, пока GPS очнется).
     if (delay > 0)
-        sleep(delay);
+        QThread::msleep(delay);
 
     send_command(COMMAND_FIRMWARE_INFO, CMDSUB_FIRMWARE_VERSION);
     send_command(COMMAND_FIRMWARE_INFO, CMDSUB_HARDWARE_COMPONENT_INFO);
@@ -185,18 +171,22 @@ void COMHandler::receiveReport()
     // по коду пакета (и подкоду, когда он есть), чтобы получить данные для интерфейса и лога.
     PacketParser *parser = new PacketParser(readedData);
     message = parser->analyseAndParse();
-    // Отправляем данные для лога.
+    // Отправляем данные для лога (если только лог не заморожен).
     // (Данные для интерфейса уже были отправлены внутри соответственного вызванного метода parser'a.)
-    emit appendReceivedText(message);
+    if (!(QMLDataHelper::getBoolFromQML("freezeLog", "checked"))) {
+        emit appendReceivedText(message);
+    }
 }
 
 
 void COMHandler::send_command(int code, int subcode)
 {
-    QByteArray cmd;
-   // qDebug() << code;
-   // qDebug() << subcode;
+    if (code == -42) {
+        requestEssentialInfo();
+        return;
+    }
 
+    QByteArray cmd;
     cmd.append(DLE);
     // Некоторые пакеты содержат только код команды, либо код команды и ее подкод
     // (либо иногда в подкоде приходит первый информационный байт, так сделано для удобства).
@@ -258,16 +248,9 @@ void COMHandler::send_command(int code, int subcode)
         requestEssentialInfo(3000);
     }
 
-    qDebug() << cmd;
     // Добавляем конец пакета и отправляем его.
     cmd.append(DLE);
     cmd.append(ETX);
     com->write(cmd.constData(), cmd.length());
     com->waitForBytesWritten(300);
-}
-
-// Тоже осталось с незапамятных времен.
-void COMHandler::run()
-{
-    (this->*methodToStartThreadWith)();
 }

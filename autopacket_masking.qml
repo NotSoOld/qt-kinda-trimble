@@ -2,6 +2,8 @@ import QtQuick 2.1
 import QtQuick.Controls 1.0
 import QtQuick.Controls 2.2
 
+// Вкладка настройки авторассылки пакетов.
+
 Item {
     width: 400
     height: 500
@@ -72,6 +74,7 @@ Item {
             y: 177
             width: 171
             height: 113
+            // Почему - см. документацию про broadcast packets.
             text: "Примечание. Перечисленные у третьего пункта пакеты могут маскироваться другими пакетами и не приходить, даже если флажок установлен."
             font.bold: false
             font.italic: true

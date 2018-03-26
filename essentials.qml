@@ -2,6 +2,9 @@ import QtQuick 2.1
 import QtQuick.Controls 1.0
 import QtQuick.Controls 2.2
 
+// Вкладка с кнопками перезагрузок и получения информации о прошивке GPS-модуля,
+// его плате и установленном на ней ПО.
+
 Item {
     width: 400
     height: 500

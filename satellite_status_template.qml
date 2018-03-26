@@ -5,6 +5,8 @@ import QtQuick.Controls 2.2
 import QtQml 2.2
 import QtQuick.Layouts 1.3
 
+// "Шаблон" для отображения информации об уровне сигнала спутников. Используется в главном окне.
+
 Item {
     id: item1
     width: 250
@@ -26,10 +28,10 @@ Item {
     Image {
         id: sat_signal_image
         objectName: "sat_signal_image"
-        x: 188
-        y: 5
+        x: 157
+        y: 8
         anchors.right: parent.right
-        anchors.rightMargin: 32
+        anchors.rightMargin: 68
         Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
         transformOrigin: Item.Center
         source: "qrc:/images/satellites_levels/excellent.png"

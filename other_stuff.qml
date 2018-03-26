@@ -2,6 +2,8 @@ import QtQuick 2.1
 import QtQuick.Controls 1.0
 import QtQuick.Controls 2.2
 
+// Еще одна вкладка с кнопками. В основном, позволяет получить какую-либо информацию о спутниках.
+
 Item {
     width: 400
     height: 500

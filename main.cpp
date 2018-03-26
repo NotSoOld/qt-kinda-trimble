@@ -1,4 +1,4 @@
-#include <QApplication>
+#include <QGuiApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlEngine>
 #include <QQmlContext>
@@ -10,13 +10,13 @@
 // Отсюда начинается выполнение программы.
 
 // Когда-то COMHandler был многопоточным... Теперь существование сразу двух его экземпляров
-// вызывает вопросы о целесообразности.
+// вызывает вопросы касательно целесообразности.
 COMHandler handler;
 COMHandler receiverThread;
 
 int main(int argc, char *argv[])
 {
-    QApplication app(argc, argv);
+    QGuiApplication app(argc, argv);
     QQmlApplicationEngine engine;
 
     // Стиль приложения.
@@ -65,24 +65,11 @@ int main(int argc, char *argv[])
                 SLOT(getSerialPortsList())
     );
 
-    // Связка для обновления графиков в интерфейсе (пока что не работает).
-    QObject::connect(
-                &receiverThread,
-                SIGNAL(newValuesGained(QVariant, QVariant)),
-                QMLDataHelper::mainWindow,
-                SLOT(onGainNewValues(QVariant, QVariant))
-    );
-
     // При первом запуске проще запустить этот слот отсюда, чем из QML.
     receiverThread.getSerialPortsList();
 
-    // Тоже от многопоточности осталось
-   // receiverThread.methodToStartThreadWith = &COMHandler::receiveReport;
-   // receiverThread.start();
-
     // Запуск, собственно, приложения.
     app.exec();
-    //receiverThread.terminate();
     // Перед завершением работы закроем порт.
     handler.finishCOM();
     return 0;

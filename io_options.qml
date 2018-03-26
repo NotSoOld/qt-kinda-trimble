@@ -1,6 +1,7 @@
 import QtQuick 2.1
-//import QtQuick.Controls 1.0
 import QtQuick.Controls 2.2
+
+// Вкладка с переключалками для указания настроек ввода-вывода GPS-модуля, их получения или отправки.
 
 Item {
     width: 400

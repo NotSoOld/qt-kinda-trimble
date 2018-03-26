@@ -1,33 +1,45 @@
 #include "packetparser.h"
 
+// Конструктор, получает на вход пакет, который нужно будет разобрать (в виде байтов).
 PacketParser::PacketParser(QByteArray data)
 {
     this->data.clear();
+    // Нулевой байт здесь - DLE, первый - код пакета.
     _reportCode = (quint8)data[1];
+    // В массив data объекта попадет пакет без первого и последнего DLE и без кода пакета.
     for (int i = 2; i < data.length() - 1; i++) {
         this->data.append((quint8)data[i]);
     }
 }
 
-byte PacketParser::reportCode()
+// Акцессор кода пакета.
+quint8 PacketParser::reportCode()
 {
     return _reportCode;
 }
 
-byte PacketParser::reportSubcode()
+// Акцессор подкода пакета.
+quint8 PacketParser::reportSubcode()
 {
     return (quint8)data[0];
 }
 
+// Начинает процесс разбора, анализируя код и, если нужно, подкод пакета и выбирая
+// подходящий метод разбора. Предназначен для запуска извне после создания пакета.
+// Возвращает строку, которая будет отправлена в лог (в ней сообщение об успешном или
+// неудачном разборе пакета и вся информация из пакета, которая не была передана в интерфейс
+// самим методом разбора).
 QString PacketParser::analyseAndParse()
 {
     QString message = "";
 
-    switch (reportCode()) {
+    // Сначала подходящий метод ищется по коду пакета.
+    switch (_reportCode) {
     case REPORT_UNPARSABLE:
         message.append(parse_REPORT_UNPARSABLE());
         break;
     case REPORT_FIRMWARE_INFO:
+        // Иногда нужно проверить и подкод пакета тоже.
         switch (reportSubcode()) {
         case RPTSUB_FIRMWARE_VERSION:
             message.append(parse_RPTSUB_FIRMWARE_VERSION());
@@ -92,7 +104,6 @@ QString PacketParser::analyseAndParse()
             break;
         case RPTSUB_SUPPL_TIMING_PACKET:
             message.append(parse_RPTSUB_SUPPL_TIMING_PACKET());
-            //updateInterfaceValues();
             break;
         case RPTSUB_PACKET_BROADCAST_MASK:
             message.append(parse_RPTSUB_PACKET_BROADCAST_MASK());
@@ -105,12 +116,14 @@ QString PacketParser::analyseAndParse()
     default:
         // Если код пакета никуда не подошел (всякое бывает)...
         message = QString("Неизвестный пакет 0x%0 ЛИБО проблемы с пониманием. Пакет отброшен")
-                .arg(reportCode(), 1, 16);
+                .arg(_reportCode, 1, 16);
     }
 
     return message;
 }
 
+// Разбирает пакет 0x13 и выводит его содержимое в лог.
+// Этот пакет присылается GPS-модулем, если тот не понял, что отправили мы.
 QString PacketParser::parse_REPORT_UNPARSABLE()
 {
     QString res;
@@ -123,6 +136,7 @@ QString PacketParser::parse_REPORT_UNPARSABLE()
     return res;
 }
 
+// Разбирает пакет получения информации о прошивке платы 0x1C с подкодом 0x81.
 QString PacketParser::parse_RPTSUB_FIRMWARE_VERSION()
 {
     QString res;
@@ -138,25 +152,15 @@ QString PacketParser::parse_RPTSUB_FIRMWARE_VERSION()
     for (quint8 i = 0; i < (quint8)data[9]; i++) {
         info.append((char)data[10 + i]);
     }
-    //res.append(info);
 
+    // Вся информация будет передана в соответствующее поле в интерфейсе.
     QObject *qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("_RPTSUB_FIRMWARE_VERSION_label");
     qmlObject->setProperty("text", QVariant(info));
 
-
-/*
-    QDataStream dataStream(data);
-
-    dataStream >> RPTSUB_FIRMWARE_VERSION_report.reportSubcode
-            >> RPTSUB_FIRMWARE_VERSION_report.reserved >> RPTSUB_FIRMWARE_VERSION_report.majorVersion
-            >> RPTSUB_FIRMWARE_VERSION_report.minorVersion >> RPTSUB_FIRMWARE_VERSION_report.buildNumber
-            >> RPTSUB_FIRMWARE_VERSION_report.month >> RPTSUB_FIRMWARE_VERSION_report.day
-            >> RPTSUB_FIRMWARE_VERSION_report.year >> RPTSUB_FIRMWARE_VERSION_report.productNameLength
-            >> RPTSUB_FIRMWARE_VERSION_report.productName;
-*/
     return res;
 }
 
+// Разбирает пакет о железе платы 0x1C с подкодом 0x83.
 QString PacketParser::parse_RPTSUB_HARDWARE_COMPONENT_INFO()
 {
     QString res;
@@ -171,29 +175,26 @@ QString PacketParser::parse_RPTSUB_HARDWARE_COMPONENT_INFO()
     for (quint8 i = 0; i < (quint8)data[12]; i++) {
         info.append((char)data[13 + i]);
     }
-    //res.append(info);
 
+    // Вся информация из пакета отправляется в интерфейс.
     QObject *qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("_RPTSUB_HARDWARE_COMPONENT_INFO_label");
     qmlObject->setProperty("text", QVariant(info));
 
     return res;
 }
 
-QString PacketParser::parse_REPORT_DOUBLE_XYZ_POS(/*COMHandler *com*/)
+// Разбирает пакет позиции в метрах двойной точности 0х83. Пакет приходит, как только новый фикс сделан
+// и если соотв. настройки задают присылать его.
+QString PacketParser::parse_REPORT_DOUBLE_XYZ_POS()
 {
     QString res;
     res.append("Получен пакет REPORT_DOUBLE_XYZ_POS (0x83)\n");
-    /*res.append(QString("- Позиция (Х; Y; Z): (%0 м; %1 м; %2 м)\n").arg(TypesConverter::bytesToDouble(data, 0)).arg(TypesConverter::bytesToDouble(data, 8))
-            .arg(TypesConverter::bytesToDouble(data, 16)));
-    res.append(QString("- Clock bias: %0\n").arg(TypesConverter::bytesToDouble(data, 24)));
-    res.append(QString("- Time of fix: %0\n").arg(TypesConverter::bytesToDouble(data, 32)));
-*/
+
     double X = TypesConverter::bytesToDouble(data, 0);
     double Y = TypesConverter::bytesToDouble(data, 8);
     double Z = TypesConverter::bytesToDouble(data, 16);
 
-//    emit com->newValuesGained(QVariant(X), QVariant(Y));
-
+    // В интерфейсе есть текстовые поля под данные из этого пакета.
     QObject *qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("xPositionLabel");
     qmlObject->setProperty("text", QVariant(QString("Позиция по Х: %0 м").arg(X, 0, 'f')));
     qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("yPositionLabel");
@@ -209,15 +210,15 @@ QString PacketParser::parse_REPORT_DOUBLE_XYZ_POS(/*COMHandler *com*/)
     return res;
 }
 
+// Разбирает пакет позиции в радианах (широта, долгота, высота) двойной точности 0х84.
+//Пакет приходит, как только новый фикс сделан
+// и если соотв. настройки задают присылать его.
 QString PacketParser::parse_REPORT_DOUBLE_LLA_POS()
 {
     QString res;
     res.append("Получен пакет REPORT_DOUBLE_LLA_POS (0x84)\n");
-   /* res.append(QString("- Позиция LLA: (%0 рад; %1 рад; %2 м)\n").arg(TypesConverter::bytesToDouble(data, 0))
-               .arg(TypesConverter::bytesToDouble(data, 8)).arg(TypesConverter::bytesToDouble(data, 16)));
-    res.append(QString("- Clock bias: %0\n").arg(TypesConverter::bytesToDouble(data, 24)));
-    res.append(QString("- Time of fix: %0\n").arg(TypesConverter::bytesToDouble(data, 32)));
-*/
+
+    // В интерфейсе есть текстовые поля под данные из этого пакета.
     double latitude = TypesConverter::bytesToDouble(data, 0) * (180 / PI);
     double longitude = TypesConverter::bytesToDouble(data, 8) * (180 / PI);
     double altitude = TypesConverter::bytesToDouble(data, 16);
@@ -240,14 +241,13 @@ QString PacketParser::parse_REPORT_DOUBLE_LLA_POS()
     return res;
 }
 
+// Разбирает пакет позиции в метрах одинарной точности 0х42. Пакет приходит, как только новый фикс сделан
+// и если соотв. настройки задают присылать его.
 QString PacketParser::parse_REPORT_SINGLE_XYZ_POS()
 {
     QString res;
     res.append("Получен пакет REPORT_SINGLE_XYZ_POS (0x42)\n");
-    /*res.append(QString("- Позиция (Х; Y; Z): (%0 м; %1 м; %2 м)\n").arg(TypesConverter::bytesToSingle(data, 0))
-               .arg(TypesConverter::bytesToSingle(data, 4)).arg(TypesConverter::bytesToSingle(data, 8)));
-    res.append(QString("- Time of fix: %0\n").arg(TypesConverter::bytesToSingle(data, 12)));
-*/
+
     float X = TypesConverter::bytesToSingle(data, 0);
     float Y = TypesConverter::bytesToSingle(data, 4);
     float Z = TypesConverter::bytesToSingle(data, 8);
@@ -267,15 +267,13 @@ QString PacketParser::parse_REPORT_SINGLE_XYZ_POS()
     return res;
 }
 
+// Разбирает пакет скорости в метрах в секунду одинарной точности 0х43. Пакет приходит, как только новый фикс сделан
+// и если соотв. настройки задают присылать его.
 QString PacketParser::parse_REPORT_SINGLE_VELOCITY_FIX_XYZ()
 {
     QString res;
     res.append("Получен пакет REPORT_SINGLE_VELOCITY_FIX_XYZ (0x43)\n");
-    /*res.append(QString("- Скорость (Х; Y; Z): (%0 м/с; %1 м/с; %2 м/с)\n").arg(TypesConverter::bytesToSingle(data, 0))
-               .arg(TypesConverter::bytesToSingle(data, 4)).arg(TypesConverter::bytesToSingle(data, 8)));
-    res.append(QString("- Bias rate: %0\n").arg(TypesConverter::bytesToSingle(data, 12)));
-    res.append(QString("- Time of fix: %0\n").arg(TypesConverter::bytesToSingle(data, 16)));
-*/
+
     float X_vel = TypesConverter::bytesToSingle(data, 0);
     float Y_vel = TypesConverter::bytesToSingle(data, 4);
     float Z_vel = TypesConverter::bytesToSingle(data, 8);
@@ -295,6 +293,7 @@ QString PacketParser::parse_REPORT_SINGLE_VELOCITY_FIX_XYZ()
     return res;
 }
 
+// Пакет 0х45: версии приложения и ядра.
 QString PacketParser::parse_REPORT_SOFTWARE_VERSION_INFO()
 {
     QString s = "Получен пакет REPORT_SOFTWARE_VERSION_INFO (0x45)\n";
@@ -307,7 +306,6 @@ QString PacketParser::parse_REPORT_SOFTWARE_VERSION_INFO()
     info.append(QString("-- Major версия ядра GPS: %0\n").arg((quint8)data[5]));
     info.append(QString("-- Minor версия ядра GPS: %0\n").arg((quint8)data[6]));
     info.append(QString("-- Дата: %0/%1/%2\n").arg((quint8)data[8]).arg((quint8)data[7]).arg((quint8)data[9] + 1900));
-    //s.append(info);
 
     QObject *qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("_REPORT_SOFTWARE_VERSION_INFO_label");
     qmlObject->setProperty("text", QVariant(info));
@@ -315,39 +313,32 @@ QString PacketParser::parse_REPORT_SOFTWARE_VERSION_INFO()
     return s;
 }
 
+// В этом пакете 0х47 - уровни сигналов спутников. Приходит каждую секунду (если соотв. галочка стоит).
 QString PacketParser::parse_REPORT_TRACKED_SATELLITES_SINGAL_LVL()
 {
     QString message = "Получен пакет REPORT_TRACKED_SATELLITES_SINGAL_LVL (0x47)\n";
 
+    // Максимальное количество пар "спутник - сигнал" в пакете, согласно документации, равно 12.
+    // В интерфейсе заранее выделено 12 полей-объектов для отображения. Сначала скроем их все:
     for (int i = 0; i < 12; i++) {
         QObject *qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>(QString("template%0").arg(i + 1));
-        if (!qmlObject) {
-            qDebug() << "cannot find satellite object";
-            return "";
-        }
         qmlObject->setProperty("visible", "false");
     }
 
     // Нулевой байт уже разобранных данных - количество присланных пар "номер спутника - уровень сигнала".
     for (quint8 i = 0; i < (quint8)data[0]; i++) {
         float signalLevel = TypesConverter::bytesToSingle(data, i * 5 + 2);
-
-        //message.append(QString("Спутник %0: %1\n").arg((quint8)data[i * 5 + 1]).arg(signalLevel));
-
+        // Для спутника, у которого есть данные о сигнале, покажем заготовку в интерфейсе.
         QObject *qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>(QString("template%0").arg(i + 1));
         qmlObject->setProperty("visible", "true");
 
+        // Обновление информации в заготовке.
         QObject *textObject = qmlObject->findChild<QObject *>("mainLabel");
-        if (!textObject) {
-            qDebug() << "no text object";
-        }
-        textObject->setProperty("text", QVariant(QString("Спутник %0: %1").arg((quint8)data[i * 5 + 1]).arg(signalLevel)));
+        textObject->setProperty("text", QVariant(QString("Спутник %0: %1 dBc").arg((quint8)data[i * 5 + 1]).arg(signalLevel)));
 
+        // Задание изображения соответственно уровню сигнала.
         QObject *imageObject = qmlObject->findChild<QObject *>("sat_signal_image");
-        if (!imageObject) {
-            qDebug() << "no image object";
-        }
-        if (signalLevel > 50)
+        if (signalLevel > 40)
             imageObject->setProperty("source", QVariant("qrc:/images/satellites_levels/excellent.png"));
         else if (signalLevel > 30)
             imageObject->setProperty("source", QVariant("qrc:/images/satellites_levels/good.png"));
@@ -360,15 +351,13 @@ QString PacketParser::parse_REPORT_TRACKED_SATELLITES_SINGAL_LVL()
     return message;
 }
 
+// Одинарная позиция широта-долгота-высота 0х4А. Приходит, как только новый фикс сделан
+// (и если включен прием этих пакетов и соотв. точность).
 QString PacketParser::parse_REPORT_SINGLE_LLA_POS()
 {
     QString res;
     res.append("Получен пакет REPORT_SINGLE_LLA_POS (0x4A)\n");
-   /* res.append(QString("- Позиция LLA: (%0 рад; %1 рад; %2 м)\n").arg(TypesConverter::bytesToSingle(data, 0))
-               .arg(TypesConverter::bytesToSingle(data, 4)).arg(TypesConverter::bytesToSingle(data, 8)));
-    res.append(QString("- Clock bias: %0\n").arg(TypesConverter::bytesToSingle(data, 12)));
-    res.append(QString("- Time of fix: %0\n").arg(TypesConverter::bytesToSingle(data, 16)));
-*/
+
     float latitude = TypesConverter::bytesToSingle(data, 0) * (180 / PI);
     float longitude = TypesConverter::bytesToSingle(data, 4) * (180 / PI);
     float altitude = TypesConverter::bytesToSingle(data, 8);
@@ -389,30 +378,26 @@ QString PacketParser::parse_REPORT_SINGLE_LLA_POS()
     return res;
 }
 
+// Приходит после отправки или запроса настроек ввода-вывода GPS. Пакет 0х55.
 QString PacketParser::parse_REPORT_REQUEST_IO_OPTIONS()
 {
     QString s = "Получен пакет REPORT_REQUEST_IO_OPTIONS (0x55)\n";
     QString info = "-- Данные о позиционировании:\n";
-
     // Данные о позиционировании.
     info.append(QString("---- ECEF: %0\n").arg((data[0] & BIT0) ? "вкл" : "выкл"));
     info.append(QString("---- LLA: %0\n").arg((data[0] & BIT1) ? "вкл" : "выкл"));
     info.append(QString("---- HAE или MSL геоид: %0\n").arg(data[0] & BIT2 ? "MSL геоид" : "HAE"));
     info.append(QString("---- Точность: %0\n").arg(data[0] & BIT4 ? "double" : "single"));
-
     // Данные о скорости.
     info.append("-- Данные о скорости:\n");
     info.append(QString("---- ECEF: %0\n").arg((data[1] & BIT0) ? "вкл" : "выкл"));
     info.append(QString("---- ENU: %0\n").arg((data[1] & BIT1) ? "вкл" : "выкл"));
-
     // Данные о времени.
     info.append(QString("-- Тайминг: %0\n").arg((data[2] & BIT0) ? "UTC" : "GPS"));
-
     // Разное.
     info.append("-- Разное:\n");
     info.append(QString("---- Пакет 5А: %0\n").arg((data[3] & BIT0) ? "вкл" : "выкл"));
     info.append(QString("---- Единицы вывода: %0\n").arg((data[3] & BIT3) ? "dB-Hz" : "AMU"));
-    //s.append(info);
 
     QObject *qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("_REPORT_REQUEST_IO_OPTIONS_label");
     qmlObject->setProperty("text", QVariant(info));
@@ -420,15 +405,12 @@ QString PacketParser::parse_REPORT_REQUEST_IO_OPTIONS()
     return s;
 }
 
+// Пакет 0х56 одинарной скорости в м/с. Пакет приходит, как только новый фикс сделан
+// и если соотв. настройки задают присылать его.
 QString PacketParser::parse_REPORT_SINGLE_VELOCITY_FIX_ENU()
 {
     QString res;
     res.append("Получен пакет REPORT_SINGLE_VELOCITY_FIX_ENU (0x56)\n");
-    /*res.append(QString("- Скорость (восток; север; по высоте): (%0 м/с; %1 м/с; %2 м/с)\n").arg(TypesConverter::bytesToSingle(data, 0))
-               .arg(TypesConverter::bytesToSingle(data, 4)).arg(TypesConverter::bytesToSingle(data, 8)));
-    res.append(QString("- Bias rate: %0\n").arg(TypesConverter::bytesToSingle(data, 12)));
-    res.append(QString("- Time of fix: %0\n").arg(TypesConverter::bytesToSingle(data, 16)));
-*/
     float east_vel = TypesConverter::bytesToSingle(data, 0);
     float north_vel = TypesConverter::bytesToSingle(data, 4);
     float up_vel = TypesConverter::bytesToSingle(data, 8);
@@ -450,7 +432,8 @@ QString PacketParser::parse_REPORT_SINGLE_VELOCITY_FIX_ENU()
     return res;
 }
 
-// Не отображается в интерфейсе.
+// Не отображается в интерфейсе. Пакет 0х57 со служебной информацией о последнем фиксе позиции/скорости.
+// Приходит вместе с запросом позиции и скорости (и прочей информации, которую оператор указал в настройках присылать).
 QString PacketParser::parse_REPORT_LAST_FIX_INFO()
 {
     QString res;
@@ -473,7 +456,11 @@ QString PacketParser::parse_REPORT_LAST_FIX_INFO()
     return res;
 }
 
-// Не отображается в интерфейсе.
+// Не отображается в интерфейсе по причине гигантских размеров, полностью высыпается в лог.
+// Пакет 0х58, может содержать либо альманах выбранного спутника, либо данные о работоспособности (состоянии, здоровье)
+// всех спутников, либо данные об ионосфере, либо данные о UTC, либо данные эфемериды выбранного спутника.
+// Много математических параметров, я совершенно не представляю, для чего они могут пригодиться, но специалистам
+// по геолокации виднее.
 QString PacketParser::parse_REPORT_GPS_SYSTEM_DATA()
 {
     if ((int)data[0] == 3) {
@@ -483,7 +470,7 @@ QString PacketParser::parse_REPORT_GPS_SYSTEM_DATA()
     QString s = "Получен пакет REPORT_GPS_SYSTEM_DATA (0x58):\n";
     switch ((quint8)data[1]) {
 
-        case 2:     // Альманах
+        case 2:     // Альманах спутника.
             s.append(QString("Данные альманаха для спутника %0:\n").arg((quint8)data[2]));
             s.append(QString("T_oa (raw): %0\n").arg((quint8)data[4]));
             s.append(QString("SV_HEALTH: %0\n").arg((quint8)data[5]));
@@ -506,19 +493,19 @@ QString PacketParser::parse_REPORT_GPS_SYSTEM_DATA()
             s.append(QString("WNa: %0\n").arg(TypesConverter::bytesToUInt16(data, 68)));
             break;
 
-        case (quint8)3:     // Здоровье
-            s.append(QString("Данные о здоровье для спутников:\n"));
-            s.append(QString("Номер недели для здоровья: %0\n").arg((quint8)data[4]));
+        case (quint8)3:     // Работоспособность спутников.
+            s.append(QString("Данные о работоспособности спутников:\n"));
+            s.append(QString("Номер недели данных о работоспособности: %0\n").arg((quint8)data[4]));
             for (int i = 5; i <= 36; i++) {
-                s.append(QString("Здоровье спутника %0: %1\n").arg(i - 4).arg((quint8)data[i]));
+                s.append(QString("Работоспособность спутника %0: %1\n").arg(i - 4).arg((quint8)data[i]));
             }
-            s.append(QString("t_oa для здоровья: %0\n").arg((quint8)data[37]));
+            s.append(QString("t_oa работоспособности: %0\n").arg((quint8)data[37]));
             s.append(QString("Текущее t_oa: %0\n").arg((quint8)data[38]));
             s.append(QString("Текущий номер недели: %0\n").arg(TypesConverter::bytesToUInt16(data, 39)));
             break;
 
-        case (quint8)4:     // Ионосфера
-            s.append(QString("Данные об ионосфере для спутника %0:\n").arg((quint8)data[2]));
+        case (quint8)4:     // Ионосфера.
+            s.append(QString("Данные об ионосфере:\n"));
             s.append(QString("alpha0 = %0\n").arg(TypesConverter::bytesToSingle(data, 12)));
             s.append(QString("alpha1 = %0\n").arg(TypesConverter::bytesToSingle(data, 16)));
             s.append(QString("alpha2 = %0\n").arg(TypesConverter::bytesToSingle(data, 20)));
@@ -529,8 +516,8 @@ QString PacketParser::parse_REPORT_GPS_SYSTEM_DATA()
             s.append(QString("beta3 = %0\n").arg(TypesConverter::bytesToSingle(data, 40)));
             break;
 
-        case (quint8)5:     // Информация UTC
-            s.append(QString("Информация UTC для спутника %0:\n").arg((quint8)data[2]));
+        case (quint8)5:     // Информация UTC.
+            s.append(QString("Информация UTC:\n"));
             s.append(QString("A0 = %0\n").arg(TypesConverter::bytesToDouble(data, 17)));
             s.append(QString("A1 = %0\n").arg(TypesConverter::bytesToSingle(data, 25)));
             s.append(QString("delta t_LS = %0\n").arg(TypesConverter::bytesToSInt16(data, 29)));
@@ -541,13 +528,13 @@ QString PacketParser::parse_REPORT_GPS_SYSTEM_DATA()
             s.append(QString("delta t_LSf = %0\n").arg(TypesConverter::bytesToSInt16(data, 41)));
             break;
 
-        case (quint8)6:     // Информация ephemeris
-            s.append(QString("Информация ephemeris для спутника %0:\n").arg((quint8)data[2]));
+        case (quint8)6:     // Информация эфемериды спутника.
+            s.append(QString("Информация эфемериды спутника %0:\n").arg((quint8)data[2]));
             s.append(QString("Номер спутника (SV PRN): %0\n").arg((quint8)data[4]));
             s.append(QString("t_ephem = %0\n").arg(TypesConverter::bytesToSingle(data, 5)));
             s.append(QString("Номер недели: %0\n").arg(TypesConverter::bytesToUInt16(data, 9)));
             s.append(QString("Точность спутника (raw): %0\n").arg((quint8)data[13]));
-            s.append(QString("Здоровье спутника: %0\n").arg((quint8)data[14]));
+            s.append(QString("Работоспособность спутника: %0\n").arg((quint8)data[14]));
             s.append(QString("Issue of data clock: %0\n").arg(TypesConverter::bytesToUInt16(data, 15)));
             s.append(QString("t_GD = %0\n").arg(TypesConverter::bytesToSingle(data, 17)));
             s.append(QString("t_oc = %0\n").arg(TypesConverter::bytesToSingle(data, 21)));
@@ -583,6 +570,13 @@ QString PacketParser::parse_REPORT_GPS_SYSTEM_DATA()
     return s;
 }
 
+// Пакет 0х59, приходит с одним из видов информации в ответ на пакет 0х39 (тот пакет может иметь
+// шесть разных подкодов, на два из них GPS-модуль ответит пакетом ниже). В пакете либо информация
+// о включении спутников в расчеты GPS-модуля (по умолчанию включены все, но можно сделать так, чтобы
+// GPS-модуль не воспринимал некоторые спутники) либо о слежении за работоспособностью спутников
+// (можно отключить слежение, чтобы работать и со спутниками, которые, по их собственному мнению,
+// не очень правильно работают, но это опасно).
+// Вся информация в итоге выведется в интерфейс.
 QString PacketParser::parse_REPORT_STATUS_SATELLITE_HEALTH()
 {
     QString s = "";
@@ -591,8 +585,7 @@ QString PacketParser::parse_REPORT_STATUS_SATELLITE_HEALTH()
         // Пришла информация о включении спутников.
         s.append("Информация о включении спутников REPORT_STATUS_SATELLITE_HEALTH\n");
         for (int i = 1; i <= 32; i++) {
-            //s.append(QString("- Спутник %0: %1\n").arg(i).arg((quint8)data[i] == (quint8)0 ? "включен" : "выключен"));
-            info.append(QString("№%0 - %1\t").arg(i).arg((quint8)data[i] == (quint8)0 ? "вкл." : "выкл."));
+            info.append(QString("№%0 - %1  \t").arg(i).arg((quint8)data[i] == (quint8)0 ? "вкл." : "выкл."));
             if (i % 4 == 0)
                 info.append("\n");
         } 
@@ -601,11 +594,10 @@ QString PacketParser::parse_REPORT_STATUS_SATELLITE_HEALTH()
 
     }
     else {
-        // Пришла информация о принятии здоровь спутников во внимание.
-        s.append("Информация о принятии здоровья спутников во внимание REPORT_STATUS_SATELLITE_HEALTH\n");
+        // Пришла информация о принятии работоспособности спутников во внимание.
+        s.append("Информация о принятии работоспособности спутников во внимание REPORT_STATUS_SATELLITE_HEALTH\n");
         for (int i = 1; i <= 32; i++) {
-            //s.append(QString("- Спутник %0: %1\n").arg(i).arg((quint8)data[i] == (quint8)0 ? "принимается" : "игнорируется"));
-            info.append(QString("№%0 - %1\t").arg(i).arg((quint8)data[i] == (quint8)0 ? "прин." : "игнор."));
+            info.append(QString("№%0 - %1\t").arg(i).arg((quint8)data[i] == (quint8)0 ? "учитыв." : "игнор."));
             if (i % 4 == 0)
                 info.append("\n");
         }
@@ -616,7 +608,8 @@ QString PacketParser::parse_REPORT_STATUS_SATELLITE_HEALTH()
     return s;
 }
 
-// Не отображается в интерфейсе.
+// Не отображается в интерфейсе. Какие-то совсем уж служебные параметры низкого уровня об измерениях спутника
+// (или GPS-модуля). Пакет 0х5А, тоже присылается в момент фикса, если стоит соотв. галочка в настройках I/O.
 QString PacketParser::parse_REPORT_RAW_MEASUREMENT_DATA()
 {
     QString s = "Получен пакет REPORT_RAW_MEASUREMENT_DATA (0x5A):\n";
@@ -630,15 +623,21 @@ QString PacketParser::parse_REPORT_RAW_MEASUREMENT_DATA()
     return s;
 }
 
-// Не отображается в интерфейсе.
+// Не отображается в интерфейсе. Пакет 0х5С о статусе трекинга спутника. Если на вкладке с кнопкой, вызывающей
+// приход этого пакета, выбран номер спутника "0", то информация придет о всех спутниках. Что содержит пакет, можно посмотреть ниже.
 QString PacketParser::parse_REPORT_SATELLITE_TRACKING_STATUS()
 {
     QString s = "Получен пакет REPORT_SATELLITE_TRACKING_STATUS (0x5C):\n";
     s.append(QString("- Номер спутника (SV PRN): %0\n").arg((quint8)data[0]));
-    s.append(QString("- Номер канала: %0\n").arg(((quint8)data[1] & (BIT3 | BIT2 | BIT1 | BIT0)) + 1));
+    int channelNo = 1;
+    if ((quint8)data[1] & BIT3) channelNo += 1;
+    if ((quint8)data[1] & BIT2) channelNo += 2;
+    if ((quint8)data[1] & BIT1) channelNo += 4;
+    if ((quint8)data[1] & BIT0) channelNo += 8;
+    s.append(QString("- Номер канала: %0\n").arg(channelNo));
     s.append(QString("- Acquisition flag: %0\n")
              .arg((int)data[2] == 0 ? "never acquired" : ((int)data[2] == 1 ? "acquired" : "re-opened search")));
-    s.append(QString("- Ephemeris flag: %0\n").arg((int)data[3] == 0 ? "флаг не установлен" : "good ephemeris"));
+    s.append(QString("- Флаг эфемериды: %0\n").arg((int)data[3] == 0 ? "флаг не установлен" : "хорошая эфемерида"));
     s.append(QString("- Уровень сигнала: %0\n").arg(TypesConverter::bytesToSingle(data, 4)));
     s.append(QString("- Время последнего измерения, с: %0\n").arg(TypesConverter::bytesToSingle(data, 8)));
     s.append(QString("- Угол подъема: %0\n").arg(TypesConverter::bytesToSingle(data, 12)));
@@ -671,7 +670,7 @@ QString PacketParser::parse_REPORT_SATELLITE_TRACKING_STATUS()
         bad_data_flag = "Ошибка четности";
     }
     else if ((int)data[22] == 2) {
-        bad_data_flag = "Bad ephemeris health";
+        bad_data_flag = "Испорченная эфемерида";
     }
     s.append(QString("Флаг испорченных данных: %0\n").arg(bad_data_flag));
 
@@ -680,42 +679,59 @@ QString PacketParser::parse_REPORT_SATELLITE_TRACKING_STATUS()
     return s;
 }
 
+// Из этого пакета о списке трекинга спутников 0х6D часть попадает в интерфейс - количество спутников в фиксе
+// Часть высылается в лог. Присылается каждую секунду, если галочка стоит.
 QString PacketParser::parse_REPORT_SATELLITE_SELECTION_LIST()
 {
     QString s = "Получен пакет REPORT_SATELLITE_SELECTION_LIST (0x6D):\n";
     QString fix_dimension = "";
     // Здесь (BIT7 | BIT6 | BIT5) - маска старших трех битов,
     // (BIT3 | BIT2 | BIT1 | BIT0) - младших четырех битов.
-    if ((((quint8)data[0] & (BIT7 | BIT6 | BIT5)) >> 5) == (quint8)1) {
+    // Биты расположены так, что нельзя просто образовать маску логическим сложением и получить правильное число
+    // из этих битов. Приходится разворачивать вручную...
+    int fix_dimension_value = 0;
+    if ((quint8)data[0] & BIT7)
+        fix_dimension_value += 1;
+    if ((quint8)data[0] & BIT6)
+        fix_dimension_value += 2;
+    if ((quint8)data[0] & BIT5)
+        fix_dimension_value += 4;
+    if (fix_dimension_value == 1) {
         fix_dimension = "1D clock fix";
     }
-    else if ((((quint8)data[0] & (BIT7 | BIT6 | BIT5)) >> 5) == (quint8)3) {
+    else if (fix_dimension_value == 3) {
         fix_dimension = "2D fix";
     }
-    else if ((((quint8)data[0] & (BIT7 | BIT6 | BIT5)) >> 5) == (quint8)4) {
+    else if (fix_dimension_value == 4) {
         fix_dimension = "3D fix";
     }
-    else if ((((quint8)data[0] & (BIT7 | BIT6 | BIT5)) >> 5) == (quint8)5) {
+    else if (fix_dimension_value == 5) {
         fix_dimension = "OD clock fix";
     }
     s.append(QString("- Fix dimension: %0\n").arg(fix_dimension));
 
     s.append(QString("- Fix mode: %0\n").arg(((quint8)data[0] & BIT4) ? "manual" : "auto"));
 
-    int svsNumber = (quint8)data[0] & (BIT3 | BIT2 | BIT1 | BIT0);
+    int svsNumber = 0;
+    if ((quint8)data[0] & BIT3)
+        svsNumber += 1;
+    if ((quint8)data[0] & BIT2)
+        svsNumber += 2;
+    if ((quint8)data[0] & BIT1)
+        svsNumber += 4;
+    if ((quint8)data[0] & BIT0)
+        svsNumber += 8;
     s.append(QString("- Количество спутников в fix: %0\n").arg(svsNumber));
     s.append(QString("- PDOP: %0\n").arg(TypesConverter::bytesToSingle(data, 1)));
     s.append(QString("- HDOP: %0\n").arg(TypesConverter::bytesToSingle(data, 5)));
     s.append(QString("- VDOP: %0\n").arg(TypesConverter::bytesToSingle(data, 9)));
     s.append(QString("- TDOP: %0\n").arg(TypesConverter::bytesToSingle(data, 13)));
-    //s.append(QString("Список всех включенных спутников (отрицательное значение означает, что спутник отвергнут для использования в алгоритме T-RAIM):\n"));
 
     QString fixedSvs = QString("%0 спутников в фиксе: ").arg(svsNumber);
     for (int i = 17; i < 17 + svsNumber; i++) {
-        //s.append(QString("SV PRN: %0\n").arg((qint8)data[i]));
-        fixedSvs.append((quint8)data[i]);
-        if (i != 17 + svsNumber - 1)
-            fixedSvs.append(", ");
+            fixedSvs.append(QString("%0").arg((qint8)data[i]));
+            if (i != 17 + svsNumber - 1)
+                fixedSvs.append(", ");
     }
 
     QObject *qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("fixedSVsLabel");
@@ -724,6 +740,8 @@ QString PacketParser::parse_REPORT_SATELLITE_SELECTION_LIST()
     return s;
 }
 
+// Основной суперпакет по таймингу 0х8F 0хАВ. Присылается по умолчанию каждую секунду. Из него в интерфейс пишется время.
+// Всё остальное отправляется в лог. Как обычно, содержимое расписано ниже.
 QString PacketParser::parse_RPTSUB_PRIMARY_TIMING_PACKET()
 {
     QString s = "Получен пакет RPTSUB_PRIMARY_TIMING_PACKET (0x8F-AB):\n";
@@ -738,17 +756,27 @@ QString PacketParser::parse_RPTSUB_PRIMARY_TIMING_PACKET()
     s.append(QString("-- Время от %0\n").arg((quint8)data[9] & BIT4 ? "пользователя" : "GPS"));
 
     QString timeString = "";
-    timeString.append(QString("- Дата и время: %0/%1/%2 %3:%4:%5\n")
-            .arg((quint8)data[13], 2, 10, QChar('0')).arg((quint8)data[14], 2, 10, QChar('0')).arg(TypesConverter::bytesToUInt16(data, 15))
-            .arg((quint8)data[12], 2, 10, QChar('0')).arg((quint8)data[11], 2, 10, QChar('0')).arg((quint8)data[10], 2, 10, QChar('0')));
-    //s.append(timeString);
+    // Хак для корректировки часового пояса.
+    quint8 hour = (quint8)data[12] + 4;
+    quint8 date = (quint8)data[13];
+    if (hour >= 24) {
+        hour -= 24;
+        date += 1;
+    }
+    timeString.append(QString("- Дата и время: %0/%1/%2 %3:%4:%5")
+            .arg(date, 2, 10, QChar('0')).arg((quint8)data[14], 2, 10, QChar('0')).arg(TypesConverter::bytesToUInt16(data, 15))
+            .arg(hour, 2, 10, QChar('0')).arg((quint8)data[11], 2, 10, QChar('0')).arg((quint8)data[10], 2, 10, QChar('0')));
 
     QObject *qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("timeLabel");
-    qmlObject->setProperty("text", QVariant(QString("Дата и время %0: %1").arg((quint8)data[9] & BIT0 ? "UTC" : "GPS").arg(timeString)));
+    qmlObject->setProperty("text", QVariant(QString("%1 %0").arg((quint8)data[9] & BIT0 ? "UTC" : "GPS").arg(timeString)));
 
     return s;
 }
 
+// Дополнительный пакет по таймингу 0х8F 0xAC. Присылается по умолчанию каждую секунду. Обновляет в интерфейсе
+// данные температуры, вольтажа, а также критические и не очень критические сигналы (и еще немного информации о GPS-модуле).
+// Всё остальное сыплется в лог.
+// Этот пакет и пакет, который выше, можно прислать и принудительно, есть спец. вкладка в интерфейсе.
 QString PacketParser::parse_RPTSUB_SUPPL_TIMING_PACKET()
 {
     QString s = "Получен пакет RPTSUB_SUPPL_TIMING_PACKET (0x8F-AC):\n";
@@ -775,11 +803,10 @@ QString PacketParser::parse_RPTSUB_SUPPL_TIMING_PACKET()
         default: info.append("неизвестно (ошибка!)");
     }
 
-    s.append(QString("\n- Прогресс самоопроса, %: %0\n")
-             .arg((int)data[3] != 0 ? QString((quint8)data[3]) : QString("самоопрос в данный момент не проводится")));
+    s.append(QString("\n- Прогресс самоопроса, %: %0\n").arg((quint8)data[3]));
     s.append(QString("- Длительность удержания (текущего или последнего, если удержание было отключено), сек: %0\n")
              .arg(TypesConverter::bytesToUInt32(data, 4)));
-    info.append("- Критические сигналы:\n");
+    info.append("\n- Критические сигналы:\n");
     info.append(QString("-- DAC at rail: %0\n").arg((quint8)data[8] & BIT4 ? "ДА" : "нет"));
     info.append("- Не такие критические сигналы:\n");
     info.append(QString("-- DAC near rail: %0\n").arg((quint8)data[10] & BIT0 ? "ДА" : "нет"));
@@ -823,7 +850,6 @@ QString PacketParser::parse_RPTSUB_SUPPL_TIMING_PACKET()
         case (quint8)9: info.append("калибровка/управление напряжением"); break;
         default: info.append("неизвестно (ошибка!)");
     }
-   // s.append(info);
     QObject *qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("supplInfoLabel");
     qmlObject->setProperty("text", QVariant(info));
 
@@ -850,59 +876,25 @@ QString PacketParser::parse_RPTSUB_SUPPL_TIMING_PACKET()
     double longitude = TypesConverter::bytesToDouble(data, 44) * (180 / PI);
 
     qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("temperatureLabel");
-    qmlObject->setProperty("text", QVariant(QString("Температура: %0 град. C")
+    qmlObject->setProperty("text", QVariant(QString("- Температура: %0 град. C")
                                             .arg(TypesConverter::bytesToSingle(data, 32), 0, 'f', 2)));
-    qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("latitudeOutLabel");
+    qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("latitudePosLabel");
     qmlObject->setProperty("text", QVariant(QString("%0 градусов %1 широты")
                                             .arg(latitude, 0, 'f').arg(latitude > 0 ? "северной" : "южной")));
-    qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("longitudeOutLabel");
+    qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("longitudePosLabel");
     qmlObject->setProperty("text", QVariant(QString("%0 градусов %1 долготы")
                                             .arg(longitude, 0, 'f').arg(longitude > 0 ? "восточной" : "западной")));
-    qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("altitudeOutLabel");
+    qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("altitudePosLabel");
     qmlObject->setProperty("text", QVariant(QString("Высота над уровнем моря: %0 м")
                                             .arg(TypesConverter::bytesToDouble(data, 52), 0, 'f', 4)));
 
-
-
-/*
-    QDataStream dataStream(data);
-    //RPTSUB_SUPPL_TIMING_PACKET_report = new RPTSUB_SUPPL_TIMING_PACKET_reportStruct;
-    dataStream.setFloatingPointPrecision(QDataStream::SinglePrecision);
-    dataStream >> RPTSUB_SUPPL_TIMING_PACKET_report.reportSubcode
-            >> RPTSUB_SUPPL_TIMING_PACKET_report.receiverMode >> RPTSUB_SUPPL_TIMING_PACKET_report.discipliningMode
-            >> RPTSUB_SUPPL_TIMING_PACKET_report.selfSurveyProgress >> RPTSUB_SUPPL_TIMING_PACKET_report.holdoverDuration
-            >> RPTSUB_SUPPL_TIMING_PACKET_report.criticalAlarmsBF >> RPTSUB_SUPPL_TIMING_PACKET_report.minorAlarmsBF
-            >> RPTSUB_SUPPL_TIMING_PACKET_report.gpsDecodingStatus >> RPTSUB_SUPPL_TIMING_PACKET_report.discipliningActivity
-            >> RPTSUB_SUPPL_TIMING_PACKET_report.spare1 >> RPTSUB_SUPPL_TIMING_PACKET_report.spare2
-            >> RPTSUB_SUPPL_TIMING_PACKET_report.ppsOffset >> RPTSUB_SUPPL_TIMING_PACKET_report.clockOffset
-            >> RPTSUB_SUPPL_TIMING_PACKET_report.dacValue >> RPTSUB_SUPPL_TIMING_PACKET_report.dacVoltage
-            >> RPTSUB_SUPPL_TIMING_PACKET_report.temperature;
-    dataStream.setFloatingPointPrecision(QDataStream::DoublePrecision);
-    dataStream >> RPTSUB_SUPPL_TIMING_PACKET_report.latitude
-            >> RPTSUB_SUPPL_TIMING_PACKET_report.longitude >> RPTSUB_SUPPL_TIMING_PACKET_report.altitude;
-    dataStream.setFloatingPointPrecision(QDataStream::SinglePrecision);
-    dataStream >> RPTSUB_SUPPL_TIMING_PACKET_report.ppsQuantizationError;
-
-*/
     return s;
 }
 
-/*void PacketParser::updateInterfaceValues()
-{
-
-    QObject *qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("temperatureLabel");
-    qmlObject->setProperty("text", QVariant(QString("Температура: %0 град. C").arg(RPTSUB_SUPPL_TIMING_PACKET_report.temperature, 0, 'f', 2)));
-    qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("latitudeOutLabel");
-    qmlObject->setProperty("text", QVariant(QString("Широта: %0").arg(RPTSUB_SUPPL_TIMING_PACKET_report.latitude * (180 / PI), 0, 'f')));
-    qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("longitudeOutLabel");
-    qmlObject->setProperty("text", QVariant(QString("Долгота: %0").arg(RPTSUB_SUPPL_TIMING_PACKET_report.longitude * (180 / PI), 0, 'f')));
-    qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("altitudeOutLabel");
-    qmlObject->setProperty("text", QVariant(QString("Высота над уровнем моря: %0 м").arg(RPTSUB_SUPPL_TIMING_PACKET_report.altitude, 0, 'f', 4)));
-
-}
-*/
-
-// Не отображается в интерфейсе.
+// Не отображается в интерфейсе (GPS-модуль тупо присылает то, что отправляет пользователь,
+// даже если отправленная маска не работает).
+// Пакет-ответ на задание маски авторассылки пакетов 0x8F 0xAB, 0x8F 0xAC, 0x47
+// и еще некоторые (в документации есть хорошая таблица на этот счет).
 QString PacketParser::parse_RPTSUB_PACKET_BROADCAST_MASK()
 {
     QString s = "Получен пакет RPTSUB_PACKET_BROADCAST_MASK (0х8F-05):\n";

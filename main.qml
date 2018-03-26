@@ -3,18 +3,23 @@ import QtQuick.Window 2.2
 import QtQuick.Controls 1.4
 import QtQuick.Controls 2.2
 import QtQml 2.2
-import QtCharts 2.2
 import "./" as MyQML
+
+// Главное окно. Такое большое, только потому что содержит кучу текстовых полей (увы, Qt по-другому не может)
+// и заготовок под строчки с сигналами спутников. В главном окне - интерфейс с важными для оператора значениями,
+// получаемыми из пакетов, окно лога, куда печатается всё, что уже не так важно, кнопка настройки обновления
+// информации и настройки подключения к GPS-модулю, и табличка с вкладками, в которой весь функционал
+// по отправке пакетов и, соответственно, получению информации и конфигурированию GPS-модуля.
 
 Window {
     id: main_window
     visible: true
-    width: 1500
+    width: 1700
     height: 950
     color: "#ffffff"
-    opacity: 1
     title: qsTr("Kinda Trimble")
 
+    // Всё равно, что соответствующие макросы кодов пакетов в kinda_trimble_shared.h, только для здешних файлов.
     property int _COMMAND_FIRMWARE_INFO                          : 0x1C
     property int     _CMDSUB_FIRMWARE_VERSION                    : 0x01
     property int     _CMDSUB_HARDWARE_COMPONENT_INFO             : 0x03
@@ -35,7 +40,7 @@ Window {
     property int _COMMAND_SET_RECEIVER_CONFIG                    : 0xBB
     property int _COMMAND_SET_PORT_CONFIG                        : 0xBC
     property int _COMMAND_SUPER                                  : 0x8E
-    property int     _CMDSUB_REQUEST_CURRENT_DATUM               : 0x15
+    /*property int     _CMDSUB_REQUEST_CURRENT_DATUM               : 0x15
     property int     _CMDSUB_WRITE_CONFIG_TO_FLASH               : 0x26
     property int     _CMDSUB_REQUEST_MANUFACT_PARAMS             : 0x41
     property int     _CMDSUB_REQUEST_STORED_PRODUCTION_PARAMS    : 0x42
@@ -44,22 +49,32 @@ Window {
     property int     _CMDSUB_SET_DAC                             : 0xA0
     property int     _CMDSUB_SET_UTC_GPS_TIMIMG                  : 0xA2
     property int     _CMDSUB_ISSUE_OSC_DISCIPL_CMD               : 0xA3
-    property int     _CMDSUB_TEST_MODES                          : 0xA4
+    property int     _CMDSUB_TEST_MODES                          : 0xA4*/
     property int     _CMDSUB_SET_PACKET_BROADCAST_MASK           : 0xA5
-    property int     _CMDSUB_ISSUE_SELF_SURVEY                   : 0xA6
+   /* property int     _CMDSUB_ISSUE_SELF_SURVEY                   : 0xA6
     property int     _CMDSUB_SET_REQUEST_DISCIPL_PARAMS          : 0xA8
-    property int     _CMDSUB_SET_SELF_SURVEY_PARAMS              : 0xA9
+    property int     _CMDSUB_SET_SELF_SURVEY_PARAMS              : 0xA9*/
     property int     _CMDSUB_REQUEST_PRIMARY_TIMING_PACKET       : 0xAB
     property int     _CMDSUB_REQUEST_SUPPL_TIMING_PACKET         : 0xAC
 
+    // Сигнал, который отправляется каждый раз, когда оператор жмет на одну из кнопок, которая подразумевает
+    // отправку пакета GPS-модулю. Этот сигнал привязан к слоту в С++, который и формирует и отправляет пакеты.
+    // Передается код и подкод, либо код и первый информационный байт (иногда так удобнее).
     signal sig_send_command(int code, int subcode)
+    // Сигнал, который вызывается в ответ на сигнал второго окна (оно кидает сигнал при нажатии
+    // кнопки открытия порта) и передается в С++, тамошний код и открывает порт. Передаются все настройки порта.
     signal sig_open_port(int portIndex, int baud, int dataBits, int parity, int flowControl, int stopBits)
+    // Сигнал, отправляемый в С++ для того, чтобы тамошний код обновил список открытых портов.
+    // (список будет прислан непосредственно компоненту, отображающему его, с помощью обращения по объектному имени)
     signal sig_get_serial_ports()
 
+    // Счетчик сообщений в логе.
     property int logCount: 0
 
+    // Слот для сигнала из С++, который вызывается тогда, когда нужно добавить запись в лог.
     function onAppendReceivedtext(s) {
         logCount++;
+        // Чтобы программа не тормозила из-за накопившегося мусора в логе.
         if (logCount > 100) {
             receivedText.clear();
             logCount = 0;
@@ -71,19 +86,24 @@ Window {
     Rectangle {
         id: rectangle
         x: 445
-        y: 65
+        y: 151
         width: 521
-        height: 500
+        height: 414
         color: "#00000000"
         border.color: "#a9a9a9"
 
         ScrollView {
             id: view
+            width: 583
+            height: 492
+            contentWidth: 16
+            topPadding: 0
             contentHeight: 30
             anchors.topMargin: 8
             anchors.leftMargin: 8
             anchors.fill: parent
 
+            // Собсна, лог ресивера. Обрамлен в ScrollView, чтобы его можно было прокручивать.
             TextArea {
                 id: receivedText
                 x: -5
@@ -100,6 +120,7 @@ Window {
         }
     }
 
+    // Элемент с вкладками, на которых кнопки для отправки пакетов.
     TabBar {
         id: tabs
         x: 18
@@ -108,6 +129,10 @@ Window {
         height: 40
         clip: true
         objectName: "tabsMain"
+
+        // Ниже перечислены все заголовки вкладок. Суть в том, что при выборе заголовка
+        // меняется параметр y tabs, он называется currentIndex. Ниже есть загрузчик вкладок, он
+        // следит за изменением этого параметра.
 
         TabButton {
             id: essentialsTab
@@ -159,6 +184,8 @@ Window {
         }
 
         onCurrentIndexChanged: {
+            // В момент изменения индекса текущей вкладки - подгрузить нужную вкладку.
+            // Вкладки представлены файлами-абзацами (Item).
             switch (currentIndex)
             {
             case 0:
@@ -186,6 +213,8 @@ Window {
         }
     }
 
+    // Сам загрзучик вкладок. Выше - лишь его использование. Почему так и почему он даже
+    // не в иерархии вкладочного списка - надо спросить тех, кто разрабатывал QML...
     Loader {
         id: loader
         x: 18
@@ -195,20 +224,28 @@ Window {
 
     Text {
         id: text1
-        x: 455
-        y: 42
-        text: qsTr("Лог ресивера")
+        x: 445
+        y: 108
+        width: 174
+        height: 42
+        text: qsTr("Область логгирования получаемых данных")
+        wrapMode: Text.WordWrap
         font.italic: false
         font.bold: true
         textFormat: Text.RichText
         font.pixelSize: 14
     }
 
+    // Объект окна настройки порта VirtualCOM. Да, в самом файле - как определение класса, а объект класса - вот он.
+    // Окно модальное, чтобы нельзя было работать с основным окном, пока порт не открыт.
     COMInit {
         id: com_init_window
         objectName: "com_init_window"
         modality: Qt.WindowModal
 
+        // Этот сигнал вызывается, НЕ когда окно закрывается - он лишь назван так. Этот сигнал приходит из окна
+        // настройки порта, когда оператор щелкает по кнопке "Подключиться". То окно закрывается, а главное - появляется,
+        // и отсылается сигнал в среду С++, что нужно открыть порт.
         onCloseWindow: {
             com_init_window.close();
             main_window.show();
@@ -216,14 +253,18 @@ Window {
         }
     }
 
+    // Кнопка открытия окна настройки порта.
     Button {
         id: button
-        x: 583
-        y: 9
-        width: 201
+        x: 445
+        y: 15
+        width: 238
         height: 50
         text: qsTr("Настройка VirtualCOM")
+        font.bold: true
 
+        // При нажатии главное окно будет скрыто, а окно настройки - показано.
+        // Заодно интерфейс просит сигналом код С++ обновить список открытых портов в интерфейсе окна настройки порта.
         onClicked: {
             sig_get_serial_ports();
             com_init_window.show();
@@ -234,32 +275,41 @@ Window {
     Label {
         id: temperatureLabel
         objectName: "temperatureLabel"
-        x: 527
-        y: 874
+        x: 10
+        y: 900
         text: "Температура, С:"
         font.pointSize: 9
     }
 
+    Rectangle {
+        id: rectangle1
+        x: 0
+        y: 868
+        width: 819
+        height: 2
+        color: "#7d7d7d"
+    }
+
     Label {
         id: latitudePosLabel
-        objectName: "latitudeOutLabel"
-        x: 247
+        objectName: "latitudePosLabel"
+        x: 281
         y: 605
         text: "Широта:"
     }
 
     Label {
         id: longitudePosLabel
-        objectName: "longitudeOutLabel"
-        x: 247
+        objectName: "longitudePosLabel"
+        x: 281
         y: 625
         text: "Долгота:"
     }
 
     Label {
         id: altitudePosLabel
-        objectName: "altitudeOutLabel"
-        x: 247
+        objectName: "altitudePosLabel"
+        x: 281
         y: 645
         text: "Высота, м:"
     }
@@ -274,6 +324,9 @@ Window {
         font.italic: false
         font.bold: true
     }
+
+    // Просто экземпляры для отображения уровня сигнала спутников. Их нельзя создавать динамически, поэтому вот так...
+    // (нужные будут скрыты и изменены из кода С++)
 
     MyQML.Satellite_status_template {
         id: template1
@@ -371,110 +424,11 @@ Window {
         visible: false
     }
 
-    function onGainNewValues(nx, ny) {
-        myLineSeries.append(parseFloat(nx), parseFloat(ny));
-        myScatterSeries.append(parseFloat(nx), parseFloat(ny));
-    }
-
-    ChartView {
-        id: myChart
-        objectName: "myChart"
-        //legend.visible: false
-
-        x: 991
-        y: 65
-        width: 475
-        height: 245
-        dropShadowEnabled: true
-        plotAreaColor: "#00000000"
-        antialiasing: true
-        visible: false
-
-        MouseArea {
-            id: mouse_area
-            anchors.fill: parent
-            property int lastX: 0
-            property int lastY: 0
-            onPressed: {
-                lastX = mouse.x
-                lastY = mouse.y
-            }
-
-            onPositionChanged: {
-                if (lastX !== mouse.x) {
-                    myChart.scrollRight(lastX - mouse.x)
-                    lastX = mouse.x
-                }
-                if (lastY !== mouse.y) {
-                    myChart.scrollDown(lastY - mouse.y)
-                    lastY = mouse.y
-                }
-                //console.log(lastX, lastY)
-            }
-        }
-
-        Button {
-            id: zoomOutButton
-            x: 349
-            y: 16
-            width: 60
-            height: 50
-            text: qsTr("-")
-            padding: 0
-            rightPadding: 0
-            leftPadding: 0
-            bottomPadding: 0
-            topPadding: 0
-            font.pointSize: 15
-            font.bold: true
-            onClicked: {
-                myChart.zoomOut()
-            }
-        }
-
-        Button {
-            id: zoomInButton
-            x: 415
-            y: 16
-            width: 60
-            height: 50
-            text: qsTr("+")
-            padding: 0
-            rightPadding: 0
-            leftPadding: 0
-            bottomPadding: 0
-            topPadding: 0
-            font.pointSize: 15
-            font.bold: true
-            onClicked: {
-                myChart.zoomIn()
-            }
-        }
-
-        SplineSeries {
-            id: myLineSeries
-            XYPoint { x: 0; y: 5 }
-            XYPoint { x: -3; y: -4 }
-            XYPoint { x: 4; y: 1 }
-            XYPoint { x: -4; y: 1 }
-            XYPoint { x: 3; y: -4 }
-            XYPoint { x: 0; y: 5 }
-        }
-        ScatterSeries {
-            id: myScatterSeries
-            XYPoint { x: 0; y: 5 }
-            XYPoint { x: -3; y: -4 }
-            XYPoint { x: 4; y: 1 }
-            XYPoint { x: -4; y: 1 }
-            XYPoint { x: 3; y: -4 }
-            XYPoint { x: 0; y: 5 }
-        }
-
-    }
+    // Дальше - куча текстовых записей, которые с помощью объектного имени получают значения из С++.
 
     Text {
         id: text3
-        x: 247
+        x: 281
         y: 582
         text: qsTr("Позиция GPS (LLA)")
         font.bold: true
@@ -485,7 +439,7 @@ Window {
 
     Label {
         id: llaPositionBiasLabel
-        x: 247
+        x: 281
         y: 665
         text: "Погрешность:"
         objectName: "llaPositionBiasLabel"
@@ -493,7 +447,7 @@ Window {
 
     Label {
         id: llaPositionFixLabel
-        x: 247
+        x: 281
         y: 685
         text: "Отметка времени:"
         objectName: "llaPositionFixLabel"
@@ -501,7 +455,7 @@ Window {
 
     Label {
         id: xPositionLabel
-        x: 247
+        x: 281
         y: 732
         text: "X:"
         objectName: "xPositionLabel"
@@ -509,7 +463,7 @@ Window {
 
     Label {
         id: yPositionLabel
-        x: 247
+        x: 281
         y: 752
         text: "Y:"
         objectName: "yPositionLabel"
@@ -517,7 +471,7 @@ Window {
 
     Label {
         id: zPositionLabel
-        x: 247
+        x: 281
         y: 772
         text: "Z:"
         objectName: "zPositionLabel"
@@ -525,7 +479,7 @@ Window {
 
     Text {
         id: text4
-        x: 247
+        x: 281
         y: 709
         text: qsTr("Позиция GPS (XYZ)")
         font.bold: true
@@ -536,7 +490,7 @@ Window {
 
     Label {
         id: xyzPositionBiasLabel
-        x: 247
+        x: 281
         y: 792
         text: "Погрешность:"
         objectName: "xyzPositionBiasLabel"
@@ -544,7 +498,7 @@ Window {
 
     Label {
         id: xyzPositionFixLabel
-        x: 247
+        x: 281
         y: 812
         text: "Отметка времени:"
         objectName: "xyzPositionFixLabel"
@@ -552,7 +506,7 @@ Window {
 
     Label {
         id: eastVelocityLabel
-        x: 527
+        x: 554
         y: 605
         text: "Скорость: восточная:"
         objectName: "eastVelocityLabel"
@@ -560,7 +514,7 @@ Window {
 
     Label {
         id: northVelocityLabel
-        x: 527
+        x: 554
         y: 625
         text: "северная:"
         objectName: "northVelocityLabel"
@@ -568,7 +522,7 @@ Window {
 
     Label {
         id: upVelocityLabel
-        x: 527
+        x: 554
         y: 645
         text: "по высоте:"
         objectName: "upVelocityLabel"
@@ -576,7 +530,7 @@ Window {
 
     Text {
         id: text5
-        x: 527
+        x: 554
         y: 582
         text: qsTr("Скорость GPS (ENU)")
         font.bold: true
@@ -587,7 +541,7 @@ Window {
 
     Label {
         id: enuVelocityBiasLabel
-        x: 527
+        x: 554
         y: 665
         text: "Погрешность:"
         objectName: "enuVelocityBiasLabel"
@@ -595,7 +549,7 @@ Window {
 
     Label {
         id: enuVelocityFixLabel
-        x: 527
+        x: 554
         y: 685
         text: "Отметка времени:"
         objectName: "enuVelocityFixLabel"
@@ -604,7 +558,7 @@ Window {
 
     Text {
         id: text6
-        x: 527
+        x: 554
         y: 709
         text: qsTr("Скорость GPS (XYZ)")
         font.bold: true
@@ -615,7 +569,7 @@ Window {
 
     Label {
         id: xVelocityLabel
-        x: 527
+        x: 554
         y: 732
         text: "X:"
         objectName: "xVelocityLabel"
@@ -623,7 +577,7 @@ Window {
 
     Label {
         id: yVelocityLabel
-        x: 527
+        x: 554
         y: 752
         text: "Y:"
         objectName: "yVelocityLabel"
@@ -631,7 +585,7 @@ Window {
 
     Label {
         id: zVelocityLabel
-        x: 527
+        x: 554
         y: 772
         text: "Z:"
         objectName: "zVelocityLabel"
@@ -639,7 +593,7 @@ Window {
 
     Label {
         id: xyzVelocityBiasLabel
-        x: 527
+        x: 554
         y: 792
         text: "Погрешность:"
         objectName: "xyzVelocityBiasLabel"
@@ -647,7 +601,7 @@ Window {
 
     Label {
         id: xyzVelocityFixLabel
-        x: 527
+        x: 554
         y: 812
         text: "Отметка времени:"
         objectName: "xyzVelocityFixLabel"
@@ -655,7 +609,7 @@ Window {
 
     Text {
         id: text7
-        x: 805
+        x: 832
         y: 582
         text: qsTr("Информация о прошивке:")
         font.bold: true
@@ -666,16 +620,18 @@ Window {
 
     Label {
         id: _RPTSUB_FIRMWARE_VERSION_label
-        x: 805
+        x: 832
         y: 605
+        width: 83
+        height: 134
         text: "(не получена)"
         objectName: "_RPTSUB_FIRMWARE_VERSION_label"
     }
 
     Text {
         id: text8
-        x: 805
-        y: 709
+        x: 832
+        y: 753
         text: qsTr("Информация о плате:")
         font.bold: true
         font.pixelSize: 14
@@ -685,16 +641,18 @@ Window {
 
     Label {
         id: _RPTSUB_HARDWARE_COMPONENT_INFO_label
-        x: 805
-        y: 732
+        x: 832
+        y: 776
+        width: 83
+        height: 151
         text: "(не получена)"
         objectName: "_RPTSUB_HARDWARE_COMPONENT_INFO_label"
     }
 
     Text {
         id: text9
-        x: 805
-        y: 825
+        x: 991
+        y: 380
         text: qsTr("Информация о ПО платы:")
         font.bold: true
         font.pixelSize: 14
@@ -704,16 +662,18 @@ Window {
 
     Label {
         id: _REPORT_SOFTWARE_VERSION_INFO_label
-        x: 805
-        y: 845
+        x: 991
+        y: 400
+        width: 83
+        height: 157
         text: "(не получена)"
         objectName: "_REPORT_SOFTWARE_VERSION_INFO_label"
     }
 
     Text {
         id: text10
-        x: 1131
-        y: 582
+        x: 1387
+        y: 14
         text: qsTr("Текущие настройки ввода-вывода GPS:")
         font.bold: true
         font.pixelSize: 14
@@ -723,8 +683,10 @@ Window {
 
     Label {
         id: _REPORT_REQUEST_IO_OPTIONS_label
-        x: 1131
-        y: 605
+        x: 1387
+        y: 37
+        width: 85
+        height: 234
         text: "(не получены)"
         objectName: "_REPORT_REQUEST_IO_OPTIONS_label"
     }
@@ -739,8 +701,8 @@ Window {
 
     Label {
         id: timeLabel
-        x: 527
-        y: 850
+        x: 10
+        y: 876
         text: "Дата и время:"
         font.pointSize: 9
         objectName: "timeLabel"
@@ -748,9 +710,9 @@ Window {
 
     Text {
         id: text11
-        x: 176
-        y: 836
-        text: qsTr("Включение спутников для отслеживания")
+        x: 1131
+        y: 753
+        text: qsTr("Включение спутников для отслеживания позиции")
         font.pixelSize: 14
         font.bold: true
         textFormat: Text.RichText
@@ -759,17 +721,20 @@ Window {
 
     Label {
         id: enabledSVsLabel
-        x: 239
-        y: 859
+        x: 1111
+        y: 785
+        width: 54
+        height: 133
         text: "вкл/выкл"
+        horizontalAlignment: Text.AlignLeft
         objectName: "enabledSVsLabel"
     }
 
     Text {
         id: text12
-        x: 1114
-        y: 785
-        text: qsTr("Учет здоровья спутников для их использования")
+        x: 1106
+        y: 582
+        text: qsTr("Учет работоспособности спутников для их использования")
         font.pixelSize: 14
         font.bold: true
         textFormat: Text.RichText
@@ -778,16 +743,19 @@ Window {
 
     Label {
         id: healthEnabledSVsLabel
-        x: 1214
-        y: 812
+        x: 1087
+        y: 605
+        width: 66
+        height: 128
         text: "прин/игнор"
+        horizontalAlignment: Text.AlignLeft
         objectName: "healthEnabledSVsLabel"
     }
 
     Text {
         id: text13
         x: 991
-        y: 321
+        y: 14
         text: qsTr("Состояние GPS-модуля")
         font.pixelSize: 14
         font.bold: true
@@ -798,17 +766,147 @@ Window {
     Label {
         id: supplInfoLabel
         x: 991
-        y: 344
+        y: 37
+        width: 83
+        height: 328
         text: "(не получено)"
         objectName: "supplInfoLabel"
     }
 
     Label {
         id: dacVoltageLabel
-        x: 527
-        y: 898
+        x: 10
+        y: 924
         text: "Напряжение на ЦАП, В:"
         objectName: "dacVoltageLabel"
         font.pointSize: 9
+    }
+
+    Rectangle {
+        id: rectangle2
+        x: 265
+        y: 574
+        width: 2
+        height: 296
+        color: "#7d7d7d"
+    }
+
+    Rectangle {
+        id: rectangle3
+        x: 538
+        y: 574
+        width: 2
+        height: 296
+        color: "#7d7d7d"
+    }
+
+    Rectangle {
+        id: rectangle4
+        x: 0
+        y: 574
+        width: 1700
+        height: 2
+        color: "#7d7d7d"
+    }
+
+    Rectangle {
+        id: rectangle5
+        x: 817
+        y: 574
+        width: 2
+        height: 376
+        color: "#7d7d7d"
+    }
+
+    Rectangle {
+        id: rectangle6
+        x: 1075
+        y: 574
+        width: 2
+        height: 376
+        color: "#7d7d7d"
+    }
+
+    Rectangle {
+        id: rectangle7
+        x: 1374
+        y: 0
+        width: 2
+        height: 576
+        color: "#7d7d7d"
+    }
+
+    Rectangle {
+        id: rectangle8
+        x: 978
+        y: 372
+        width: 398
+        height: 2
+        color: "#7d7d7d"
+    }
+
+    Rectangle {
+        id: rectangle9
+        x: 978
+        y: 0
+        width: 2
+        height: 576
+        color: "#7d7d7d"
+    }
+
+    // Еще три кнопки настройки авторассылки пакетов. Можно приостановить рассылку (фактически это пакет
+    // 0х8F 0xA5 со всеми снятыми галочками), возобновить (просто тот же пакет со всеми установленными галочками)
+    // или обновить единоразово (вызывается метод С++ COMHandler::requestEssentialInfo()).
+
+    property bool pausePacketFlow: false;
+
+    Button {
+        id: button1
+        x: 723
+        y: 7
+        width: 243
+        height: 35
+        text: qsTr("Приостановить обновление")
+        onClicked: {
+            pausePacketFlow = true;
+            sig_send_command(_COMMAND_SUPER, _CMDSUB_SET_PACKET_BROADCAST_MASK);
+        }
+    }
+
+    Button {
+        id: button2
+        x: 723
+        y: 49
+        width: 243
+        height: 35
+        text: qsTr("Возобновить обновление")
+        onClicked: {
+            pausePacketFlow = false;
+            sig_send_command(_COMMAND_SUPER, _CMDSUB_SET_PACKET_BROADCAST_MASK);
+        }
+    }
+
+    Button {
+        id: button3
+        x: 723
+        y: 89
+        width: 243
+        height: 35
+        text: qsTr("ОБНОВИТЬ ВСЕ")
+        font.bold: true
+        onClicked: {
+            // Это не пакет 0x-42 и не запрос смысла жизни, Вселенной и всего такого. С++ сам разберется...
+            sig_send_command(-42, 0);
+        }
+    }
+
+    // Проверяется перед тем, как отправить сигнал о логгировании. Если взведен, в лог ничего не отсылается,
+    // однако пакеты по-прежнему принимаются, разбираются и обновляют интерфейсные данные.
+    CheckBox {
+        id: freezeLog
+        objectName: "freezeLog"
+        x: 652
+        y: 115
+        text: qsTr("Заморозить лог без остановки обновления")
     }
 }

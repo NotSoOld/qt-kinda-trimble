@@ -2,6 +2,7 @@
 
 // Метод собирает все опции пакета установки опций ввода-вывода с соответствующей вкладки интерфейса.
 // Все эти опции перечислены в документации, см. пакет 0х35.
+// Собирает пакет 0х35.
 void CommandBuilder::build_COMMAND_SET_IO_OPTIONS(QByteArray *cmd)
 {
     // Опции считываются из интерфейса с помощью обращения по объектному имени элементов QML.
@@ -38,6 +39,7 @@ void CommandBuilder::build_COMMAND_SET_IO_OPTIONS(QByteArray *cmd)
 // Этот метод и метод ниже помещают в пакет инициализации начальной позиции
 // значения начальной позиции, напечатанные пользователем в соответствующей вкладке
 // интерфейса.
+// Собирает пакет 0x31.
 void CommandBuilder::build_COMMAND_ACCURATE_INIT_POS_XYZ(QByteArray *cmd)
 {
     double initX = QMLDataHelper::getDoubleFromQML("init_x_text", "text");
@@ -53,6 +55,7 @@ void CommandBuilder::build_COMMAND_ACCURATE_INIT_POS_XYZ(QByteArray *cmd)
 }
 
 // См. комментарий выше.
+// Собирает пакет 0х32.
 void CommandBuilder::build_COMMAND_ACCURATE_INIT_POS_LLA(QByteArray *cmd)
 {
     double initLat = QMLDataHelper::getDoubleFromQML("init_lat_text", "text");
@@ -71,6 +74,7 @@ void CommandBuilder::build_COMMAND_ACCURATE_INIT_POS_LLA(QByteArray *cmd)
 // Далее нужно добавить код информации, которую желаем получить (он равен номеру выбранного пункта
 // в выпадающем списке в интерфейсе плюс 2) и номер спутника. Номер спутника нужен не для всех типов
 // данных, однако поле, тем не менее, нужно чем-то заполнить.
+// Собирает пакет 0х38.
 void CommandBuilder::build_COMMAND_REQUEST_SATELLITE_SYSTEM_DATA(QByteArray *cmd)
 {
     // Этот ComboBox - на вкладке "Информация о спутниках".
@@ -85,6 +89,7 @@ void CommandBuilder::build_COMMAND_REQUEST_SATELLITE_SYSTEM_DATA(QByteArray *cmd
 
 // Этот метод делает всего одну вещь - получает номер спутника, которому нужно включить/отключить отслеживание
 // здоровья или включение его в список разрешенных спутников GPS-модуля. Тип операции уже был занесен в пакет ранее.
+// Собирает пакет 0х39.
 void CommandBuilder::build_COMMAND_SET_REQUEST_SATELLITES_AND_HEALTH(QByteArray *cmd)
 {
     quint8 satelliteIndex = (quint8)QMLDataHelper::getIntFromQML("satellites_and_health_spinner", "value");
@@ -95,8 +100,21 @@ void CommandBuilder::build_COMMAND_SET_REQUEST_SATELLITES_AND_HEALTH(QByteArray 
 
 // Еще один метод для получения вкл/выкл опций из переключателей на вкладке "Настройка авторассылки"
 // и превращения этих опций в битовое поле.
+// Собирает суперпакет 0х8Е 0хА5.
 void CommandBuilder::build_CMDSUB_SET_PACKET_BROADCAST_MASK(QByteArray *cmd)
 {
+    // Дополнительная возможность: этот пакет может использоваться для остановки обновления
+    // величин, отображаемых в интерфейсе, либо для возобновления этого потока автопакетов
+    // (во втором случае переменная pausePacketFlow будет равна false, и метод выполнится как обычно).
+    bool stopBroadcast = QMLDataHelper::mainWindow->property("pausePacketFlow").toBool();
+    if (stopBroadcast) {
+        QByteArrayHelper::appendAndStuff(cmd, ZERO_BYTE);
+        QByteArrayHelper::appendAndStuff(cmd, ZERO_BYTE);
+        QByteArrayHelper::appendAndStuff(cmd, ZERO_BYTE);
+        QByteArrayHelper::appendAndStuff(cmd, ZERO_BYTE);
+        return;
+    }
+
     bool maskPrimaryPackets = QMLDataHelper::getBoolFromQML("primaryPacketMaskingBit", "checked");
     bool maskSupplPackets = QMLDataHelper::getBoolFromQML("supplPacketMaskingBit", "checked");
     bool maskOtherPackets = QMLDataHelper::getBoolFromQML("otherPacketsMaskingBit", "checked");
@@ -121,6 +139,7 @@ void CommandBuilder::build_CMDSUB_SET_PACKET_BROADCAST_MASK(QByteArray *cmd)
 
 // Метод забирает из кода интерфейса QML значение специальной переменной, которая меняется при нажатии
 // одной из кнопок на вкладке "Пакеты по таймингу", и ее значение после нажатия определяет тип запроса, который нужно отправить.
+// Собирает суперпакет 0х8Е: либо 0хAB, либо 0хАС.
 void CommandBuilder::build_CMDSUB_REQUEST_TIMING_PACKET(QByteArray *cmd)
 {
     quint8 typeOfRequest = (quint8)QMLDataHelper::getIntFromQML("timingPacketItem", "timingPacketType");
