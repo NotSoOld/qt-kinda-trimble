@@ -114,10 +114,17 @@ void CommandBuilder::build_CMDSUB_SET_PACKET_BROADCAST_MASK(QByteArray *cmd)
         QByteArrayHelper::appendAndStuff(cmd, ZERO_BYTE);
         return;
     }
+    // Этот хак - чтобы загрузить нужную вкладку TabBar'a, а то некоторые поля не находятся CommandBuilder'ом,
+    // так как иногда этот пакет требуется собрать после нажатия кнопки не на вкладке, а в главном окне.
+    QObject *obj = QMLDataHelper::mainWindow->findChild<QObject *>("tabsMain");
+    int oldTabIndex = obj->property("currentIndex").toInt();
+    obj->setProperty("currentIndex", QVariant(5));
 
     bool maskPrimaryPackets = QMLDataHelper::getBoolFromQML("primaryPacketMaskingBit", "checked");
     bool maskSupplPackets = QMLDataHelper::getBoolFromQML("supplPacketMaskingBit", "checked");
     bool maskOtherPackets = QMLDataHelper::getBoolFromQML("otherPacketsMaskingBit", "checked");
+
+    obj->setProperty("currentIndex", QVariant(oldTabIndex));
 
     // Создание битового поля.
     quint8 infoByte = (quint8)(

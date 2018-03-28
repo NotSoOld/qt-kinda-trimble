@@ -105,6 +105,7 @@ void COMHandler::requestEssentialInfo(unsigned long delay)
     send_command(COMMAND_SET_IO_OPTIONS, -1);
     // Хак (этот и ниже) - чтобы загрузить нужную вкладку TabBar'a, а то некоторые поля не находятся CommandBuilder'ом.
     QObject *obj = QMLDataHelper::mainWindow->findChild<QObject *>("tabsMain");
+    int oldTabIndex = obj->property("currentIndex").toInt();
     obj->setProperty("currentIndex", QVariant(4));
     send_command(COMMAND_SET_REQUEST_SATELLITES_AND_HEALTH, 3);
     send_command(COMMAND_SET_REQUEST_SATELLITES_AND_HEALTH, 6);
@@ -113,7 +114,7 @@ void COMHandler::requestEssentialInfo(unsigned long delay)
     obj->setProperty("currentIndex", QVariant(6));
     send_command(COMMAND_SUPER, CMDSUB_REQUEST_PRIMARY_TIMING_PACKET);
     send_command(COMMAND_SUPER, CMDSUB_REQUEST_SUPPL_TIMING_PACKET);
-    obj->setProperty("currentIndex", QVariant(0));
+    obj->setProperty("currentIndex", QVariant(oldTabIndex));
 }
 
 
@@ -242,6 +243,7 @@ void COMHandler::send_command(int code, int subcode)
             CommandBuilder::build_CMDSUB_REQUEST_TIMING_PACKET(&cmd);
             break;
         }
+        break;
     case COMMAND_INITIATE_RESET:
     case COMMAND_INITIATE_HOT_RESET:
         // После перезагрузки GPS-модуля желательно получить всю важную информацию заново (спустя 3 секунды).

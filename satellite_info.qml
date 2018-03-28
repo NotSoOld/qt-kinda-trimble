@@ -58,7 +58,7 @@ Item {
             x: 25
             y: 175
             width: 186
-            height: 51
+            height: 58
             text: qsTr("Выбрать наилучший\nавтоматически")
             font.pointSize: 7
             onClicked: {

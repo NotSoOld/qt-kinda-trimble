@@ -14,7 +14,7 @@ import "./" as MyQML
 Window {
     id: main_window
     visible: true
-    width: 1700
+    width: 1800
     height: 950
     color: "#ffffff"
     title: qsTr("Kinda Trimble")
@@ -79,7 +79,8 @@ Window {
             receivedText.clear();
             logCount = 0;
         }
-
+        //receivedText.text += s;
+        //receivedText.text += "\n";
         receivedText.append(s+"\n");
     }
 
@@ -108,16 +109,19 @@ Window {
                 id: receivedText
                 x: -5
                 y: -1
-                width: 314
-                height: 487
+                width: 518
+                height: 407
                 text: ""
                 wrapMode: Text.WordWrap
                 font.weight: Font.Light
                 readOnly: true
+                selectByMouse: true
                 font.wordSpacing: 0
                 font.pixelSize: 14
             }
         }
+
+
     }
 
     // Элемент с вкладками, на которых кнопки для отправки пакетов.
@@ -285,7 +289,7 @@ Window {
         id: rectangle1
         x: 0
         y: 868
-        width: 819
+        width: 846
         height: 2
         color: "#7d7d7d"
     }
@@ -331,96 +335,96 @@ Window {
     MyQML.Satellite_status_template {
         id: template1
         objectName: "template1"
-        x: 25
-        y: 633
+        x: 10
+        y: 613
         visible: false
     }
 
     MyQML.Satellite_status_template {
         id: template2
         objectName: "template2"
-        x: 25
-        y: 653
+        x: 10
+        y: 633
         visible: false
     }
 
     MyQML.Satellite_status_template {
         id: template3
         objectName: "template3"
-        x: 25
-        y: 673
+        x: 10
+        y: 653
         visible: false
     }
 
     MyQML.Satellite_status_template {
         id: template4
         objectName: "template4"
-        x: 25
-        y: 693
+        x: 10
+        y: 673
         visible: false
     }
 
     MyQML.Satellite_status_template {
         id: template5
         objectName: "template5"
-        x: 25
-        y: 713
+        x: 10
+        y: 693
         visible: false
     }
 
     MyQML.Satellite_status_template {
         id: template6
         objectName: "template6"
-        x: 25
-        y: 733
+        x: 10
+        y: 713
         visible: false
     }
 
     MyQML.Satellite_status_template {
         id: template7
         objectName: "template7"
-        x: 25
-        y: 753
+        x: 10
+        y: 733
         visible: false
     }
 
     MyQML.Satellite_status_template {
         id: template8
         objectName: "template8"
-        x: 25
-        y: 773
+        x: 10
+        y: 753
         visible: false
     }
 
     MyQML.Satellite_status_template {
         id: template9
         objectName: "template9"
-        x: 25
-        y: 793
+        x: 10
+        y: 773
         visible: false
     }
 
     MyQML.Satellite_status_template {
         id: template10
         objectName: "template10"
-        x: 25
-        y: 813
+        x: 10
+        y: 793
         visible: false
     }
 
     MyQML.Satellite_status_template {
         id: template11
         objectName: "template11"
-        x: 25
-        y: 833
+        x: 10
+        y: 813
         visible: false
     }
 
     MyQML.Satellite_status_template {
         id: template12
         objectName: "template12"
-        x: 25
-        y: 853
+        x: 10
+        y: 833
         visible: false
     }
 
@@ -428,7 +432,7 @@ Window {
 
     Text {
         id: text3
-        x: 281
+        x: 282
         y: 582
         text: qsTr("Позиция GPS (LLA)")
         font.bold: true
@@ -456,7 +460,7 @@ Window {
     Label {
         id: xPositionLabel
         x: 281
-        y: 732
+        y: 748
         text: "X:"
         objectName: "xPositionLabel"
     }
@@ -464,7 +468,7 @@ Window {
     Label {
         id: yPositionLabel
         x: 281
-        y: 752
+        y: 768
         text: "Y:"
         objectName: "yPositionLabel"
     }
@@ -472,7 +476,7 @@ Window {
     Label {
         id: zPositionLabel
         x: 281
-        y: 772
+        y: 788
         text: "Z:"
         objectName: "zPositionLabel"
     }
@@ -480,7 +484,7 @@ Window {
     Text {
         id: text4
         x: 281
-        y: 709
+        y: 725
         text: qsTr("Позиция GPS (XYZ)")
         font.bold: true
         font.pixelSize: 14
@@ -491,7 +495,7 @@ Window {
     Label {
         id: xyzPositionBiasLabel
         x: 281
-        y: 792
+        y: 808
         text: "Погрешность:"
         objectName: "xyzPositionBiasLabel"
     }
@@ -499,14 +503,14 @@ Window {
     Label {
         id: xyzPositionFixLabel
         x: 281
-        y: 812
+        y: 828
         text: "Отметка времени:"
         objectName: "xyzPositionFixLabel"
     }
 
     Label {
         id: eastVelocityLabel
-        x: 554
+        x: 565
         y: 605
         text: "Скорость: восточная:"
         objectName: "eastVelocityLabel"
@@ -514,7 +518,7 @@ Window {
 
     Label {
         id: northVelocityLabel
-        x: 554
+        x: 565
         y: 625
         text: "северная:"
         objectName: "northVelocityLabel"
@@ -522,7 +526,7 @@ Window {
 
     Label {
         id: upVelocityLabel
-        x: 554
+        x: 565
         y: 645
         text: "по высоте:"
         objectName: "upVelocityLabel"
@@ -530,7 +534,7 @@ Window {
 
     Text {
         id: text5
-        x: 554
+        x: 565
         y: 582
         text: qsTr("Скорость GPS (ENU)")
         font.bold: true
@@ -541,7 +545,7 @@ Window {
 
     Label {
         id: enuVelocityBiasLabel
-        x: 554
+        x: 565
         y: 665
         text: "Погрешность:"
         objectName: "enuVelocityBiasLabel"
@@ -549,7 +553,7 @@ Window {
 
     Label {
         id: enuVelocityFixLabel
-        x: 554
+        x: 565
         y: 685
         text: "Отметка времени:"
         objectName: "enuVelocityFixLabel"
@@ -558,8 +562,8 @@ Window {
 
     Text {
         id: text6
-        x: 554
-        y: 709
+        x: 565
+        y: 725
         text: qsTr("Скорость GPS (XYZ)")
         font.bold: true
         font.pixelSize: 14
@@ -569,47 +573,47 @@ Window {
 
     Label {
         id: xVelocityLabel
-        x: 554
-        y: 732
+        x: 565
+        y: 748
         text: "X:"
         objectName: "xVelocityLabel"
     }
 
     Label {
         id: yVelocityLabel
-        x: 554
-        y: 752
+        x: 565
+        y: 768
         text: "Y:"
         objectName: "yVelocityLabel"
     }
 
     Label {
         id: zVelocityLabel
-        x: 554
-        y: 772
+        x: 565
+        y: 788
         text: "Z:"
         objectName: "zVelocityLabel"
     }
 
     Label {
         id: xyzVelocityBiasLabel
-        x: 554
-        y: 792
+        x: 565
+        y: 808
         text: "Погрешность:"
         objectName: "xyzVelocityBiasLabel"
     }
 
     Label {
         id: xyzVelocityFixLabel
-        x: 554
-        y: 812
+        x: 565
+        y: 828
         text: "Отметка времени:"
         objectName: "xyzVelocityFixLabel"
     }
 
     Text {
         id: text7
-        x: 832
+        x: 859
         y: 582
         text: qsTr("Информация о прошивке:")
         font.bold: true
@@ -620,7 +624,7 @@ Window {
 
     Label {
         id: _RPTSUB_FIRMWARE_VERSION_label
-        x: 832
+        x: 859
         y: 605
         width: 83
         height: 134
@@ -630,7 +634,7 @@ Window {
 
     Text {
         id: text8
-        x: 832
+        x: 859
         y: 753
         text: qsTr("Информация о плате:")
         font.bold: true
@@ -641,11 +645,12 @@ Window {
 
     Label {
         id: _RPTSUB_HARDWARE_COMPONENT_INFO_label
-        x: 832
+        x: 859
         y: 776
-        width: 83
-        height: 151
+        width: 230
+        height: 161
         text: "(не получена)"
+        wrapMode: Text.NoWrap
         objectName: "_RPTSUB_HARDWARE_COMPONENT_INFO_label"
     }
 
@@ -664,15 +669,16 @@ Window {
         id: _REPORT_SOFTWARE_VERSION_INFO_label
         x: 991
         y: 400
-        width: 83
+        width: 377
         height: 157
         text: "(не получена)"
+        wrapMode: Text.NoWrap
         objectName: "_REPORT_SOFTWARE_VERSION_INFO_label"
     }
 
     Text {
         id: text10
-        x: 1387
+        x: 1440
         y: 14
         text: qsTr("Текущие настройки ввода-вывода GPS:")
         font.bold: true
@@ -683,7 +689,7 @@ Window {
 
     Label {
         id: _REPORT_REQUEST_IO_OPTIONS_label
-        x: 1387
+        x: 1440
         y: 37
         width: 85
         height: 234
@@ -710,7 +716,7 @@ Window {
 
     Text {
         id: text11
-        x: 1131
+        x: 1219
         y: 753
         text: qsTr("Включение спутников для отслеживания позиции")
         font.pixelSize: 14
@@ -721,7 +727,7 @@ Window {
 
     Label {
         id: enabledSVsLabel
-        x: 1111
+        x: 1199
         y: 785
         width: 54
         height: 133
@@ -732,7 +738,7 @@ Window {
 
     Text {
         id: text12
-        x: 1106
+        x: 1194
         y: 582
         text: qsTr("Учет работоспособности спутников для их использования")
         font.pixelSize: 14
@@ -743,7 +749,7 @@ Window {
 
     Label {
         id: healthEnabledSVsLabel
-        x: 1087
+        x: 1175
         y: 605
         width: 66
         height: 128
@@ -767,9 +773,10 @@ Window {
         id: supplInfoLabel
         x: 991
         y: 37
-        width: 83
+        width: 377
         height: 328
         text: "(не получено)"
+        wrapMode: Text.NoWrap
         objectName: "supplInfoLabel"
     }
 
@@ -793,7 +800,7 @@ Window {
 
     Rectangle {
         id: rectangle3
-        x: 538
+        x: 549
         y: 574
         width: 2
         height: 296
@@ -804,14 +811,14 @@ Window {
         id: rectangle4
         x: 0
         y: 574
-        width: 1700
+        width: 1800
         height: 2
         color: "#7d7d7d"
     }
 
     Rectangle {
         id: rectangle5
-        x: 817
+        x: 844
         y: 574
         width: 2
         height: 376
@@ -820,7 +827,7 @@ Window {
 
     Rectangle {
         id: rectangle6
-        x: 1075
+        x: 1163
         y: 574
         width: 2
         height: 376
@@ -829,7 +836,7 @@ Window {
 
     Rectangle {
         id: rectangle7
-        x: 1374
+        x: 1427
         y: 0
         width: 2
         height: 576
@@ -840,7 +847,7 @@ Window {
         id: rectangle8
         x: 978
         y: 372
-        width: 398
+        width: 451
         height: 2
         color: "#7d7d7d"
     }

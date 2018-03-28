@@ -168,8 +168,8 @@ QString PacketParser::parse_RPTSUB_HARDWARE_COMPONENT_INFO()
 
     res.append("Получен пакет RPTSUB_FIRMWARE_VERSION (0x1C / 0x83)\n");
     info.append(QString("- Серийный номер платы: %0\n").arg(TypesConverter::bytesToUInt32(data, 1)));
-    info.append(QString("- Дата сборки платы: %0/%1/%2, %3 часов\n")
-                .arg((quint8)data[5]).arg((quint8)data[6]).arg(TypesConverter::bytesToUInt16(data, 7)).arg((quint8)data[9]));
+    info.append(QString("- Дата сборки платы: %0/%1/%2\n")
+                .arg((quint8)data[5]).arg((quint8)data[6]).arg(TypesConverter::bytesToUInt16(data, 7)));
     info.append(QString("- Код платы, ассоциированный с ID: %0\n").arg(TypesConverter::bytesToUInt16(data, 10)));
     info.append(QString("- ID платы: "));
     for (quint8 i = 0; i < (quint8)data[12]; i++) {
@@ -196,16 +196,16 @@ QString PacketParser::parse_REPORT_DOUBLE_XYZ_POS()
 
     // В интерфейсе есть текстовые поля под данные из этого пакета.
     QObject *qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("xPositionLabel");
-    qmlObject->setProperty("text", QVariant(QString("Позиция по Х: %0 м").arg(X, 0, 'f')));
+    qmlObject->setProperty("text", QVariant(QString("Позиция по Х: %0 м").arg(X, 0, 'f', 2)));
     qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("yPositionLabel");
-    qmlObject->setProperty("text", QVariant(QString("Позиция по Y: %0 м").arg(Y, 0, 'f')));
+    qmlObject->setProperty("text", QVariant(QString("Позиция по Y: %0 м").arg(Y, 0, 'f', 2)));
     qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("zPositionLabel");
-    qmlObject->setProperty("text", QVariant(QString("Позиция по Z: %0 м").arg(Z, 0, 'f', 4)));
+    qmlObject->setProperty("text", QVariant(QString("Позиция по Z: %0 м").arg(Z, 0, 'f', 2)));
     qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("xyzPositionBiasLabel");
-    qmlObject->setProperty("text", QVariant(QString("Погрешность: %0 м").arg(TypesConverter::bytesToSingle(data, 24), 0, 'f', 6)));
+    qmlObject->setProperty("text", QVariant(QString("Погрешность: %0 м").arg(fabs(TypesConverter::bytesToSingle(data, 24)), 0, 'f', 2)));
     qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("xyzPositionFixLabel");
-    qmlObject->setProperty("text", QVariant(QString("Отметка времени измерения: %0 сек")
-                                            .arg(TypesConverter::bytesToSingle(data, 32), 0, 'f', 4)));
+    qmlObject->setProperty("text", QVariant(QString("Отметка времени измерения:\n%0 сек")
+                                            .arg(TypesConverter::bytesToSingle(data, 32), 0, 'f', 0)));
 
     return res;
 }
@@ -225,18 +225,18 @@ QString PacketParser::parse_REPORT_DOUBLE_LLA_POS()
 
     QObject *qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("latitudePosLabel");
     qmlObject->setProperty("text", QVariant(QString("%0 градусов %1 широты")
-                                            .arg(latitude, 0, 'f').arg(latitude > 0 ? "северной" : "южной")));
+                                            .arg(fabs(latitude), 0, 'f').arg(latitude > 0 ? "северной" : "южной")));
     qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("longitudePosLabel");
     qmlObject->setProperty("text", QVariant(QString("%0 градусов %1 долготы")
-                                            .arg(longitude, 0, 'f').arg(longitude > 0 ? "восточной" : "западной")));
+                                            .arg(fabs(longitude), 0, 'f').arg(longitude > 0 ? "восточной" : "западной")));
     qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("altitudePosLabel");
-    qmlObject->setProperty("text", QVariant(QString("Высота над уровнем моря: %0 м").arg(altitude, 0, 'f', 4)));
+    qmlObject->setProperty("text", QVariant(QString("Высота над уровнем моря: %0 м").arg(altitude, 0, 'f', 2)));
     qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("llaPositionBiasLabel");
     qmlObject->setProperty("text", QVariant(QString("Погрешность: %0 м")
-                                            .arg(TypesConverter::bytesToSingle(data, 24), 0, 'f', 6)));
+                                            .arg(fabs(TypesConverter::bytesToSingle(data, 24)), 0, 'f', 4)));
     qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("llaPositionFixLabel");
-    qmlObject->setProperty("text", QVariant(QString("Отметка времени измерения: %0 сек")
-                                            .arg(TypesConverter::bytesToSingle(data, 32), 0, 'f', 4)));
+    qmlObject->setProperty("text", QVariant(QString("Отметка времени измерения:\n%0 сек")
+                                            .arg(TypesConverter::bytesToSingle(data, 32), 0, 'f', 0)));
 
     return res;
 }
@@ -253,16 +253,16 @@ QString PacketParser::parse_REPORT_SINGLE_XYZ_POS()
     float Z = TypesConverter::bytesToSingle(data, 8);
 
     QObject *qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("xPositionLabel");
-    qmlObject->setProperty("text", QVariant(QString("Позиция по Х: %0 м").arg(X, 0, 'f')));
+    qmlObject->setProperty("text", QVariant(QString("Позиция по Х: %0 м").arg(X, 0, 'f', 2)));
     qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("yPositionLabel");
-    qmlObject->setProperty("text", QVariant(QString("Позиция по Y: %0 м").arg(Y, 0, 'f')));
+    qmlObject->setProperty("text", QVariant(QString("Позиция по Y: %0 м").arg(Y, 0, 'f', 2)));
     qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("zPositionLabel");
-    qmlObject->setProperty("text", QVariant(QString("Позиция по Z: %0 м").arg(Z, 0, 'f', 4)));
+    qmlObject->setProperty("text", QVariant(QString("Позиция по Z: %0 м").arg(Z, 0, 'f', 2)));
     qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("xyzPositionBiasLabel");
-    qmlObject->setProperty("text", QVariant(QString("Погрешность: %0 м").arg(TypesConverter::bytesToSingle(data, 8), 0, 'f', 6)));
+    qmlObject->setProperty("text", QVariant(QString("Погрешность: %0 м").arg(fabs(TypesConverter::bytesToSingle(data, 8)), 0, 'f', 4)));
     qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("xyzPositionFixLabel");
-    qmlObject->setProperty("text", QVariant(QString("Отметка времени измерения: %0 сек")
-                                            .arg(TypesConverter::bytesToSingle(data, 12), 0, 'f', 4)));
+    qmlObject->setProperty("text", QVariant(QString("Отметка времени измерения:\n%0 сек")
+                                            .arg(TypesConverter::bytesToSingle(data, 12), 0, 'f', 0)));
 
     return res;
 }
@@ -285,10 +285,10 @@ QString PacketParser::parse_REPORT_SINGLE_VELOCITY_FIX_XYZ()
     qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("zVelocityLabel");
     qmlObject->setProperty("text", QVariant(QString("Скорость по Z: %0 м/с").arg(Z_vel, 0, 'f', 3)));
     qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("xyzVelocityBiasLabel");
-    qmlObject->setProperty("text", QVariant(QString("Погрешность: %0 м/с").arg(TypesConverter::bytesToSingle(data, 12), 0, 'f', 4)));
+    qmlObject->setProperty("text", QVariant(QString("Погрешность: %0 м/с").arg(fabs(TypesConverter::bytesToSingle(data, 12)), 0, 'f', 4)));
     qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("xyzVelocityFixLabel");
-    qmlObject->setProperty("text", QVariant(QString("Отметка времени измерения: %0 сек")
-                                            .arg(TypesConverter::bytesToSingle(data, 16), 0, 'f', 4)));
+    qmlObject->setProperty("text", QVariant(QString("Отметка времени измерения:\n%0 сек")
+                                            .arg(TypesConverter::bytesToSingle(data, 16), 0, 'f', 0)));
 
     return res;
 }
@@ -332,17 +332,21 @@ QString PacketParser::parse_REPORT_TRACKED_SATELLITES_SINGAL_LVL()
         QObject *qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>(QString("template%0").arg(i + 1));
         qmlObject->setProperty("visible", "true");
 
-        // Обновление информации в заготовке.
+        // Обновление информации об уровне сигнала в заготовке.
+        QObject *qmlIOOptionsObject = QMLDataHelper::mainWindow->findChild<QObject *>("_REPORT_REQUEST_IO_OPTIONS_label");
+        bool is_db_HZ = qmlIOOptionsObject->property("text").toString().contains("dB-Hz");
         QObject *textObject = qmlObject->findChild<QObject *>("mainLabel");
-        textObject->setProperty("text", QVariant(QString("Спутник %0: %1 dBc").arg((quint8)data[i * 5 + 1]).arg(signalLevel)));
+        textObject->setProperty("text", QVariant(QString("Спутник %0: %1 %2").arg((quint8)data[i * 5 + 1]).arg(signalLevel)
+                                .arg(is_db_HZ ? "dBc" : "а.е.м.")));
 
         // Задание изображения соответственно уровню сигнала.
+        float AMUfactor = (is_db_HZ ? 1 : 0.25);
         QObject *imageObject = qmlObject->findChild<QObject *>("sat_signal_image");
-        if (signalLevel > 40)
+        if (signalLevel > 40 * AMUfactor)
             imageObject->setProperty("source", QVariant("qrc:/images/satellites_levels/excellent.png"));
-        else if (signalLevel > 30)
+        else if (signalLevel > 30 * AMUfactor)
             imageObject->setProperty("source", QVariant("qrc:/images/satellites_levels/good.png"));
-        else if (signalLevel > 15)
+        else if (signalLevel > 15 * AMUfactor)
             imageObject->setProperty("source", QVariant("qrc:/images/satellites_levels/fair.png"));
         else
             imageObject->setProperty("source", QVariant("qrc:/images/satellites_levels/weak.png"));
@@ -364,17 +368,17 @@ QString PacketParser::parse_REPORT_SINGLE_LLA_POS()
 
     QObject *qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("latitudePosLabel");
     qmlObject->setProperty("text", QVariant(QString("%0 градусов %1 широты")
-                                            .arg(latitude, 0, 'f').arg(latitude > 0 ? "северной" : "южной")));
+                                            .arg(fabs(latitude), 0, 'f').arg(latitude > 0 ? "северной" : "южной")));
     qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("longitudePosLabel");
     qmlObject->setProperty("text", QVariant(QString("%0 градусов %1 долготы")
-                                            .arg(longitude, 0, 'f').arg(longitude > 0 ? "восточной" : "западной")));
+                                            .arg(fabs(longitude), 0, 'f').arg(longitude > 0 ? "восточной" : "западной")));
     qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("altitudePosLabel");
     qmlObject->setProperty("text", QVariant(QString("Высота над уровнем моря: %0 м").arg(altitude, 0, 'f', 4)));
     qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("llaPositionBiasLabel");
-    qmlObject->setProperty("text", QVariant(QString("Погрешность: %0 м").arg(TypesConverter::bytesToSingle(data, 12), 0, 'f', 6)));
+    qmlObject->setProperty("text", QVariant(QString("Погрешность: %0 м").arg(fabs(TypesConverter::bytesToSingle(data, 12)), 0, 'f', 4)));
     qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("llaPositionFixLabel");
-    qmlObject->setProperty("text", QVariant(QString("Отметка времени измерения: %0 сек")
-                                            .arg(TypesConverter::bytesToSingle(data, 16), 0, 'f', 4)));
+    qmlObject->setProperty("text", QVariant(QString("Отметка времени измерения:\n%0 сек")
+                                            .arg(TypesConverter::bytesToSingle(data, 16), 0, 'f', 0)));
     return res;
 }
 
@@ -417,17 +421,17 @@ QString PacketParser::parse_REPORT_SINGLE_VELOCITY_FIX_ENU()
 
     QObject *qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("eastVelocityLabel");
     qmlObject->setProperty("text", QVariant(QString("Скорость: %0 м/с на %1")
-                                            .arg(east_vel, 0, 'f', 3).arg(east_vel > 0 ? "восток" : "запад")));
+                                            .arg(fabs(east_vel), 0, 'f', 3).arg(east_vel > 0 ? "восток" : "запад")));
     qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("northVelocityLabel");
-    qmlObject->setProperty("text", QVariant(QString("          %0 м/с на %1")
-                                            .arg(north_vel, 0, 'f', 3).arg(north_vel > 0 ? "север" : "юг")));
+    qmlObject->setProperty("text", QVariant(QString("                 %0 м/с на %1")
+                                            .arg(fabs(north_vel), 0, 'f', 3).arg(north_vel > 0 ? "север" : "юг")));
     qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("upVelocityLabel");
-    qmlObject->setProperty("text", QVariant(QString("          %0 м/с %1").arg(up_vel, 0, 'f', 3).arg(up_vel > 0 ? "вверх" : "вниз")));
+    qmlObject->setProperty("text", QVariant(QString("                 %0 м/с %1").arg(fabs(up_vel), 0, 'f', 3).arg(up_vel > 0 ? "вверх" : "вниз")));
     qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("enuVelocityBiasLabel");
-    qmlObject->setProperty("text", QVariant(QString("Погрешность: %0 м/с").arg(TypesConverter::bytesToSingle(data, 12), 0, 'f', 4)));
+    qmlObject->setProperty("text", QVariant(QString("Погрешность: %0 м/с").arg(fabs(TypesConverter::bytesToSingle(data, 12)), 0, 'f', 4)));
     qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("enuVelocityFixLabel");
-    qmlObject->setProperty("text", QVariant(QString("Отметка времени измерения: %0 сек")
-                                            .arg(TypesConverter::bytesToSingle(data, 16), 0, 'f', 4)));
+    qmlObject->setProperty("text", QVariant(QString("Отметка времени измерения:\n%0 сек")
+                                            .arg(TypesConverter::bytesToSingle(data, 16), 0, 'f', 0)));
 
     return res;
 }
@@ -585,7 +589,7 @@ QString PacketParser::parse_REPORT_STATUS_SATELLITE_HEALTH()
         // Пришла информация о включении спутников.
         s.append("Информация о включении спутников REPORT_STATUS_SATELLITE_HEALTH\n");
         for (int i = 1; i <= 32; i++) {
-            info.append(QString("№%0 - %1  \t").arg(i).arg((quint8)data[i] == (quint8)0 ? "вкл." : "выкл."));
+            info.append(QString("№%0 - %1  \t\t").arg(i).arg((quint8)data[i] == (quint8)0 ? "вкл." : "выкл."));
             if (i % 4 == 0)
                 info.append("\n");
         } 
@@ -757,7 +761,7 @@ QString PacketParser::parse_RPTSUB_PRIMARY_TIMING_PACKET()
 
     QString timeString = "";
     // Хак для корректировки часового пояса.
-    quint8 hour = (quint8)data[12] + 4;
+    quint8 hour = (quint8)data[12] + 3;
     quint8 date = (quint8)data[13];
     if (hour >= 24) {
         hour -= 24;
@@ -776,7 +780,7 @@ QString PacketParser::parse_RPTSUB_PRIMARY_TIMING_PACKET()
 // Дополнительный пакет по таймингу 0х8F 0xAC. Присылается по умолчанию каждую секунду. Обновляет в интерфейсе
 // данные температуры, вольтажа, а также критические и не очень критические сигналы (и еще немного информации о GPS-модуле).
 // Всё остальное сыплется в лог.
-// Этот пакет и пакет, который выше, можно прислать и принудительно, есть спец. вкладка в интерфейсе.
+// Этот пакет и пакет выше можно прислать и принудительно, есть спец. вкладка в интерфейсе.
 QString PacketParser::parse_RPTSUB_SUPPL_TIMING_PACKET()
 {
     QString s = "Получен пакет RPTSUB_SUPPL_TIMING_PACKET (0x8F-AC):\n";
@@ -867,27 +871,14 @@ QString PacketParser::parse_RPTSUB_SUPPL_TIMING_PACKET()
 
     s.append(QString("- Температура: %0 град. С\n").arg(TypesConverter::bytesToSingle(data, 32), 0, 'f', 2));
 
-    s.append(QString("- Широта, рад: %0\n").arg(TypesConverter::bytesToDouble(data, 36), 0, 'f'));
-    s.append(QString("- Долгота, рад: %0\n").arg(TypesConverter::bytesToDouble(data, 44), 0, 'f'));
-    s.append(QString("- Высота, м: %0\n").arg(TypesConverter::bytesToDouble(data, 52), 0, 'f'));
+    s.append(QString("- Широта из памяти, рад: %0\n").arg(TypesConverter::bytesToDouble(data, 36), 0, 'f'));
+    s.append(QString("- Долгота из памяти, рад: %0\n").arg(TypesConverter::bytesToDouble(data, 44), 0, 'f'));
+    s.append(QString("- Высота из памяти, м: %0\n").arg(TypesConverter::bytesToDouble(data, 52), 0, 'f'));
     s.append(QString("- Ошибка квантизации PPS, нс: %0\n").arg(TypesConverter::bytesToSingle(data, 60), 0, 'f'));
-
-    double latitude = TypesConverter::bytesToDouble(data, 36) * (180 / PI);
-    double longitude = TypesConverter::bytesToDouble(data, 44) * (180 / PI);
 
     qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("temperatureLabel");
     qmlObject->setProperty("text", QVariant(QString("- Температура: %0 град. C")
                                             .arg(TypesConverter::bytesToSingle(data, 32), 0, 'f', 2)));
-    qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("latitudePosLabel");
-    qmlObject->setProperty("text", QVariant(QString("%0 градусов %1 широты")
-                                            .arg(latitude, 0, 'f').arg(latitude > 0 ? "северной" : "южной")));
-    qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("longitudePosLabel");
-    qmlObject->setProperty("text", QVariant(QString("%0 градусов %1 долготы")
-                                            .arg(longitude, 0, 'f').arg(longitude > 0 ? "восточной" : "западной")));
-    qmlObject = QMLDataHelper::mainWindow->findChild<QObject *>("altitudePosLabel");
-    qmlObject->setProperty("text", QVariant(QString("Высота над уровнем моря: %0 м")
-                                            .arg(TypesConverter::bytesToDouble(data, 52), 0, 'f', 4)));
-
     return s;
 }
 

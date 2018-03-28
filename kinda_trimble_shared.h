@@ -24,6 +24,7 @@
 #define BIT7 ((quint8)128)
 
 // Байты кодов и подкодов пакетов команд и запросов.
+// (Некоторые закомментированы, потому что эти пакеты не пригодились или не были реализованы.)
 #define COMMAND_FIRMWARE_INFO                           ((quint8)0x1C)
 #define     CMDSUB_FIRMWARE_VERSION                     ((quint8)0x01)
 #define     CMDSUB_HARDWARE_COMPONENT_INFO              ((quint8)0x03)

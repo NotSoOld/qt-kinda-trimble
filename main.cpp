@@ -9,17 +9,14 @@
 
 // Отсюда начинается выполнение программы.
 
-// Когда-то COMHandler был многопоточным... Теперь существование сразу двух его экземпляров
-// вызывает вопросы касательно целесообразности.
 COMHandler handler;
-COMHandler receiverThread;
 
 int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
     QQmlApplicationEngine engine;
 
-    // Стиль приложения.
+    // Стиль приложения касательно библиотек Qt Quick 2.
     QQuickStyle::setStyle("Material");
 
     engine.load(QUrl(QStringLiteral("qrc:/main.qml")));
@@ -43,7 +40,7 @@ int main(int argc, char *argv[])
 
     // Связка для отправки сообщений в лог в интерфейсе.
     QObject::connect(
-                &receiverThread,
+                &handler,
                 SIGNAL(appendReceivedText(QVariant)),
                 QMLDataHelper::mainWindow,
                 SLOT(onAppendReceivedtext(QVariant))
@@ -53,7 +50,7 @@ int main(int argc, char *argv[])
     QObject::connect(
                 QMLDataHelper::mainWindow,
                 SIGNAL(sig_open_port(int, int, int, int, int, int)),
-                &receiverThread,
+                &handler,
                 SLOT(configureCOM(int, int, int, int, int, int))
     );
 
@@ -61,12 +58,12 @@ int main(int argc, char *argv[])
     QObject::connect(
                 QMLDataHelper::mainWindow,
                 SIGNAL(sig_get_serial_ports()),
-                &receiverThread,
+                &handler,
                 SLOT(getSerialPortsList())
     );
 
     // При первом запуске проще запустить этот слот отсюда, чем из QML.
-    receiverThread.getSerialPortsList();
+    handler.getSerialPortsList();
 
     // Запуск, собственно, приложения.
     app.exec();
