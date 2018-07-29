@@ -73,7 +73,7 @@ void CommandBuilder::build_COMMAND_ACCURATE_INIT_POS_LLA(QByteArray *cmd)
 // Данный метод собирает пакет 0х38. Первый байт данных - "1" - добавлен ранее как подкод.
 // Далее нужно добавить код информации, которую желаем получить (он равен номеру выбранного пункта
 // в выпадающем списке в интерфейсе плюс 2) и номер спутника. Номер спутника нужен не для всех типов
-// данных, однако поле, тем не менее, нужно чем-то заполнить.
+// данных, однако поле нужно чем-то заполнить для получения любого типа данных.
 // Собирает пакет 0х38.
 void CommandBuilder::build_COMMAND_REQUEST_SATELLITE_SYSTEM_DATA(QByteArray *cmd)
 {
@@ -114,7 +114,7 @@ void CommandBuilder::build_CMDSUB_SET_PACKET_BROADCAST_MASK(QByteArray *cmd)
         QByteArrayHelper::appendAndStuff(cmd, ZERO_BYTE);
         return;
     }
-    // Этот хак - чтобы загрузить нужную вкладку TabBar'a, а то некоторые поля не находятся CommandBuilder'ом,
+    // Этот хак - чтобы вовремя загрузить нужную вкладку TabBar'a, а то некоторые поля не находятся CommandBuilder'ом,
     // так как иногда этот пакет требуется собрать после нажатия кнопки не на вкладке, а в главном окне.
     QObject *obj = QMLDataHelper::mainWindow->findChild<QObject *>("tabsMain");
     int oldTabIndex = obj->property("currentIndex").toInt();
@@ -135,7 +135,7 @@ void CommandBuilder::build_CMDSUB_SET_PACKET_BROADCAST_MASK(QByteArray *cmd)
 
     // В документации написано, что нужно поместить битовое поле в первый байт, а остальные рарезервированы.
     // Тесты же показали, что первый байт ни на что не влияет. Так или иначе, отправка поля во всех четырех байтах
-    // дает желаемый результат (возможно, виноват порядок байт).
+    // дает желаемый результат (возможно, "виноват" порядок байт).
     QByteArrayHelper::appendAndStuff(cmd, infoByte);
     QByteArrayHelper::appendAndStuff(cmd, infoByte);
     QByteArrayHelper::appendAndStuff(cmd, infoByte);

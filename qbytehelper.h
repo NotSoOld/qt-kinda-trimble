@@ -11,7 +11,10 @@ class QByteArrayHelper : public QObject
 {
     Q_OBJECT
 public:
+    // Метод для однобайтовой величины:
     static void appendAndStuff(QByteArray *, quint8);
+
+    // Методы для многобайтовых величин:
     static void appendAndStuff(QByteArray *, double);
     static void appendAndStuff(QByteArray *, float);
     static void appendAndStuff(QByteArray *, quint16);

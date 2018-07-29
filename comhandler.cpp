@@ -1,7 +1,7 @@
 // Общие комментарии к методам см. здесь:
 #include "comhandler.h"
 
-// Потому что они статические.
+// Определены здесь, потому что они статические.
 QSerialPort *COMHandler::com;
 QByteArray COMHandler::readedData;
 byte COMHandler::previouslyReadedChar;
@@ -15,7 +15,7 @@ void COMHandler::getSerialPortsList()
     // соединение, чтобы оно отображалось в списке доступных.
     finishCOM();
 
-    // Получаем список всех портов и выкидываем из него занятые.
+    // Получаем список всех портов и убираем из него занятые.
     portsList = QSerialPortInfo::availablePorts();
     int openPortsNumber = portsList.length();
     for (int i = 0; i < openPortsNumber; i++) {
@@ -94,7 +94,7 @@ void COMHandler::configureCOM(int portIndex, int baudRate, int dataBits, int par
 
 void COMHandler::requestEssentialInfo(unsigned long delay)
 {
-    // Просто возможность отсрочить получение информации (например, после перезагрузки стоит подождать, пока GPS очнется).
+    // Просто возможность отсрочить получение информации (например, после перезагрузки стоит подождать, пока GPS "очнется").
     if (delay > 0)
         QThread::msleep(delay);
 
@@ -120,7 +120,7 @@ void COMHandler::requestEssentialInfo(unsigned long delay)
 
 void COMHandler::finishCOM()
 {
-    // Полное уни[что]жение (но сначала нужно проверить на возможность совершения того, что делаем, конечно).
+    // Проверка, открыт ли порт VirtualCOM в данный момент. Если да, то его можно закрыть.
     if (com == nullptr)
         return;
     if (!(com->isOpen()))
@@ -136,7 +136,7 @@ void COMHandler::readFromCOM()
 {
     // Эта строка и цикл ниже - на всякий случай. Вообще сигнал readyRead (и этот слот соответственно)
     // вызывается на КАЖДЫЙ приходящий байт ОДИН раз, т.е. сколько байтов пришло, столько раз этот метод и сработает.
-    // Но вдруг вызовов будет меньше, чем байтов в порте?
+    // Но вдруг вызовов будет меньше, чем байтов в порте, из-за аппаратного сбоя?
     int bytesAvailable = com->bytesAvailable();
     for (int i = 0; i < bytesAvailable; i++) {
         char readedChar;
@@ -182,6 +182,8 @@ void COMHandler::receiveReport()
 
 void COMHandler::send_command(int code, int subcode)
 {
+    // Отдельная ветвь кода для обновления всей важной информации
+    // при нажатии соответствующей клавиши в программе.
     if (code == -42) {
         requestEssentialInfo();
         return;

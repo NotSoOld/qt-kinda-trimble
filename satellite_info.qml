@@ -111,7 +111,7 @@ Item {
         }
 
         Label {
-            id: label1
+            id: svSystemInfoLabel
             x: 25
             y: 331
             width: 256
